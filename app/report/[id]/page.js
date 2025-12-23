@@ -3,10 +3,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 export async function generateStaticParams() {
-    const reports = await getReports();
-    return reports.map((report) => ({
-        id: report.id,
-    }));
+    // Return empty array to generate all pages on-demand (ISR/SSR behavior for build)
+    // 7000+ pages is too many for standard build validation
+    return [];
 }
 
 // Helper to safely render list items (string or object)

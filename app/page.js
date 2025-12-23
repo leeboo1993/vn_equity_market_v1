@@ -5,10 +5,8 @@ import Dashboard from './components/Dashboard';
 export const revalidate = 10800;
 export const dynamic = 'force-static'; // Optional: force static generation if possible
 
-export default async function Home() {
-    const reports = await getReports();
-    // Ensure reports is an array before reversing
-    const recentReports = Array.isArray(reports) ? [...reports].reverse() : [];
-
-    return <Dashboard initialReports={recentReports} />;
+export default function Home() {
+    // Client-side fetching strategy to avoid 60MB payload limit on Vercel Functions
+    // Data is pre-built into public/reports.json
+    return <Dashboard initialReports={[]} shouldFetchData={true} />;
 }

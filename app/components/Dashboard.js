@@ -10,6 +10,14 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 // === Helpers ===
+const safeToFixed = (val, digits = 1) => {
+    if (val == null || isNaN(val)) return '-';
+    // If val is string, try parse
+    const num = Number(val);
+    if (isNaN(num)) return '-';
+    return num.toFixed(digits);
+};
+
 const getQuarterFromDate = (dateString) => {
     if (!dateString || dateString.length !== 6) return null;
     const year = parseInt(`20${dateString.substring(0, 2)}`);
@@ -91,8 +99,8 @@ const getRecommendationStyle = (recommendation) => {
     };
 };
 
-const getTickerCallsSummary = (ticker, initialReports) => {
-    const tickerReports = initialReports.filter(r => r.info_of_report.ticker === ticker);
+const getTickerCallsSummary = (ticker, reports) => {
+    const tickerReports = reports.filter(r => r.info_of_report.ticker === ticker);
 
     // Group by broker and keep only the latest report from each
     const brokerLatestMap = {};
@@ -175,9 +183,38 @@ const getCompanyName = (ticker) => {
     return map[ticker] || ticker;
 };
 
-export default function Dashboard({ initialReports }) {
+export default function Dashboard({ reports: propReports, shouldFetchData }) {
     // === State ===
+    const [reports, setReports] = useState(propReports || []);
+    const [isLoading, setIsLoading] = useState(shouldFetchData);
     const [selectedReportId, setSelectedReportId] = useState(null);
+
+    useEffect(() => {
+        if (shouldFetchData) {
+            setIsLoading(true);
+            fetch('/reports.json')
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data)) {
+                        setReports(data.reverse()); // Match previous reverse logic
+                    }
+                    setIsLoading(false);
+                })
+                .catch(err => {
+                    console.error("Failed to load reports:", err);
+                    setIsLoading(false);
+                });
+        }
+    }, [shouldFetchData]);
+
+    // Fallback or loading indicator?
+    // The rest of the code uses 'filteredReports' derived from 'reports' (which should be 'reports' now)
+    // We need to verify 'filteredReports' uses 'reports'.
+    // BUT the prop `reports` was used in `useMemo` hooks. I need to change them to use `reports` state.
+
+    // === Derived Data ===
+    // Update dependencies from 'reports' to 'reports'
+
     const [selectedHistYear, setSelectedHistYear] = useState(null);
     const [comparisonMode, setComparisonMode] = useState('historical'); // 'historical' | 'peers'
     const [rankingMode, setRankingMode] = useState('buy'); // 'buy' | 'sell'
@@ -226,8 +263,8 @@ export default function Dashboard({ initialReports }) {
     const [filterSector, setFilterSector] = useState('All');
     const [filterPeriod, setFilterPeriod] = useState(() => {
         // Default to newest quarter
-        if (!initialReports || initialReports.length === 0) return 'All';
-        const dates = initialReports.map(r => getQuarterFromDate(r.info_of_report.date_of_issue)).filter(Boolean);
+        if (!reports || reports.length === 0) return 'All';
+        const dates = reports.map(r => getQuarterFromDate(r.info_of_report.date_of_issue)).filter(Boolean);
         if (dates.length === 0) return 'All';
         // Find max
         const max = dates.reduce((prev, curr) => {
@@ -244,14 +281,14 @@ export default function Dashboard({ initialReports }) {
     const [activeTab, setActiveTab] = useState('rec');
 
     // === Derived Data ===
-    const uniqueTickers = useMemo(() => [...new Set(initialReports.map(r => r.info_of_report.ticker))].sort(), [initialReports]);
-    const uniqueBrokers = useMemo(() => [...new Set(initialReports.map(r => r.info_of_report.issued_company))]
+    const uniqueTickers = useMemo(() => [...new Set(reports.map(r => r.info_of_report.ticker))].sort(), [reports]);
+    const uniqueBrokers = useMemo(() => [...new Set(reports.map(r => r.info_of_report.issued_company))]
         .filter(b => b && b.length < 15) // Filter out messy data (long company names mistakenly in issuer field)
-        .sort(), [initialReports]);
-    const uniqueSectors = useMemo(() => [...new Set(initialReports.map(r => r.info_of_report.sector))].sort(), [initialReports]);
+        .sort(), [reports]);
+    const uniqueSectors = useMemo(() => [...new Set(reports.map(r => r.info_of_report.sector))].sort(), [reports]);
 
     const uniqueQuarters = useMemo(() => {
-        const set = new Set(initialReports.map(r => {
+        const set = new Set(reports.map(r => {
             const q = getQuarterFromDate(r.info_of_report.date_of_issue);
             return q ? q.label : null;
         }).filter(Boolean));
@@ -263,10 +300,10 @@ export default function Dashboard({ initialReports }) {
             const valB = parseInt(yB) * 10 + parseInt(qB.replace('Q', ''));
             return valB - valA; // Descending
         });
-    }, [initialReports]);
+    }, [reports]);
 
     const filteredReports = useMemo(() => {
-        return initialReports.filter(r => {
+        return reports.filter(r => {
             const mTicker = filterTicker === 'All' || r.info_of_report.ticker === filterTicker;
             const mBroker = filterBroker === 'All' || r.info_of_report.issued_company === filterBroker;
             const mSector = filterSector === 'All' || r.info_of_report.sector === filterSector;
@@ -285,7 +322,7 @@ export default function Dashboard({ initialReports }) {
 
             return mTicker && mBroker && mSector && mPeriod && mTarget;
         });
-    }, [initialReports, filterTicker, filterBroker, filterSector, filterPeriod, shouldFilterTargets]);
+    }, [reports, filterTicker, filterBroker, filterSector, filterPeriod, shouldFilterTargets]);
 
     const sortedReports = useMemo(() => {
         let sortableItems = [...filteredReports];
@@ -431,13 +468,13 @@ export default function Dashboard({ initialReports }) {
         const brokerFilter = (r) => coverageBrokers.length === 0 || coverageBrokers.includes(r.info_of_report.issued_company);
 
         // Get reports from current quarter
-        const currentQuarterReports = initialReports.filter(r => {
+        const currentQuarterReports = reports.filter(r => {
             const q = getQuarterFromDate(r.info_of_report.date_of_issue);
             return q && q.label === filterPeriod && brokerFilter(r);
         });
 
         // Get reports from the previous quarter only (for upgrade/downgrade comparison)
-        const prevQuarterReports = initialReports.filter(r => {
+        const prevQuarterReports = reports.filter(r => {
             const q = getQuarterFromDate(r.info_of_report.date_of_issue);
             return q && q.label === prevQuarterLabel && brokerFilter(r);
         });
@@ -458,7 +495,7 @@ export default function Dashboard({ initialReports }) {
 
         // Get all reports within the lookback period (NOT including current quarter)
         const lookbackQuarters = [...pastQuarterLabels];
-        const periodReports = initialReports.filter(r => {
+        const periodReports = reports.filter(r => {
             const q = getQuarterFromDate(r.info_of_report.date_of_issue);
             return q && lookbackQuarters.includes(q.label) && brokerFilter(r);
         });
@@ -566,7 +603,7 @@ export default function Dashboard({ initialReports }) {
         });
 
         return { newCoverage, dropped, upgraded, downgraded };
-    }, [initialReports, filterPeriod, coverageHorizon, coverageBrokers]);
+    }, [reports, filterPeriod, coverageHorizon, coverageBrokers]);
 
     // Helper to get Risks safely (checking multiple possible keys or array format)
     const getRisks = (report) => {
@@ -752,7 +789,7 @@ export default function Dashboard({ initialReports }) {
                                                         <td>{t.avgTargetPrice?.toLocaleString() || '-'}</td>
                                                         <td>{summary.element}</td>
                                                         <td className={isPositive ? 'text-green' : 'text-red'}>
-                                                            {(isPositive ? '+' : '') + t.avgUpside.toFixed(1) + '%'}
+                                                            {(isPositive ? '+' : '') + safeToFixed(t.avgUpside, 1) + '%'}
                                                         </td>
                                                     </tr>
                                                 );
@@ -1253,7 +1290,7 @@ export default function Dashboard({ initialReports }) {
                                                 <td style={{ textAlign: 'right' }} className="text-blue-400 font-medium">{r.recommendation?.price_now?.toLocaleString() || '-'}</td>
                                                 <td style={{ textAlign: 'right' }}>
                                                     {r.recommendation?.upside_at_call != null
-                                                        ? r.recommendation.upside_at_call.toFixed(1) + '%'
+                                                        ? safeToFixed(r.recommendation.upside_at_call, 1) + '%'
                                                         : '-'}
                                                 </td>
                                                 <td style={{ textAlign: 'right' }}>
@@ -1506,7 +1543,7 @@ export default function Dashboard({ initialReports }) {
                                                     // 1. All reports for Ticker
                                                     // 2. Within 1 year
                                                     // 3. Latest per Broker
-                                                    const candidates = (initialReports || []).filter(r => {
+                                                    const candidates = (reports || []).filter(r => {
                                                         const rDate = parseDateDate(r.info_of_report.date_of_issue);
                                                         // Ticker match
                                                         if (r.info_of_report.ticker !== selectedReport.info_of_report.ticker) return false;
@@ -1536,7 +1573,7 @@ export default function Dashboard({ initialReports }) {
 
                                                 } else {
                                                     // === HISTORICAL MODE (Existing Logic) ===
-                                                    const comparisonReportsRaw = (initialReports || [])
+                                                    const comparisonReportsRaw = (reports || [])
                                                         .filter(r => {
                                                             const rDate = parseDateDate(r.info_of_report.date_of_issue);
                                                             if (r.info_of_report.issued_company !== selectedReport.info_of_report.issued_company) return false;
