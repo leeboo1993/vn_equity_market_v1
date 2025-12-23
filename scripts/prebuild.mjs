@@ -1,14 +1,13 @@
-const fs = require('fs');
-const path = require('path');
-const { getReports } = require('../lib/data');
+import fs from 'fs';
+import path from 'path';
+import 'dotenv/config'; // Load env vars
+
+// Ensure R2 credentials are available
+if (!process.env.R2_ACCESS_KEY_ID) {
+    console.warn("Available Env Keys:", Object.keys(process.env));
+}
 
 // Adapt require context for ES modules if needed, but we can probably use the existing lib if we rename this to .mjs
-// or just use dynamic import.
-// Since the project is using "type": "module" implied by .mjs extension of next config? 
-// Let's check package.json type.
-// package.json doesn't say "type": "module".
-// But `lib/data.js` uses `import`. So we must run this script with `node` treating it as module or use `esm`.
-// Or just rename to `scripts/prebuild.mjs`.
 
 async function main() {
     console.log("Pre-fetching data from R2...");
