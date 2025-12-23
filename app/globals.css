@@ -1,0 +1,476 @@
+:root {
+  --bg: #050505;
+  --card-bg: rgba(255, 255, 255, 0.03);
+  --border: rgba(255, 255, 255, 0.10);
+  --accent: #00ff7f;
+  /* Neon Green */
+  --text: #e0e0e0;
+  --muted: #9a9a9a;
+  --radius: 14px;
+  --shadow: 0 0 16px rgba(0, 0, 0, 0.45);
+  --fs-small: 1rem;
+  --fs-normal: 1rem;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 10px;
+  /* Base override if needed */
+}
+
+/* Global scrollbar hiding for cleaner UI */
+* {
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+}
+
+*::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari, Opera */
+}
+
+/* Header */
+.header-bar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 2rem;
+  background: #0c0c0c;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.hamburger {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.hamburger:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.header-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.header-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Base Select Style if used directly, or mimicking Component style */
+.header-filters select,
+.filter-select-base {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.header-filters select:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Dashboard Layout */
+/* Dashboard Layout */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 25% minmax(0, 1fr) 30%;
+  gap: 1.6rem;
+  padding: 1.6rem 2rem 2.2rem;
+  align-items: start;
+  height: calc(100vh - 60px);
+  overflow: hidden;
+}
+
+/* Cards */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 1.4rem 1.6rem;
+  min-height: 380px;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-title {
+  margin: 0 0 0.8rem;
+  color: var(--accent);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* Overview Layout */
+.overview-top {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  align-items: center;
+}
+
+.overview-stats {
+  flex: 1;
+}
+
+/* Metrics & Deltas */
+.metric-line {
+  font-size: var(--fs-small);
+  margin: 0.1rem 0;
+  color: var(--text);
+}
+
+.metric-note {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.2rem;
+}
+
+.delta.up {
+  color: #00ff7f;
+  margin-left: 0.3rem;
+}
+
+.delta.down {
+  color: #ff6666;
+  margin-left: 0.3rem;
+}
+
+/* Section Blocks */
+.section-block {
+  margin-bottom: 1.5rem;
+}
+
+.section-title {
+  color: var(--accent);
+  margin-bottom: 12px;
+  margin-top: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Tables */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.mini-table,
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+  table-layout: auto;
+  /* Matches fs-small */
+}
+
+.mini-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+  table-layout: auto;
+}
+
+.mini-table th,
+.mini-table td,
+.report-table th,
+.report-table td {
+  padding: 0.45rem 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.mini-table td {
+  text-align: center;
+}
+
+.mini-table td:first-child,
+.mini-table th:first-child {
+  text-align: left;
+}
+
+.mini-table th {
+  color: var(--accent);
+  font-weight: 500;
+  text-align: center;
+  border-bottom-color: rgba(255, 255, 255, 0.15);
+}
+
+.report-table th {
+  color: var(--accent);
+  font-weight: 500;
+  text-align: left;
+  border-bottom-color: rgba(255, 255, 255, 0.15);
+}
+
+.report-table tbody tr:hover,
+.report-table tbody tr.active-row,
+.mini-table tbody tr:hover {
+  background: rgba(0, 255, 127, 0.08);
+  cursor: pointer;
+}
+
+.report-table tbody tr.selected {
+  background: rgba(0, 255, 127, 0.12);
+  border-left: 3px solid var(--accent);
+}
+
+.badge {
+  padding: 0.3rem 0.8rem;
+  border-radius: 99px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.badge-outperform,
+.badge-buy {
+  background-color: #00ff7f;
+  color: #000;
+}
+
+.badge-underperform,
+.badge-sell {
+  background-color: #ff6666;
+  color: #fff;
+}
+
+.badge-neutral {
+  background-color: #333333;
+  color: #e0e0e0;
+}
+
+.badge-no-rating {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+/* Sticky Columns */
+/* Sticky Columns */
+.sticky-col {
+  position: sticky !important;
+  z-index: 30 !important;
+  background-color: #1e1e1e !important;
+}
+
+.report-table tbody tr:hover .sticky-col {
+  background-color: #1e1e1e !important;
+}
+
+.sticky-col-header {
+  position: sticky !important;
+  top: 0;
+  z-index: 40 !important;
+  background-color: #141414 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.sticky-intersect {
+  z-index: 50 !important;
+  position: sticky !important;
+  top: 0;
+  background-color: #141414 !important;
+}
+
+/* Tabs */
+.detail-tabs {
+  display: flex;
+  gap: 0.6rem;
+  margin: 0.8rem 0 0.8rem;
+}
+
+.detail-tab {
+  flex: 1;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: var(--fs-small);
+  padding: 0.35rem 0.4rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.detail-tab:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.detail-tab.active {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.detail-tab-content {
+  display: none;
+  animation: fadeIn 0.2s;
+}
+
+.detail-tab-content.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* Sub-sections (Inside Details) */
+.sub-section {
+  margin-top: 1rem;
+}
+
+.sub-section h4 {
+  color: var(--accent);
+  margin: 0 0 0.4rem;
+  font-size: 10px;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 0.2rem;
+}
+
+.sub-section ul {
+  margin: 0.3rem 0 0 1.2rem;
+  padding: 0;
+  list-style-type: square;
+}
+
+.sub-section li {
+  margin-bottom: 0.4rem;
+  color: #d1d5db;
+  /* Light gray text */
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.sub-section li::marker {
+  color: var(--muted);
+}
+
+/* Pills (New Style) */
+.pill-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Donut Chart Wrapper */
+.donut-wrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+}
+
+/* Media Queries */
+@media (max-width: 1200px) {
+  .dashboard-grid {
+    grid-template-columns: 320px 1fr 340px;
+    /* Maintains sidebar feel on smaller screens */
+  }
+}
+
+@media (max-width: 1100px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+
+  .header-bar {
+    padding: 1rem;
+  }
+}
+
+@media(max-width:768px) {
+  .header-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .header-filters {
+    width: 100%;
+    overflow-x: auto;
+  }
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 99px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Hidden Scrollbar - keeps scroll functionality but hides the bar */
+.hidden-scrollbar {
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+}
+
+.hidden-scrollbar::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari, Opera */
+}
