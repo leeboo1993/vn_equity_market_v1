@@ -1387,7 +1387,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                 <section className="column">
                     <div className="card">
                         {selectedReport && selectedReport.info_of_report && selectedReport.recommendation ? (
-                            <ReportDetailErrorBoundary reportData={selectedReport}>
+                            <ReportDetailErrorBoundary key={selectedReport.id} reportData={selectedReport}>
                                 <>
                                     <h2 className="card-title text-xl" style={{ marginBottom: '12px' }}>
                                         {selectedReport.info_of_report.organ_short_name || selectedReport.info_of_report.organ_name_en || selectedReport.info_of_report.covered_stock || selectedReport.info_of_report.ticker} ({selectedReport.info_of_report.exchange || 'HSX'}: {selectedReport.info_of_report.ticker})
