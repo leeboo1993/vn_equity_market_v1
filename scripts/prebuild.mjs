@@ -25,13 +25,33 @@ async function main() {
             fs.mkdirSync(path.join(process.cwd(), 'public'));
         }
 
+        // SAFETY: If we fetched 0 reports, check if there's existing data
+        if (reports.length === 0) {
+            console.warn("[WARN] Fetched 0 reports from R2!");
+            if (fs.existsSync(outputPath)) {
+                console.warn("[WARN] Keeping existing reports.json as fallback");
+                return; // Don't overwrite with empty data
+            } else {
+                console.warn("[WARN] No existing reports.json found. Creating empty array.");
+                fs.writeFileSync(outputPath, JSON.stringify([]));
+                return;
+            }
+        }
+
         console.log(`Writing to ${outputPath}...`);
         fs.writeFileSync(outputPath, JSON.stringify(reports));
         console.log("Done.");
 
     } catch (e) {
         console.error("Prebuild failed:", e);
-        process.exit(1);
+        // Don't exit with error - allow build to continue with cached/empty data
+        const outputPath = path.join(process.cwd(), 'public', 'reports.json');
+        if (!fs.existsSync(outputPath)) {
+            console.error("[ERROR] No cached data available. Creating empty reports.json");
+            fs.writeFileSync(outputPath, JSON.stringify([]));
+        } else {
+            console.warn("[WARN] Using cached reports.json due to R2 error");
+        }
     }
 }
 
