@@ -5,6 +5,7 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import ForecastTable from './ForecastTable';
 import ReportDetailErrorBoundary from './ReportDetailErrorBoundary';
+import Header from './Header';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -724,28 +725,23 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
     };
 
 
+
     return (
         <>
-            <header className="header-bar">
-                <div className="header-left">
-                    <button className="hamburger">☰</button>
-                    <span className="header-title">Company Research Panel</span>
-                </div>
-                <div className="header-filters">
-                    <CustomSelect
-                        options={uniqueTickers} value={filterTicker} onChange={setFilterTicker} placeholder="All Tickers"
-                    />
-                    <CustomSelect
-                        options={uniqueBrokers} value={filterBroker} onChange={setFilterBroker} placeholder="All brokers"
-                    />
-                    <CustomSelect
-                        options={uniqueSectors} value={filterSector} onChange={setFilterSector} placeholder="All sectors"
-                    />
-                    <CustomSelect
-                        options={uniqueQuarters} value={filterPeriod} onChange={setFilterPeriod} placeholder="All Periods"
-                    />
-                </div>
-            </header>
+            <Header title="Company Research Panel">
+                <CustomSelect
+                    options={uniqueTickers} value={filterTicker} onChange={setFilterTicker} placeholder="All Tickers"
+                />
+                <CustomSelect
+                    options={uniqueBrokers} value={filterBroker} onChange={setFilterBroker} placeholder="All brokers"
+                />
+                <CustomSelect
+                    options={uniqueSectors} value={filterSector} onChange={setFilterSector} placeholder="All sectors"
+                />
+                <CustomSelect
+                    options={uniqueQuarters} value={filterPeriod} onChange={setFilterPeriod} placeholder="All Periods"
+                />
+            </Header>
 
             <main className="dashboard-grid">
                 {/* COLUMN 1 */}
