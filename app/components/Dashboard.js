@@ -762,12 +762,18 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                             const quarterReports = filterPeriod === 'All'
                                                 ? reports
                                                 : reports.filter(r => {
+                                                    // Add null safety for report structure
+                                                    if (!r || !r.info_of_report || !r.info_of_report.date_of_issue) return false;
+
                                                     const q = getQuarterFromDate(r.info_of_report.date_of_issue);
                                                     return q && q.label === filterPeriod;
                                                 });
 
                                             // Apply only the ticker/broker/sector filters (header filters)
                                             const headerFilteredReports = quarterReports.filter(r => {
+                                                // Safety check
+                                                if (!r || !r.info_of_report) return false;
+
                                                 if (filterTicker && r.info_of_report.ticker !== filterTicker) return false;
                                                 if (filterBroker && r.info_of_report.issued_company !== filterBroker) return false;
                                                 if (filterSector && r.info_of_report.sector !== filterSector) return false;
