@@ -20,33 +20,33 @@ const safeToFixed = (val, digits = 1) => {
 
 const getQuarterFromDate = (dateString) => {
     if (!dateString || dateString.length !== 6) return null;
-    
+
     // User confirmed JSON uses YYMMDD format
     // Try YYMMDD first
     const yy = parseInt(dateString.substring(0, 2));
     const mm = parseInt(dateString.substring(2, 4));
     const dd = parseInt(dateString.substring(4, 6));
     const year_yymmdd = 2000 + yy;
-    
+
     // Check if YYMMDD gives reasonable year (2000-2027)
     const isValidYYMMDD = (mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31 && year_yymmdd <= 2027);
-    
+
     if (isValidYYMMDD) {
         const quarter = Math.ceil(mm / 3);
         return { quarter, year: year_yymmdd, label: `Q${quarter} ${year_yymmdd}` };
     }
-    
+
     // If year > 2027 (e.g., "311223" -> 2031), try DDMMYY interpretation  
     const dd2 = parseInt(dateString.substring(0, 2));
     const mm2 = parseInt(dateString.substring(2, 4));
     const yy2 = parseInt(dateString.substring(4, 6));
     const year_ddmmyy = 2000 + yy2;
-    
+
     if (mm2 >= 1 && mm2 <= 12 && dd2 >= 1 && dd2 <= 31 && year_ddmmyy <= 2027) {
         const quarter = Math.ceil(mm2 / 3);
         return { quarter, year: year_ddmmyy, label: `Q${quarter} ${year_ddmmyy}` };
     }
-    
+
     // Invalid future date
     return null;
 };
@@ -1363,9 +1363,9 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                 </section >
 
                 {/* COLUMN 3 */}
-                < section className="column" >
+                <section className="column">
                     <div className="card">
-                        {selectedReport ? (
+                        {selectedReport && selectedReport.info_of_report && selectedReport.recommendation ? (
                             <>
                                 <h2 className="card-title text-xl" style={{ marginBottom: '12px' }}>
                                     {selectedReport.info_of_report.organ_short_name || selectedReport.info_of_report.organ_name_en || selectedReport.info_of_report.covered_stock || selectedReport.info_of_report.ticker} ({selectedReport.info_of_report.exchange || 'HSX'}: {selectedReport.info_of_report.ticker})
