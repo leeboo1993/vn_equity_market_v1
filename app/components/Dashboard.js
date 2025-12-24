@@ -754,8 +754,28 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                     </thead>
                                     <tbody>
                                         {(() => {
+                                            // === FIX: Use quarter-filtered reports, not table-filtered ===
+                                            // Top 10 should be based on ALL reports in the selected quarter,
+                                            // not influenced by table filters like "Has Target Price" checkbox
+
+                                            // Get all reports from the selected quarter (not filtered by table filters)
+                                            const quarterReports = filterPeriod === 'All'
+                                                ? reports
+                                                : reports.filter(r => {
+                                                    const q = getQuarterFromDate(r.info_of_report.date_of_issue);
+                                                    return q && q.label === filterPeriod;
+                                                });
+
+                                            // Apply only the ticker/broker/sector filters (header filters)
+                                            const headerFilteredReports = quarterReports.filter(r => {
+                                                if (filterTicker && r.info_of_report.ticker !== filterTicker) return false;
+                                                if (filterBroker && r.info_of_report.issued_company !== filterBroker) return false;
+                                                if (filterSector && r.info_of_report.sector !== filterSector) return false;
+                                                return true;
+                                            });
+
                                             // Aggregate by ticker - calculate average upside and target price
-                                            const reportsWithUpside = sortedReports.filter(r =>
+                                            const reportsWithUpside = headerFilteredReports.filter(r =>
                                                 r.recommendation?.upside_at_call != null &&
                                                 r.recommendation?.target_price != null
                                             );
@@ -816,7 +836,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                             }
 
                                             return rankedTickers.map((t) => {
-                                                const summary = getTickerCallsSummary(t.ticker, sortedReports);
+                                                const summary = getTickerCallsSummary(t.ticker, headerFilteredReports);
                                                 const isPositive = t.avgUpside >= 0;
                                                 return (
                                                     <tr key={t.ticker} onClick={() => setSelectedReportId(t.latestReport.id)}>
@@ -1577,7 +1597,12 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                     // 2. Within 1 year
                                                     // 3. Latest per Broker
                                                     const candidates = (reports || []).filter(r => {
+                                                        // Add null safety for all property accesses
+                                                        if (!r || !r.info_of_report) return false;
+
                                                         const rDate = parseDateDate(r.info_of_report.date_of_issue);
+                                                        if (!rDate) return false;
+
                                                         // Ticker match
                                                         if (r.info_of_report.ticker !== selectedReport.info_of_report.ticker) return false;
                                                         // Date window (< 1 year from NOW or Selected Report? User said <1 year, assuming relative to Selected)
@@ -1595,7 +1620,10 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
 
                                                     const latestPerBroker = {};
                                                     candidates.forEach(r => {
-                                                        const broker = r.info_of_report.issued_company;
+                                                        // Add null safety for broker name
+                                                        const broker = r?.info_of_report?.issued_company;
+                                                        if (!broker) return; // Skip if no broker name
+
                                                         if (!latestPerBroker[broker] || parseDateDate(latestPerBroker[broker].info_of_report.date_of_issue) < parseDateDate(r.info_of_report.date_of_issue)) {
                                                             latestPerBroker[broker] = r;
                                                         }
@@ -1612,7 +1640,12 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                     // === HISTORICAL MODE (Existing Logic) ===
                                                     const comparisonReportsRaw = (reports || [])
                                                         .filter(r => {
+                                                            // Add null safety for all property accesses
+                                                            if (!r || !r.info_of_report) return false;
+
                                                             const rDate = parseDateDate(r.info_of_report.date_of_issue);
+                                                            if (!rDate) return false;
+
                                                             if (r.info_of_report.issued_company !== selectedReport.info_of_report.issued_company) return false;
                                                             if (r.info_of_report.ticker !== selectedReport.info_of_report.ticker) return false;
                                                             if (rDate > currentRepDate || rDate < oneYearAgo) return false;
@@ -1669,9 +1702,11 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
 
                                                 // 3. Helper to get Matching Data
                                                 const getFinancialsForYear = (rep, key, tYear) => {
+                                                    // Add comprehensive null safety
                                                     if (!rep) return null;
-
-                                                    // Strategy: explicit year match ONLY
+                                                    if (!rep.forecast_table) return null;
+                                                    if (!rep.forecast_table.columns || !Array.isArray(rep.forecast_table.columns)) return null;
+                                                    if (!rep.forecast_table.rows || !Array.isArray(rep.forecast_table.rows)) return null;
                                                     if (tYear && rep.forecast_table) {
                                                         try {
                                                             const cols = rep.forecast_table.columns || [];
