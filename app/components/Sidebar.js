@@ -4,10 +4,10 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
 const navItems = [
-    { href: '/', label: 'Daily Tracking', icon: '📊' },
-    { href: '/company-research', label: 'Company Research', icon: '🏢' },
-    { href: '/macro-research', label: 'Macro Research', icon: '🌍' },
-    { href: '/strategy-research', label: 'Strategy Research', icon: '📈' },
+    { href: '/', label: 'Daily Tracking' },
+    { href: '/company-research', label: 'Company Research' },
+    { href: '/macro-research', label: 'Macro Research' },
+    { href: '/strategy-research', label: 'Strategy Research' },
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
@@ -36,7 +36,6 @@ export default function Sidebar({ isOpen, onClose }) {
                                 className={`sidebar-link ${pathname === item.href ? 'active' : ''}`}
                                 onClick={onClose}
                             >
-                                <span className="sidebar-icon">{item.icon}</span>
                                 <span className="sidebar-label">{item.label}</span>
                             </Link>
                         </li>

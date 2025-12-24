@@ -30,6 +30,7 @@ const getCallType = (call) => {
 
 export default function DailyTrackingPage() {
     const [reports, setReports] = useState([]);
+    const [dailyData, setDailyData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [marketTab, setMarketTab] = useState('VN-Index');
     const [newsTab, setNewsTab] = useState('Macro');
@@ -44,20 +45,39 @@ export default function DailyTrackingPage() {
     const [toDate, setToDate] = useState(formatInputDate(today));
     const [brokerFilter, setBrokerFilter] = useState('All Brokers');
 
-    // Load reports
+    // Load daily report data from R2
     useEffect(() => {
         setIsLoading(true);
-        fetch(`/reports.json?t=${new Date().getTime()}`)
+
+        // Fetch daily report data from R2 via API
+        fetch(`/api/daily-report?t=${new Date().getTime()}`)
             .then(res => res.json())
             .then(data => {
-                if (Array.isArray(data)) {
-                    setReports(data.reverse());
+                console.log('Daily report data loaded:', data);
+                setDailyData(data);
+                // If data has reports array, use it
+                if (data && Array.isArray(data.reports)) {
+                    setReports(data.reports);
+                } else if (Array.isArray(data)) {
+                    setReports(data);
                 }
                 setIsLoading(false);
             })
             .catch(err => {
-                console.error("Failed to load reports:", err);
-                setIsLoading(false);
+                console.error("Failed to load daily data:", err);
+                // Fallback to reports.json
+                fetch(`/reports.json?t=${new Date().getTime()}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (Array.isArray(data)) {
+                            setReports(data.reverse());
+                        }
+                        setIsLoading(false);
+                    })
+                    .catch(e => {
+                        console.error("Failed to load fallback:", e);
+                        setIsLoading(false);
+                    });
             });
     }, []);
 
