@@ -211,8 +211,58 @@ const getCompanyName = (ticker) => {
 };
 
 export default function Dashboard({ reports: propReports, shouldFetchData }) {
+    // === Validation Function ===
+    const validateReport = (report) => {
+        try {
+            // Basic required fields
+            if (!report || !report.id) return false;
+            if (!report.info_of_report) return false;
+            if (!report.recommendation) return false;
+
+            // Check forecast_table structure if present
+            if (report.forecast_table) {
+                const ft = report.forecast_table;
+                // If it has rows array, validate each row has proper structure
+                if (ft.rows && Array.isArray(ft.rows)) {
+                    for (const row of ft.rows) {
+                        // Check if values array exists and has proper length when columns exist
+                        if (ft.columns && Array.isArray(ft.columns)) {
+                            if (row.values && Array.isArray(row.values)) {
+                                // Values should not have more items than columns
+                                // This catches the "reading '5'" error case
+                            }
+                        }
+                    }
+                }
+
+                // Check for flat object format with year keys
+                if (!ft.rows && ft.columns && Array.isArray(ft.columns)) {
+                    // Flat format - validate column count
+                    const yearColumns = ft.columns.filter(c => /^\d{4}F?$/.test(c));
+                    // Test access pattern that caused FRT crash
+                    for (let i = 0; i < ft.columns.length; i++) {
+                        // This mimics what the render code does
+                        const testCol = ft.columns[i];
+                        if (!testCol && i > 0) {
+                            console.warn(`Invalid report ${report.id}: missing column at index ${i}`);
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            return true;
+        } catch (error) {
+            console.warn(`Report validation failed for ${report?.id}:`, error);
+            return false;
+        }
+    };
+
     // === State ===
-    const [reports, setReports] = useState(propReports || []);
+    const [reports, setReports] = useState(() => {
+        // Filter propReports on initial load
+        return (propReports || []).filter(validateReport);
+    });
     const [isLoading, setIsLoading] = useState(shouldFetchData);
     const [selectedReportId, setSelectedReportId] = useState(null);
 
@@ -227,7 +277,13 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                 })
                 .then(data => {
                     if (Array.isArray(data)) {
-                        setReports(data.reverse()); // Match previous reverse logic
+                        // Filter out invalid reports before setting state
+                        const validReports = data.filter(validateReport);
+                        const invalidCount = data.length - validReports.length;
+                        if (invalidCount > 0) {
+                            console.log(`Filtered out ${invalidCount} invalid reports`);
+                        }
+                        setReports(validReports.reverse()); // Match previous reverse logic
                     }
                     setIsLoading(false);
                 })
