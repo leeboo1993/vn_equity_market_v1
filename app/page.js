@@ -5,11 +5,15 @@ import Header from './components/Header';
 
 // Helper functions
 const formatDateDisplay = (dateStr) => {
-    if (!dateStr || dateStr.length !== 6) return dateStr || '-';
-    const yy = dateStr.substring(0, 2);
-    const mm = dateStr.substring(2, 4);
-    const dd = dateStr.substring(4, 6);
-    return `${dd}/${mm}/20${yy}`;
+    if (!dateStr) return '-';
+    // Handle YYMMDD format
+    if (dateStr.length === 6) {
+        const yy = dateStr.substring(0, 2);
+        const mm = dateStr.substring(2, 4);
+        const dd = dateStr.substring(4, 6);
+        return `${dd}/${mm}/20${yy}`;
+    }
+    return dateStr;
 };
 
 const parseDateYYMMDD = (dateStr) => {
@@ -20,153 +24,158 @@ const parseDateYYMMDD = (dateStr) => {
     return new Date(2000 + yy, mm, dd);
 };
 
-const getCallType = (call) => {
-    if (!call || call === 'No Rating') return 'No Rating';
-    const c = call.toLowerCase();
-    if (['buy', 'outperform', 'add', 'accumulate', 'overweight'].some(k => c.includes(k))) return 'Buy';
-    if (['sell', 'underperform', 'reduce', 'underweight'].some(k => c.includes(k))) return 'Sell';
-    return 'Hold';
+const getSentimentColor = (sentiment) => {
+    if (!sentiment) return '#333';
+    const s = sentiment.toLowerCase();
+    if (s === 'positive') return '#00ff7f';
+    if (s === 'negative') return '#ff4444';
+    return '#666'; // Neutral
+};
+
+const getSentimentBadgeClass = (sentiment) => {
+    if (!sentiment) return 'neutral';
+    const s = sentiment.toLowerCase();
+    if (s === 'positive') return 'positive';
+    if (s === 'negative') return 'negative';
+    return 'neutral';
 };
 
 export default function DailyTrackingPage() {
-    const [reports, setReports] = useState([]);
     const [dailyData, setDailyData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [marketTab, setMarketTab] = useState('VN-Index');
-    const [newsTab, setNewsTab] = useState('Macro');
-
-    // Date range for recommendations (last 7 days by default)
-    const today = new Date();
-    const weekAgo = new Date(today);
-    weekAgo.setDate(weekAgo.getDate() - 7);
-
-    const formatInputDate = (d) => d.toISOString().split('T')[0];
-    const [fromDate, setFromDate] = useState(formatInputDate(weekAgo));
-    const [toDate, setToDate] = useState(formatInputDate(today));
-    const [brokerFilter, setBrokerFilter] = useState('All Brokers');
+    const [newsTab, setNewsTab] = useState('market');
+    const [selectedDate, setSelectedDate] = useState(null);
 
     // Load daily report data from R2
     useEffect(() => {
         setIsLoading(true);
 
-        // Fetch daily report data from R2 via API
         fetch(`/api/daily-report?t=${new Date().getTime()}`)
             .then(res => res.json())
             .then(data => {
                 console.log('Daily report data loaded:', data);
                 setDailyData(data);
-                // If data has reports array, use it
-                if (data && Array.isArray(data.reports)) {
-                    setReports(data.reports);
-                } else if (Array.isArray(data)) {
-                    setReports(data);
-                }
                 setIsLoading(false);
             })
             .catch(err => {
                 console.error("Failed to load daily data:", err);
-                // Fallback to reports.json
-                fetch(`/reports.json?t=${new Date().getTime()}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (Array.isArray(data)) {
-                            setReports(data.reverse());
-                        }
-                        setIsLoading(false);
-                    })
-                    .catch(e => {
-                        console.error("Failed to load fallback:", e);
-                        setIsLoading(false);
-                    });
+                setIsLoading(false);
             });
     }, []);
+
+    // Process data: flatten all reports from all brokers
+    const allReports = useMemo(() => {
+        if (!dailyData) return [];
+
+        const reports = [];
+        Object.entries(dailyData).forEach(([brokerKey, brokerReports]) => {
+            if (typeof brokerReports === 'object') {
+                Object.entries(brokerReports).forEach(([reportId, report]) => {
+                    if (report && report.info_of_report) {
+                        reports.push({
+                            id: reportId,
+                            broker: brokerKey,
+                            ...report
+                        });
+                    }
+                });
+            }
+        });
+
+        // Sort by date descending
+        reports.sort((a, b) => {
+            const dateA = a.info_of_report?.date_of_issue || '';
+            const dateB = b.info_of_report?.date_of_issue || '';
+            return dateB.localeCompare(dateA);
+        });
+
+        return reports;
+    }, [dailyData]);
+
+    // Get unique dates
+    const uniqueDates = useMemo(() => {
+        const dates = [...new Set(allReports.map(r => r.info_of_report?.date_of_issue))].filter(Boolean);
+        dates.sort((a, b) => b.localeCompare(a)); // Descending
+        return dates;
+    }, [allReports]);
+
+    // Set default selected date to latest
+    useEffect(() => {
+        if (uniqueDates.length > 0 && !selectedDate) {
+            setSelectedDate(uniqueDates[0]);
+        }
+    }, [uniqueDates, selectedDate]);
 
     // Get unique brokers
     const uniqueBrokers = useMemo(() => {
-        return [...new Set(reports.map(r => r.info_of_report?.issued_company))]
-            .filter(b => b && b.length < 15)
-            .sort();
-    }, [reports]);
+        return [...new Set(allReports.map(r => r.broker))].sort();
+    }, [allReports]);
 
-    // Generate date range for heatmap (last 14 days)
-    const dateRange = useMemo(() => {
-        const dates = [];
-        const now = new Date();
-        for (let i = 13; i >= 0; i--) {
-            const d = new Date(now);
-            d.setDate(d.getDate() - i);
-            dates.push({
-                date: d,
-                label: `${d.getDate()}/${d.getMonth() + 1}`
+    // Filter reports for selected date
+    const reportsForDate = useMemo(() => {
+        if (!selectedDate) return allReports.slice(0, 10);
+        return allReports.filter(r => r.info_of_report?.date_of_issue === selectedDate);
+    }, [allReports, selectedDate]);
+
+    // Aggregate market news for selected date
+    const aggregatedNews = useMemo(() => {
+        const news = { global: [], macro: [], market: [], sector: [], companies: [], other: [] };
+
+        reportsForDate.forEach(r => {
+            const mn = r.market_news;
+            if (!mn) return;
+
+            const broker = r.info_of_report?.issued_company || r.broker;
+
+            ['global', 'macro', 'market', 'sector', 'companies', 'other'].forEach(key => {
+                if (mn[key] && Array.isArray(mn[key])) {
+                    mn[key].forEach(item => {
+                        news[key].push({ text: item, broker });
+                    });
+                }
             });
-        }
-        return dates;
-    }, []);
-
-    // Calculate broker sentiment heatmap data
-    const sentimentData = useMemo(() => {
-        const brokerSentiment = {};
-
-        reports.forEach(r => {
-            const broker = r.info_of_report?.issued_company;
-            const dateStr = r.info_of_report?.date_of_issue;
-            if (!broker || !dateStr || broker.length > 15) return;
-
-            const reportDate = parseDateYYMMDD(dateStr);
-            if (!reportDate) return;
-
-            const callType = getCallType(r.recommendation?.recommendation);
-
-            if (!brokerSentiment[broker]) {
-                brokerSentiment[broker] = {};
-            }
-
-            const dateKey = `${reportDate.getDate()}/${reportDate.getMonth() + 1}`;
-            if (!brokerSentiment[broker][dateKey]) {
-                brokerSentiment[broker][dateKey] = { buy: 0, sell: 0, hold: 0 };
-            }
-
-            if (callType === 'Buy') brokerSentiment[broker][dateKey].buy++;
-            else if (callType === 'Sell') brokerSentiment[broker][dateKey].sell++;
-            else if (callType === 'Hold') brokerSentiment[broker][dateKey].hold++;
         });
 
-        return brokerSentiment;
-    }, [reports]);
+        return news;
+    }, [reportsForDate]);
 
-    // Filter recommendations by date range
-    const filteredRecommendations = useMemo(() => {
-        const from = new Date(fromDate);
-        const to = new Date(toDate);
-        to.setHours(23, 59, 59);
+    // Build sentiment heatmap data
+    const sentimentHeatmap = useMemo(() => {
+        const heatmap = {};
 
-        return reports.filter(r => {
-            const reportDate = parseDateYYMMDD(r.info_of_report?.date_of_issue);
-            if (!reportDate) return false;
+        // Get last 14 dates
+        const dates = uniqueDates.slice(0, 14);
 
-            const inDateRange = reportDate >= from && reportDate <= to;
-            const matchesBroker = brokerFilter === 'All Brokers' ||
-                r.info_of_report?.issued_company === brokerFilter;
+        uniqueBrokers.forEach(broker => {
+            heatmap[broker] = {};
+            dates.forEach(date => {
+                const report = allReports.find(r => r.broker === broker && r.info_of_report?.date_of_issue === date);
+                heatmap[broker][date] = report?.market_view?.sentiment || null;
+            });
+        });
 
-            return inDateRange && matchesBroker;
-        }).slice(0, 20); // Limit to 20 for performance
-    }, [reports, fromDate, toDate, brokerFilter]);
+        return { brokers: uniqueBrokers, dates, data: heatmap };
+    }, [allReports, uniqueBrokers, uniqueDates]);
 
-    const getCellColor = (sentiment) => {
-        if (!sentiment) return '#1a1a1a';
-        const { buy, sell, hold } = sentiment;
-        const total = buy + sell + hold;
-        if (total === 0) return '#1a1a1a';
-
-        const buyRatio = buy / total;
-        const sellRatio = sell / total;
-
-        if (buyRatio > 0.6) return '#00ff7f';
-        if (sellRatio > 0.6) return '#ff4444';
-        if (buyRatio > sellRatio) return '#228B22';
-        if (sellRatio > buyRatio) return '#8B0000';
-        return '#333';
-    };
+    // Get stock recommendations
+    const stockRecommendations = useMemo(() => {
+        const recs = [];
+        reportsForDate.forEach(r => {
+            const sr = r.stock_recommendation?.recommendations;
+            if (sr && Array.isArray(sr)) {
+                sr.forEach(rec => {
+                    if (rec.ticker) {
+                        recs.push({
+                            ...rec,
+                            broker: r.info_of_report?.issued_company || r.broker,
+                            date: r.info_of_report?.date_of_issue
+                        });
+                    }
+                });
+            }
+        });
+        return recs;
+    }, [reportsForDate]);
 
     return (
         <>
@@ -178,21 +187,42 @@ export default function DailyTrackingPage() {
                     {/* Market Overview */}
                     <section className="card daily-card">
                         <div className="daily-card-header">
-                            <h3 className="daily-card-title">Market overview</h3>
-                            <div className="tab-group">
-                                {['VN-Index', 'DJIA', 'USD/VND', 'Interest rate'].map(tab => (
-                                    <button
-                                        key={tab}
-                                        className={`tab-btn ${marketTab === tab ? 'active' : ''}`}
-                                        onClick={() => setMarketTab(tab)}
-                                    >
-                                        {tab}
-                                    </button>
-                                ))}
+                            <h3 className="daily-card-title">Market Overview</h3>
+                            <div className="date-selector">
+                                <label>Select Date:</label>
+                                <select
+                                    value={selectedDate || ''}
+                                    onChange={e => setSelectedDate(e.target.value)}
+                                    className="date-select"
+                                >
+                                    {uniqueDates.map(d => (
+                                        <option key={d} value={d}>{formatDateDisplay(d)}</option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
-                        <div className="daily-card-content placeholder-text">
-                            Charts or summary data will appear here.
+                        <div className="daily-card-content">
+                            {isLoading ? (
+                                <div className="placeholder-text">Loading...</div>
+                            ) : reportsForDate.length === 0 ? (
+                                <div className="placeholder-text">No data available</div>
+                            ) : (
+                                <div className="market-views-list">
+                                    {reportsForDate.map(r => (
+                                        <div key={r.id} className="market-view-item">
+                                            <div className="market-view-header">
+                                                <span className="broker-name">{r.info_of_report?.issued_company || r.broker}</span>
+                                                <span className={`sentiment-badge ${getSentimentBadgeClass(r.market_view?.sentiment)}`}>
+                                                    {r.market_view?.sentiment || 'N/A'}
+                                                </span>
+                                            </div>
+                                            <p className="market-view-summary">
+                                                {r.market_view?.summary_commentary || r.market_view?.market_viewpoint || 'No commentary'}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </section>
 
@@ -201,19 +231,28 @@ export default function DailyTrackingPage() {
                         <div className="daily-card-header">
                             <h3 className="daily-card-title">Market News</h3>
                             <div className="tab-group">
-                                {['Macro', 'Market', 'Sector', 'Companies', 'Others'].map(tab => (
+                                {['macro', 'market', 'sector', 'companies', 'global'].map(tab => (
                                     <button
                                         key={tab}
                                         className={`tab-btn ${newsTab === tab ? 'active' : ''}`}
                                         onClick={() => setNewsTab(tab)}
                                     >
-                                        {tab}
+                                        {tab.charAt(0).toUpperCase() + tab.slice(1)}
                                     </button>
                                 ))}
                             </div>
                         </div>
-                        <div className="daily-card-content placeholder-text">
-                            No data available
+                        <div className="daily-card-content news-list">
+                            {aggregatedNews[newsTab]?.length > 0 ? (
+                                aggregatedNews[newsTab].slice(0, 15).map((item, idx) => (
+                                    <div key={idx} className="news-item">
+                                        <span className="news-broker">[{item.broker}]</span>
+                                        <span className="news-text">{item.text}</span>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="placeholder-text">No {newsTab} news available</div>
+                            )}
                         </div>
                     </section>
                 </div>
@@ -226,33 +265,38 @@ export default function DailyTrackingPage() {
                             <h3 className="daily-card-title" style={{ color: 'var(--accent)' }}>Market Sentiment</h3>
                         </div>
                         <div className="heatmap-container">
-                            <table className="heatmap-table">
-                                <thead>
-                                    <tr>
-                                        <th>Broker</th>
-                                        {dateRange.map(d => (
-                                            <th key={d.label}>{d.label}</th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {Object.keys(sentimentData).slice(0, 12).map(broker => (
-                                        <tr key={broker}>
-                                            <td className="broker-cell">{broker}</td>
-                                            {dateRange.map(d => (
-                                                <td
-                                                    key={d.label}
-                                                    style={{
-                                                        backgroundColor: getCellColor(sentimentData[broker]?.[d.label]),
-                                                        minWidth: '40px',
-                                                        height: '24px'
-                                                    }}
-                                                />
+                            {isLoading ? (
+                                <div className="placeholder-text">Loading...</div>
+                            ) : (
+                                <table className="heatmap-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Broker</th>
+                                            {sentimentHeatmap.dates.map(d => (
+                                                <th key={d}>{formatDateDisplay(d).slice(0, 5)}</th>
                                             ))}
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {sentimentHeatmap.brokers.map(broker => (
+                                            <tr key={broker}>
+                                                <td className="broker-cell">{broker}</td>
+                                                {sentimentHeatmap.dates.map(d => (
+                                                    <td
+                                                        key={d}
+                                                        style={{
+                                                            backgroundColor: getSentimentColor(sentimentHeatmap.data[broker]?.[d]),
+                                                            minWidth: '40px',
+                                                            height: '24px'
+                                                        }}
+                                                        title={sentimentHeatmap.data[broker]?.[d] || 'No data'}
+                                                    />
+                                                ))}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
                         </div>
                     </section>
 
@@ -260,35 +304,6 @@ export default function DailyTrackingPage() {
                     <section className="card daily-card">
                         <div className="daily-card-header">
                             <h3 className="daily-card-title" style={{ color: 'var(--accent)' }}>Stock Recommendations</h3>
-                        </div>
-
-                        {/* Filters */}
-                        <div className="rec-filters">
-                            <label>From:</label>
-                            <input
-                                type="date"
-                                value={fromDate}
-                                onChange={e => setFromDate(e.target.value)}
-                                className="date-input"
-                            />
-                            <label>To:</label>
-                            <input
-                                type="date"
-                                value={toDate}
-                                onChange={e => setToDate(e.target.value)}
-                                className="date-input"
-                            />
-                            <label>Broker:</label>
-                            <select
-                                value={brokerFilter}
-                                onChange={e => setBrokerFilter(e.target.value)}
-                                className="broker-select"
-                            >
-                                <option>All Brokers</option>
-                                {uniqueBrokers.map(b => (
-                                    <option key={b} value={b}>{b}</option>
-                                ))}
-                            </select>
                         </div>
 
                         {/* Recommendations Table */}
@@ -300,60 +315,61 @@ export default function DailyTrackingPage() {
                                         <th>Ticker</th>
                                         <th>Broker</th>
                                         <th>Call</th>
-                                        <th>Target price</th>
-                                        <th>Upside (at call)</th>
-                                        <th>Current price</th>
-                                        <th>Upside (now)</th>
-                                        <th>Performance</th>
-                                        <th>Update / Thesis</th>
+                                        <th>Target</th>
+                                        <th>Thesis / Viewpoint</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {isLoading ? (
-                                        <tr><td colSpan="10" className="loading-cell">Loading...</td></tr>
-                                    ) : filteredRecommendations.length === 0 ? (
-                                        <tr><td colSpan="10" className="loading-cell">No recommendations in date range</td></tr>
+                                        <tr><td colSpan="6" className="loading-cell">Loading...</td></tr>
+                                    ) : stockRecommendations.length === 0 ? (
+                                        <tr><td colSpan="6" className="loading-cell">No stock recommendations for this date</td></tr>
                                     ) : (
-                                        filteredRecommendations.map((r, idx) => {
-                                            const callType = getCallType(r.recommendation?.recommendation);
-                                            const upside = r.recommendation?.upside;
-                                            const upsideAtCall = r.recommendation?.upside_at_call;
-                                            const performance = r.recommendation?.performance_since_call;
-
-                                            return (
-                                                <tr key={r.id || idx}>
-                                                    <td>{formatDateDisplay(r.info_of_report?.date_of_issue)}</td>
-                                                    <td><strong>{r.info_of_report?.ticker}</strong></td>
-                                                    <td>{r.info_of_report?.issued_company}</td>
-                                                    <td>
-                                                        <span className={`call-badge ${callType.toLowerCase()}`}>
-                                                            {callType.toUpperCase()}
-                                                        </span>
-                                                    </td>
-                                                    <td>{r.recommendation?.target_price || '-'}</td>
-                                                    <td className={upsideAtCall > 0 ? 'text-green' : upsideAtCall < 0 ? 'text-red' : ''}>
-                                                        {upsideAtCall != null ? `${(upsideAtCall * 100).toFixed(1)}%` : '-'}
-                                                    </td>
-                                                    <td>{r.recommendation?.current_price || '-'}</td>
-                                                    <td className={upside > 0 ? 'text-green' : upside < 0 ? 'text-red' : ''}>
-                                                        {upside != null ? `${(upside * 100).toFixed(1)}%` : '-'}
-                                                    </td>
-                                                    <td className={performance > 0 ? 'text-green' : performance < 0 ? 'text-red' : ''}>
-                                                        {performance != null ? `${(performance * 100).toFixed(1)}%` : '-'}
-                                                    </td>
-                                                    <td className="thesis-cell">
-                                                        <strong>Investment summary</strong>
-                                                        <br />
-                                                        <span className="thesis-text">
-                                                            {r.recommendation?.recommendation || 'No details'}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })
+                                        stockRecommendations.map((rec, idx) => (
+                                            <tr key={idx}>
+                                                <td>{formatDateDisplay(rec.date)}</td>
+                                                <td><strong>{rec.ticker}</strong></td>
+                                                <td>{rec.broker}</td>
+                                                <td>
+                                                    <span className={`call-badge ${rec.recommendation?.toLowerCase().includes('buy') ? 'buy' : rec.recommendation?.toLowerCase().includes('sell') ? 'sell' : 'hold'}`}>
+                                                        {rec.recommendation || '-'}
+                                                    </span>
+                                                </td>
+                                                <td>{rec.target_price || '-'}</td>
+                                                <td className="thesis-cell">
+                                                    {rec.investment_thesis?.length > 0
+                                                        ? rec.investment_thesis.slice(0, 2).join('. ')
+                                                        : rec.analyst_viewpoint?.viewpoint || '-'}
+                                                </td>
+                                            </tr>
+                                        ))
                                     )}
                                 </tbody>
                             </table>
+                        </div>
+                    </section>
+
+                    {/* Analyst Viewpoints */}
+                    <section className="card daily-card">
+                        <div className="daily-card-header">
+                            <h3 className="daily-card-title" style={{ color: 'var(--accent)' }}>Analyst Viewpoints</h3>
+                        </div>
+                        <div className="viewpoints-list">
+                            {reportsForDate.slice(0, 3).map(r => (
+                                r.analyst_viewpoints?.slice(0, 2).map((vp, idx) => (
+                                    <div key={`${r.id}-${idx}`} className="viewpoint-item">
+                                        <div className="viewpoint-broker">{r.info_of_report?.issued_company || r.broker}</div>
+                                        <div className="viewpoint-text">{vp.viewpoint}</div>
+                                        {vp.backing_facts?.length > 0 && (
+                                            <ul className="viewpoint-facts">
+                                                {vp.backing_facts.slice(0, 2).map((f, i) => (
+                                                    <li key={i}>{f}</li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
+                                ))
+                            ))}
                         </div>
                     </section>
                 </div>
