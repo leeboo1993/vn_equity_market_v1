@@ -4,6 +4,7 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import ForecastTable from './ForecastTable';
+import ReportDetailErrorBoundary from './ReportDetailErrorBoundary';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -1386,836 +1387,838 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                 <section className="column">
                     <div className="card">
                         {selectedReport && selectedReport.info_of_report && selectedReport.recommendation ? (
-                            <>
-                                <h2 className="card-title text-xl" style={{ marginBottom: '12px' }}>
-                                    {selectedReport.info_of_report.organ_short_name || selectedReport.info_of_report.organ_name_en || selectedReport.info_of_report.covered_stock || selectedReport.info_of_report.ticker} ({selectedReport.info_of_report.exchange || 'HSX'}: {selectedReport.info_of_report.ticker})
-                                </h2>
-                                <div className="text-sm text-gray-400" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '5px', marginBottom: '12px' }}>
-                                    {(() => {
-                                        const tp = selectedReport.recommendation?.target_price;
-                                        const hasTP = tp != null && tp !== '-' && tp !== 0 && tp !== '0';
-                                        const displayRec = hasTP ? (selectedReport.recommendation?.recommendation || '-') : 'No Rating';
-                                        const recStyle = getRecommendationStyle(displayRec);
-                                        const upside = selectedReport.recommendation?.upside_at_call;
-                                        const upsideStr = upside != null ? `(${upside >= 0 ? '+' : ''}${upside.toFixed(1)}%)` : '';
+                            <ReportDetailErrorBoundary reportData={selectedReport}>
+                                <>
+                                    <h2 className="card-title text-xl" style={{ marginBottom: '12px' }}>
+                                        {selectedReport.info_of_report.organ_short_name || selectedReport.info_of_report.organ_name_en || selectedReport.info_of_report.covered_stock || selectedReport.info_of_report.ticker} ({selectedReport.info_of_report.exchange || 'HSX'}: {selectedReport.info_of_report.ticker})
+                                    </h2>
+                                    <div className="text-sm text-gray-400" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '5px', marginBottom: '12px' }}>
+                                        {(() => {
+                                            const tp = selectedReport.recommendation?.target_price;
+                                            const hasTP = tp != null && tp !== '-' && tp !== 0 && tp !== '0';
+                                            const displayRec = hasTP ? (selectedReport.recommendation?.recommendation || '-') : 'No Rating';
+                                            const recStyle = getRecommendationStyle(displayRec);
+                                            const upside = selectedReport.recommendation?.upside_at_call;
+                                            const upsideStr = upside != null ? `(${upside >= 0 ? '+' : ''}${upside.toFixed(1)}%)` : '';
 
-                                        return (
-                                            <>
-                                                <span style={{
-                                                    ...recStyle,
-                                                    padding: '3px 10px',
-                                                    borderRadius: '9999px',
-                                                    fontWeight: 'bold',
-                                                    fontSize: '10px',
-                                                    display: 'inline-block'
-                                                }}>
-                                                    {displayRec}
-                                                </span>
-                                                <span className="text-white" style={{ fontWeight: 500 }}>
-                                                    {tp?.toLocaleString() || '-'} {upsideStr}
-                                                </span>
-                                            </>
-                                        );
-                                    })()}
-                                </div>
+                                            return (
+                                                <>
+                                                    <span style={{
+                                                        ...recStyle,
+                                                        padding: '3px 10px',
+                                                        borderRadius: '9999px',
+                                                        fontWeight: 'bold',
+                                                        fontSize: '10px',
+                                                        display: 'inline-block'
+                                                    }}>
+                                                        {displayRec}
+                                                    </span>
+                                                    <span className="text-white" style={{ fontWeight: 500 }}>
+                                                        {tp?.toLocaleString() || '-'} {upsideStr}
+                                                    </span>
+                                                </>
+                                            );
+                                        })()}
+                                    </div>
 
-                                <div style={{
-                                    backgroundColor: '#2C2C2E',
-                                    borderRadius: '10px',
-                                    padding: '4px',
-                                    display: 'flex',
-                                    gap: '0',
-                                    border: '1px solid #3A3A3C',
-                                    marginBottom: '12px',
-                                    overflowX: 'auto',
-                                    maxWidth: '100%'
-                                }} className="hidden-scrollbar">
-                                    <button
-                                        onClick={() => setActiveTab('rec')}
-                                        className="transition-all"
-                                        style={{
-                                            backgroundColor: activeTab === 'rec' ? '#00ff7f' : 'transparent',
-                                            color: activeTab === 'rec' ? 'black' : 'white',
-                                            padding: '6px 16px',
-                                            borderRadius: '8px',
-                                            border: 'none',
-                                            cursor: 'pointer',
-                                            outline: 'none',
-                                            fontSize: '10px',
-                                            fontWeight: '400',
-                                            whiteSpace: 'nowrap',
-                                            flexShrink: 0
-                                        }}
-                                    >
-                                        Recommendation
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('inv')}
-                                        className="transition-all"
-                                        style={{
-                                            backgroundColor: activeTab === 'inv' ? '#00ff7f' : 'transparent',
-                                            color: activeTab === 'inv' ? 'black' : 'white',
-                                            padding: '6px 16px',
-                                            borderRadius: '8px',
-                                            border: 'none',
-                                            cursor: 'pointer',
-                                            outline: 'none',
-                                            fontSize: '10px',
-                                            fontWeight: '400',
-                                            whiteSpace: 'nowrap',
-                                            flexShrink: 0
-                                        }}
-                                    >
-                                        Investment summary
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('company')}
-                                        className="transition-all"
-                                        style={{
-                                            backgroundColor: activeTab === 'company' ? '#00ff7f' : 'transparent',
-                                            color: activeTab === 'company' ? 'black' : 'white',
-                                            padding: '6px 16px',
-                                            borderRadius: '8px',
-                                            border: 'none',
-                                            cursor: 'pointer',
-                                            outline: 'none',
-                                            fontSize: '10px',
-                                            fontWeight: '400',
-                                            whiteSpace: 'nowrap',
-                                            flexShrink: 0
-                                        }}
-                                    >
-                                        Company update
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('analyst')}
-                                        className="transition-all"
-                                        style={{
-                                            backgroundColor: activeTab === 'analyst' ? '#00ff7f' : 'transparent',
-                                            color: activeTab === 'analyst' ? 'black' : 'white',
-                                            padding: '6px 16px',
-                                            borderRadius: '8px',
-                                            border: 'none',
-                                            cursor: 'pointer',
-                                            outline: 'none',
-                                            fontSize: '10px',
-                                            fontWeight: '400',
-                                            whiteSpace: 'nowrap',
-                                            flexShrink: 0
-                                        }}
-                                    >
-                                        Analyst view
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('fin')}
-                                        className="transition-all"
-                                        style={{
-                                            backgroundColor: activeTab === 'fin' ? '#00ff7f' : 'transparent',
-                                            color: activeTab === 'fin' ? 'black' : 'white',
-                                            padding: '6px 16px',
-                                            borderRadius: '8px',
-                                            border: 'none',
-                                            cursor: 'pointer',
-                                            outline: 'none',
-                                            fontSize: '10px',
-                                            fontWeight: '400',
-                                            whiteSpace: 'nowrap',
-                                            flexShrink: 0
-                                        }}
-                                    >
-                                        Financials
-                                    </button>
-                                </div>
+                                    <div style={{
+                                        backgroundColor: '#2C2C2E',
+                                        borderRadius: '10px',
+                                        padding: '4px',
+                                        display: 'flex',
+                                        gap: '0',
+                                        border: '1px solid #3A3A3C',
+                                        marginBottom: '12px',
+                                        overflowX: 'auto',
+                                        maxWidth: '100%'
+                                    }} className="hidden-scrollbar">
+                                        <button
+                                            onClick={() => setActiveTab('rec')}
+                                            className="transition-all"
+                                            style={{
+                                                backgroundColor: activeTab === 'rec' ? '#00ff7f' : 'transparent',
+                                                color: activeTab === 'rec' ? 'black' : 'white',
+                                                padding: '6px 16px',
+                                                borderRadius: '8px',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                outline: 'none',
+                                                fontSize: '10px',
+                                                fontWeight: '400',
+                                                whiteSpace: 'nowrap',
+                                                flexShrink: 0
+                                            }}
+                                        >
+                                            Recommendation
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveTab('inv')}
+                                            className="transition-all"
+                                            style={{
+                                                backgroundColor: activeTab === 'inv' ? '#00ff7f' : 'transparent',
+                                                color: activeTab === 'inv' ? 'black' : 'white',
+                                                padding: '6px 16px',
+                                                borderRadius: '8px',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                outline: 'none',
+                                                fontSize: '10px',
+                                                fontWeight: '400',
+                                                whiteSpace: 'nowrap',
+                                                flexShrink: 0
+                                            }}
+                                        >
+                                            Investment summary
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveTab('company')}
+                                            className="transition-all"
+                                            style={{
+                                                backgroundColor: activeTab === 'company' ? '#00ff7f' : 'transparent',
+                                                color: activeTab === 'company' ? 'black' : 'white',
+                                                padding: '6px 16px',
+                                                borderRadius: '8px',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                outline: 'none',
+                                                fontSize: '10px',
+                                                fontWeight: '400',
+                                                whiteSpace: 'nowrap',
+                                                flexShrink: 0
+                                            }}
+                                        >
+                                            Company update
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveTab('analyst')}
+                                            className="transition-all"
+                                            style={{
+                                                backgroundColor: activeTab === 'analyst' ? '#00ff7f' : 'transparent',
+                                                color: activeTab === 'analyst' ? 'black' : 'white',
+                                                padding: '6px 16px',
+                                                borderRadius: '8px',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                outline: 'none',
+                                                fontSize: '10px',
+                                                fontWeight: '400',
+                                                whiteSpace: 'nowrap',
+                                                flexShrink: 0
+                                            }}
+                                        >
+                                            Analyst view
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveTab('fin')}
+                                            className="transition-all"
+                                            style={{
+                                                backgroundColor: activeTab === 'fin' ? '#00ff7f' : 'transparent',
+                                                color: activeTab === 'fin' ? 'black' : 'white',
+                                                padding: '6px 16px',
+                                                borderRadius: '8px',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                outline: 'none',
+                                                fontSize: '10px',
+                                                fontWeight: '400',
+                                                whiteSpace: 'nowrap',
+                                                flexShrink: 0
+                                            }}
+                                        >
+                                            Financials
+                                        </button>
+                                    </div>
 
-                                <div className="overflow-y-auto relative custom-scrollbar pr-2 pb-2 block" style={{ maxHeight: '485px', overflowY: 'auto', display: 'block' }}>
-                                    <div className={`detail-tab-content ${activeTab === 'rec' ? 'active' : ''}`}>
-                                        <h3 className="section-title">Price performance</h3>
-                                        <div className="overflow-x-auto">
-                                            <table className="mini-table w-full table-fixed">
-                                                <thead>
-                                                    <tr>
-                                                        <th className="text-left" style={{ width: '20%' }}>1M</th>
-                                                        <th className="text-left" style={{ width: '20%' }}>3M</th>
-                                                        <th className="text-left" style={{ width: '20%' }}>6M</th>
-                                                        <th className="text-left" style={{ width: '20%' }}>1Y</th>
-                                                        <th className="text-left" style={{ width: '20%' }}>Since call</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {(() => {
-                                                        const rec = selectedReport.recommendation || {};
-                                                        const perfCall = rec.performance_since_call;
+                                    <div className="overflow-y-auto relative custom-scrollbar pr-2 pb-2 block" style={{ maxHeight: '485px', overflowY: 'auto', display: 'block' }}>
+                                        <div className={`detail-tab-content ${activeTab === 'rec' ? 'active' : ''}`}>
+                                            <h3 className="section-title">Price performance</h3>
+                                            <div className="overflow-x-auto">
+                                                <table className="mini-table w-full table-fixed">
+                                                    <thead>
+                                                        <tr>
+                                                            <th className="text-left" style={{ width: '20%' }}>1M</th>
+                                                            <th className="text-left" style={{ width: '20%' }}>3M</th>
+                                                            <th className="text-left" style={{ width: '20%' }}>6M</th>
+                                                            <th className="text-left" style={{ width: '20%' }}>1Y</th>
+                                                            <th className="text-left" style={{ width: '20%' }}>Since call</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {(() => {
+                                                            const rec = selectedReport.recommendation || {};
+                                                            const perfCall = rec.performance_since_call;
 
-                                                        const val1m = rec.return_1m != null ? rec.return_1m : perfCall;
-                                                        const val3m = rec.return_3m != null ? rec.return_3m : perfCall;
-                                                        const val6m = rec.return_6m != null ? rec.return_6m : perfCall;
-                                                        const val1y = rec.return_1y != null ? rec.return_1y : perfCall;
+                                                            const val1m = rec.return_1m != null ? rec.return_1m : perfCall;
+                                                            const val3m = rec.return_3m != null ? rec.return_3m : perfCall;
+                                                            const val6m = rec.return_6m != null ? rec.return_6m : perfCall;
+                                                            const val1y = rec.return_1y != null ? rec.return_1y : perfCall;
 
-                                                        return (
-                                                            <tr>
-                                                                <td className={`text-left ${getPerfColorClass(val1m)}`}>
-                                                                    {val1m != null ? val1m.toFixed(1) + '%' : '-'}
-                                                                </td>
-                                                                <td className={`text-left ${getPerfColorClass(val3m)}`}>
-                                                                    {val3m != null ? val3m.toFixed(1) + '%' : '-'}
-                                                                </td>
-                                                                <td className={`text-left ${getPerfColorClass(val6m)}`}>
-                                                                    {val6m != null ? val6m.toFixed(1) + '%' : '-'}
-                                                                </td>
-                                                                <td className={`text-left ${getPerfColorClass(val1y)}`}>
-                                                                    {val1y != null ? val1y.toFixed(1) + '%' : '-'}
-                                                                </td>
-                                                                <td className={`text-left ${getPerfColorClass(perfCall)}`}>
-                                                                    {perfCall != null ? perfCall.toFixed(1) + '%' : '-'}
-                                                                </td>
-                                                            </tr>
-                                                        );
-                                                    })()}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <div className="overflow-x-auto">
-                                            {(() => {
-                                                try {
-                                                    // 1. Get Comparisons
-                                                    // Function to parse date
-                                                    const parseDateDate = (dStr) => {
-                                                        if (!dStr) return new Date(0);
-                                                        const y = 2000 + parseInt(dStr.substring(0, 2));
-                                                        const m = parseInt(dStr.substring(2, 4)) - 1;
-                                                        const d = parseInt(dStr.substring(4, 6));
-                                                        return new Date(y, m, d);
-                                                    };
-                                                    const currentRepDate = parseDateDate(selectedReport.info_of_report?.date_of_issue);
-                                                    const oneYearAgo = new Date(currentRepDate);
-                                                    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+                                                            return (
+                                                                <tr>
+                                                                    <td className={`text-left ${getPerfColorClass(val1m)}`}>
+                                                                        {val1m != null ? val1m.toFixed(1) + '%' : '-'}
+                                                                    </td>
+                                                                    <td className={`text-left ${getPerfColorClass(val3m)}`}>
+                                                                        {val3m != null ? val3m.toFixed(1) + '%' : '-'}
+                                                                    </td>
+                                                                    <td className={`text-left ${getPerfColorClass(val6m)}`}>
+                                                                        {val6m != null ? val6m.toFixed(1) + '%' : '-'}
+                                                                    </td>
+                                                                    <td className={`text-left ${getPerfColorClass(val1y)}`}>
+                                                                        {val1y != null ? val1y.toFixed(1) + '%' : '-'}
+                                                                    </td>
+                                                                    <td className={`text-left ${getPerfColorClass(perfCall)}`}>
+                                                                        {perfCall != null ? perfCall.toFixed(1) + '%' : '-'}
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        })()}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div className="overflow-x-auto">
+                                                {(() => {
+                                                    try {
+                                                        // 1. Get Comparisons
+                                                        // Function to parse date
+                                                        const parseDateDate = (dStr) => {
+                                                            if (!dStr) return new Date(0);
+                                                            const y = 2000 + parseInt(dStr.substring(0, 2));
+                                                            const m = parseInt(dStr.substring(2, 4)) - 1;
+                                                            const d = parseInt(dStr.substring(4, 6));
+                                                            return new Date(y, m, d);
+                                                        };
+                                                        const currentRepDate = parseDateDate(selectedReport.info_of_report?.date_of_issue);
+                                                        const oneYearAgo = new Date(currentRepDate);
+                                                        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
-                                                    let comparisonReports = [];
+                                                        let comparisonReports = [];
 
-                                                    if (comparisonMode === 'peers') {
-                                                        // === PEERS MODE ===
-                                                        // 1. All reports for Ticker
-                                                        // 2. Within 1 year
-                                                        // 3. Latest per Broker
-                                                        const candidates = (reports || []).filter(r => {
-                                                            // Add null safety for all property accesses
-                                                            if (!r || !r.info_of_report) return false;
-
-                                                            const rDate = parseDateDate(r.info_of_report.date_of_issue);
-                                                            if (!rDate) return false;
-
-                                                            // Ticker match
-                                                            if (r.info_of_report.ticker !== selectedReport.info_of_report.ticker) return false;
-                                                            // Date window (< 1 year from NOW or Selected Report? User said <1 year, assuming relative to Selected)
-                                                            // Let's use relative to Selected Report to be consistent with "historical context". 
-                                                            // Actually, for "Peer Comparison", usually it's "Current market view". 
-                                                            // But let's stick to "Relative to Selected Report" for consistency, or "Relative to Today"? 
-                                                            // If I view an old report, I probably want to see its peers *at that time*. 
-                                                            // So relative to Selected is safer.
-                                                            if (rDate > currentRepDate || rDate < oneYearAgo) return false;
-
-                                                            const hasTP = r.recommendation?.target_price != null;
-                                                            const hasForecast = r.forecast_table != null || r.forecast_summary != null;
-                                                            return hasTP || hasForecast;
-                                                        });
-
-                                                        const latestPerBroker = {};
-                                                        candidates.forEach(r => {
-                                                            // Add null safety for broker name
-                                                            const broker = r?.info_of_report?.issued_company;
-                                                            if (!broker) return; // Skip if no broker name
-
-                                                            if (!latestPerBroker[broker] || parseDateDate(latestPerBroker[broker].info_of_report.date_of_issue) < parseDateDate(r.info_of_report.date_of_issue)) {
-                                                                latestPerBroker[broker] = r;
-                                                            }
-                                                        });
-
-                                                        // Sort alphabetically by Broker, but put Selected Report's broker first? Or just Alpha.
-                                                        comparisonReports = Object.values(latestPerBroker).sort((a, b) => {
-                                                            const brokerA = a?.info_of_report?.issued_company || '';
-                                                            const brokerB = b?.info_of_report?.issued_company || '';
-                                                            return brokerA.localeCompare(brokerB);
-                                                        });
-
-                                                    } else {
-                                                        // === HISTORICAL MODE (Existing Logic) ===
-                                                        const comparisonReportsRaw = (reports || [])
-                                                            .filter(r => {
+                                                        if (comparisonMode === 'peers') {
+                                                            // === PEERS MODE ===
+                                                            // 1. All reports for Ticker
+                                                            // 2. Within 1 year
+                                                            // 3. Latest per Broker
+                                                            const candidates = (reports || []).filter(r => {
                                                                 // Add null safety for all property accesses
                                                                 if (!r || !r.info_of_report) return false;
 
                                                                 const rDate = parseDateDate(r.info_of_report.date_of_issue);
                                                                 if (!rDate) return false;
 
-                                                                if (r.info_of_report.issued_company !== selectedReport.info_of_report.issued_company) return false;
+                                                                // Ticker match
                                                                 if (r.info_of_report.ticker !== selectedReport.info_of_report.ticker) return false;
+                                                                // Date window (< 1 year from NOW or Selected Report? User said <1 year, assuming relative to Selected)
+                                                                // Let's use relative to Selected Report to be consistent with "historical context". 
+                                                                // Actually, for "Peer Comparison", usually it's "Current market view". 
+                                                                // But let's stick to "Relative to Selected Report" for consistency, or "Relative to Today"? 
+                                                                // If I view an old report, I probably want to see its peers *at that time*. 
+                                                                // So relative to Selected is safer.
                                                                 if (rDate > currentRepDate || rDate < oneYearAgo) return false;
+
                                                                 const hasTP = r.recommendation?.target_price != null;
                                                                 const hasForecast = r.forecast_table != null || r.forecast_summary != null;
                                                                 return hasTP || hasForecast;
-                                                            })
-                                                            .sort((a, b) => parseDateDate(a.info_of_report.date_of_issue) - parseDateDate(b.info_of_report.date_of_issue));
+                                                            });
 
-                                                        const reportsByQuarter = {};
-                                                        comparisonReportsRaw.forEach(r => {
-                                                            const d = parseDateDate(r.info_of_report.date_of_issue);
-                                                            const q = Math.floor(d.getMonth() / 3) + 1;
-                                                            const key = `${d.getFullYear()}-Q${q}`;
-                                                            if (!reportsByQuarter[key] || parseDateDate(reportsByQuarter[key].info_of_report.date_of_issue) < d) {
-                                                                reportsByQuarter[key] = r;
-                                                            }
-                                                        });
-                                                        comparisonReports = Object.values(reportsByQuarter);
-                                                    }
-                                                    // Common End logic
-                                                    // Ensure selected report is in logic? 
-                                                    // The filters above include it (<= currentRepDate).
+                                                            const latestPerBroker = {};
+                                                            candidates.forEach(r => {
+                                                                // Add null safety for broker name
+                                                                const broker = r?.info_of_report?.issued_company;
+                                                                if (!broker) return; // Skip if no broker name
 
-                                                    // For financials logic:
-                                                    // We need to know who is "Latest" to determine available years.
-                                                    const latestReport = comparisonReports.length > 0 ? comparisonReports[comparisonReports.length - 1] : selectedReport;
+                                                                if (!latestPerBroker[broker] || parseDateDate(latestPerBroker[broker].info_of_report.date_of_issue) < parseDateDate(r.info_of_report.date_of_issue)) {
+                                                                    latestPerBroker[broker] = r;
+                                                                }
+                                                            });
 
-                                                    // For change calculation:
-                                                    // In Peers mode: Change vs what? Maybe vs Avg? Or no change col?
-                                                    // "every other row is the same". Recommendation, TP, etc.
-                                                    // Change column in peers usually irrelevant or vs prev rating.
-                                                    // I will KEEP the `prevToLatestReport` variable but it might be undefined in Peers mode or meaningless.
-                                                    // Actually, let's just null it for Peers to avoid confusing "Change" arrows between different brokers.
-                                                    const prevToLatestReport = comparisonMode === 'historical' && comparisonReports.length > 1 ? comparisonReports[comparisonReports.length - 2] : null;
+                                                            // Sort alphabetically by Broker, but put Selected Report's broker first? Or just Alpha.
+                                                            comparisonReports = Object.values(latestPerBroker).sort((a, b) => {
+                                                                const brokerA = a?.info_of_report?.issued_company || '';
+                                                                const brokerB = b?.info_of_report?.issued_company || '';
+                                                                return brokerA.localeCompare(brokerB);
+                                                            });
 
-                                                    // 2. Determine Available Years & Target Year
-                                                    const getAvailableForecastYears = (rep) => {
-                                                        if (!rep || !rep.forecast_table || !rep.forecast_table.columns) return [];
-                                                        // Columns usually ["Year", "2023", "2024A", "2025F", "2026F"...]
-                                                        // Filter for anything looking like a year (4 digits)
-                                                        const allYears = rep.forecast_table.columns.filter(c => c.toString().match(/\d{4}/));
+                                                        } else {
+                                                            // === HISTORICAL MODE (Existing Logic) ===
+                                                            const comparisonReportsRaw = (reports || [])
+                                                                .filter(r => {
+                                                                    // Add null safety for all property accesses
+                                                                    if (!r || !r.info_of_report) return false;
 
-                                                        // User Request: Filter out years before 2025 (keep 2025 and newer)
-                                                        return allYears.filter(y => {
-                                                            const val = parseInt(y.toString().replace(/\D/g, ''));
-                                                            return val >= 2025;
-                                                        });
-                                                    };
+                                                                    const rDate = parseDateDate(r.info_of_report.date_of_issue);
+                                                                    if (!rDate) return false;
 
-                                                    const availableYears = getAvailableForecastYears(latestReport);
-                                                    // Default to the last one (furthest year) if no selection
-                                                    const targetYear = selectedHistYear || (availableYears.length > 0 ? availableYears[availableYears.length - 1] : null);
+                                                                    if (r.info_of_report.issued_company !== selectedReport.info_of_report.issued_company) return false;
+                                                                    if (r.info_of_report.ticker !== selectedReport.info_of_report.ticker) return false;
+                                                                    if (rDate > currentRepDate || rDate < oneYearAgo) return false;
+                                                                    const hasTP = r.recommendation?.target_price != null;
+                                                                    const hasForecast = r.forecast_table != null || r.forecast_summary != null;
+                                                                    return hasTP || hasForecast;
+                                                                })
+                                                                .sort((a, b) => parseDateDate(a.info_of_report.date_of_issue) - parseDateDate(b.info_of_report.date_of_issue));
 
-                                                    // 3. Helper to get Matching Data
-                                                    const getFinancialsForYear = (rep, key, tYear) => {
-                                                        // Add comprehensive null safety
-                                                        if (!rep) return null;
-                                                        if (!rep.forecast_table) return null;
-                                                        if (!rep.forecast_table.columns || !Array.isArray(rep.forecast_table.columns)) return null;
-                                                        if (!rep.forecast_table.rows || !Array.isArray(rep.forecast_table.rows)) return null;
-                                                        if (tYear && rep.forecast_table) {
-                                                            try {
-                                                                const cols = rep.forecast_table.columns || [];
-                                                                const tYearClean = tYear.replace(/[A-Za-z]/g, '');
-                                                                const colIndex = cols.findIndex(c => c.toString().includes(tYearClean));
-                                                                const colName = cols[colIndex];
+                                                            const reportsByQuarter = {};
+                                                            comparisonReportsRaw.forEach(r => {
+                                                                const d = parseDateDate(r.info_of_report.date_of_issue);
+                                                                const q = Math.floor(d.getMonth() / 3) + 1;
+                                                                const key = `${d.getFullYear()}-Q${q}`;
+                                                                if (!reportsByQuarter[key] || parseDateDate(reportsByQuarter[key].info_of_report.date_of_issue) < d) {
+                                                                    reportsByQuarter[key] = r;
+                                                                }
+                                                            });
+                                                            comparisonReports = Object.values(reportsByQuarter);
+                                                        }
+                                                        // Common End logic
+                                                        // Ensure selected report is in logic? 
+                                                        // The filters above include it (<= currentRepDate).
 
-                                                                if (colIndex !== -1) {
-                                                                    // Find row: Support "metric" OR "item", case-insensitive
-                                                                    const row = (rep.forecast_table.rows || []).find(r => {
-                                                                        const rKey = r.metric || r.item;
-                                                                        return rKey && (rKey === key || rKey.toLowerCase() === key.toLowerCase());
-                                                                    });
+                                                        // For financials logic:
+                                                        // We need to know who is "Latest" to determine available years.
+                                                        const latestReport = comparisonReports.length > 0 ? comparisonReports[comparisonReports.length - 1] : selectedReport;
 
-                                                                    if (row) {
-                                                                        // 1. Array format (Newer reports)
-                                                                        if (row.values && Array.isArray(row.values)) {
-                                                                            return row.values[colIndex];
-                                                                        }
-                                                                        // 2. Flat Object format (Older reports)
-                                                                        // Access by column name (e.g. "2026F")
-                                                                        if (row[colName] !== undefined) {
-                                                                            return row[colName];
+                                                        // For change calculation:
+                                                        // In Peers mode: Change vs what? Maybe vs Avg? Or no change col?
+                                                        // "every other row is the same". Recommendation, TP, etc.
+                                                        // Change column in peers usually irrelevant or vs prev rating.
+                                                        // I will KEEP the `prevToLatestReport` variable but it might be undefined in Peers mode or meaningless.
+                                                        // Actually, let's just null it for Peers to avoid confusing "Change" arrows between different brokers.
+                                                        const prevToLatestReport = comparisonMode === 'historical' && comparisonReports.length > 1 ? comparisonReports[comparisonReports.length - 2] : null;
+
+                                                        // 2. Determine Available Years & Target Year
+                                                        const getAvailableForecastYears = (rep) => {
+                                                            if (!rep || !rep.forecast_table || !rep.forecast_table.columns) return [];
+                                                            // Columns usually ["Year", "2023", "2024A", "2025F", "2026F"...]
+                                                            // Filter for anything looking like a year (4 digits)
+                                                            const allYears = rep.forecast_table.columns.filter(c => c.toString().match(/\d{4}/));
+
+                                                            // User Request: Filter out years before 2025 (keep 2025 and newer)
+                                                            return allYears.filter(y => {
+                                                                const val = parseInt(y.toString().replace(/\D/g, ''));
+                                                                return val >= 2025;
+                                                            });
+                                                        };
+
+                                                        const availableYears = getAvailableForecastYears(latestReport);
+                                                        // Default to the last one (furthest year) if no selection
+                                                        const targetYear = selectedHistYear || (availableYears.length > 0 ? availableYears[availableYears.length - 1] : null);
+
+                                                        // 3. Helper to get Matching Data
+                                                        const getFinancialsForYear = (rep, key, tYear) => {
+                                                            // Add comprehensive null safety
+                                                            if (!rep) return null;
+                                                            if (!rep.forecast_table) return null;
+                                                            if (!rep.forecast_table.columns || !Array.isArray(rep.forecast_table.columns)) return null;
+                                                            if (!rep.forecast_table.rows || !Array.isArray(rep.forecast_table.rows)) return null;
+                                                            if (tYear && rep.forecast_table) {
+                                                                try {
+                                                                    const cols = rep.forecast_table.columns || [];
+                                                                    const tYearClean = tYear.replace(/[A-Za-z]/g, '');
+                                                                    const colIndex = cols.findIndex(c => c.toString().includes(tYearClean));
+                                                                    const colName = cols[colIndex];
+
+                                                                    if (colIndex !== -1) {
+                                                                        // Find row: Support "metric" OR "item", case-insensitive
+                                                                        const row = (rep.forecast_table.rows || []).find(r => {
+                                                                            const rKey = r.metric || r.item;
+                                                                            return rKey && (rKey === key || rKey.toLowerCase() === key.toLowerCase());
+                                                                        });
+
+                                                                        if (row) {
+                                                                            // 1. Array format (Newer reports)
+                                                                            if (row.values && Array.isArray(row.values)) {
+                                                                                return row.values[colIndex];
+                                                                            }
+                                                                            // 2. Flat Object format (Older reports)
+                                                                            // Access by column name (e.g. "2026F")
+                                                                            if (row[colName] !== undefined) {
+                                                                                return row[colName];
+                                                                            }
                                                                         }
                                                                     }
-                                                                }
-                                                            } catch (e) { console.error(e); }
-                                                        }
-                                                        // DISABLE Fallback to summary if year lookup fails.
-                                                        // This prevents showing 2025 data when 2026 was requested.
-                                                        return null;
-                                                    };
-
-                                                    // 4. Render Row Helper
-                                                    const renderHistoricalRow = (label, key, isPercent = false, isFinancial = false, isText = false) => {
-                                                        // Check data density - count non-null values
-                                                        let filledCount = 0;
-                                                        const totalColumns = comparisonReports.length;
-
-                                                        for (const rep of comparisonReports) {
-                                                            let val = null;
-                                                            if (isFinancial) {
-                                                                val = getFinancialsForYear(rep, key, targetYear);
-                                                            } else if (key === 'recommendation') {
-                                                                val = rep.recommendation?.recommendation;
-                                                            } else {
-                                                                val = rep.recommendation?.[key];
+                                                                } catch (e) { console.error(e); }
                                                             }
-
-                                                            if (val !== null && val !== undefined && val !== '' && val !== '-') {
-                                                                filledCount++;
-                                                            }
-                                                        }
-
-                                                        // Hide row only if ALL columns are empty
-                                                        if (filledCount === 0) {
+                                                            // DISABLE Fallback to summary if year lookup fails.
+                                                            // This prevents showing 2025 data when 2026 was requested.
                                                             return null;
-                                                        }
+                                                        };
 
-                                                        // ... same calculation logic ...
-                                                        // Calculate Change only for the last 2 reports
-                                                        let valLatest = null;
-                                                        let valPrev = null;
+                                                        // 4. Render Row Helper
+                                                        const renderHistoricalRow = (label, key, isPercent = false, isFinancial = false, isText = false) => {
+                                                            // Check data density - count non-null values
+                                                            let filledCount = 0;
+                                                            const totalColumns = comparisonReports.length;
 
-                                                        if (isFinancial) { // EPS, Revenue, etc.
-                                                            valLatest = getFinancialsForYear(latestReport, key, targetYear);
-                                                            valPrev = getFinancialsForYear(prevToLatestReport, key, targetYear);
-                                                        } else if (key === 'recommendation') {
-                                                            valLatest = latestReport?.recommendation?.recommendation;
-                                                            valPrev = prevToLatestReport?.recommendation?.recommendation;
-                                                        } else if (key === 'target_price') {
-                                                            valLatest = latestReport?.recommendation?.target_price;
-                                                            valPrev = prevToLatestReport?.recommendation?.target_price;
-                                                        } else if (key === 'upside_at_call') {
-                                                            valLatest = latestReport?.recommendation?.upside_at_call;
-                                                            valPrev = null;
-                                                        } else if (key === 'performance_since_call') {
-                                                            valLatest = latestReport?.recommendation?.performance_since_call;
-                                                            valPrev = null;
-                                                        }
+                                                            for (const rep of comparisonReports) {
+                                                                let val = null;
+                                                                if (isFinancial) {
+                                                                    val = getFinancialsForYear(rep, key, targetYear);
+                                                                } else if (key === 'recommendation') {
+                                                                    val = rep.recommendation?.recommendation;
+                                                                } else {
+                                                                    val = rep.recommendation?.[key];
+                                                                }
 
-                                                        // For financial metrics, check if latest value is an outlier
-                                                        let latestIsOutlier = false;
-                                                        if (isFinancial) {
-                                                            const allValues = comparisonReports.map(rep => {
-                                                                const v = getFinancialsForYear(rep, key, targetYear);
-                                                                return v != null && !isNaN(v) ? v : null;
-                                                            }).filter(v => v != null);
-
-                                                            const sorted = [...allValues].sort((a, b) => a - b);
-                                                            const mid = Math.floor(sorted.length / 2);
-                                                            const median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-
-                                                            if (median != null && valLatest != null && allValues.length >= 3) {
-                                                                const deviation = Math.abs(valLatest - median) / Math.abs(median);
-                                                                latestIsOutlier = deviation > 0.30;
+                                                                if (val !== null && val !== undefined && val !== '' && val !== '-') {
+                                                                    filledCount++;
+                                                                }
                                                             }
-                                                        }
 
-                                                        // Calculate Delta (skip if latest is outlier)
-                                                        let change = null;
-                                                        if (latestIsOutlier) {
-                                                            change = null;
-                                                        } else if (!isText && !isFinancial && key === 'target_price' && valLatest && valPrev) {
-                                                            change = ((valLatest - valPrev) / valPrev) * 100;
-                                                        } else if (isFinancial && valLatest != null && valPrev != null) {
-                                                            change = calculateChange(valLatest, valPrev);
-                                                        }
+                                                            // Hide row only if ALL columns are empty
+                                                            if (filledCount === 0) {
+                                                                return null;
+                                                            }
 
-                                                        if (key === 'upside_at_call' || key === 'performance_since_call') change = null;
+                                                            // ... same calculation logic ...
+                                                            // Calculate Change only for the last 2 reports
+                                                            let valLatest = null;
+                                                            let valPrev = null;
+
+                                                            if (isFinancial) { // EPS, Revenue, etc.
+                                                                valLatest = getFinancialsForYear(latestReport, key, targetYear);
+                                                                valPrev = getFinancialsForYear(prevToLatestReport, key, targetYear);
+                                                            } else if (key === 'recommendation') {
+                                                                valLatest = latestReport?.recommendation?.recommendation;
+                                                                valPrev = prevToLatestReport?.recommendation?.recommendation;
+                                                            } else if (key === 'target_price') {
+                                                                valLatest = latestReport?.recommendation?.target_price;
+                                                                valPrev = prevToLatestReport?.recommendation?.target_price;
+                                                            } else if (key === 'upside_at_call') {
+                                                                valLatest = latestReport?.recommendation?.upside_at_call;
+                                                                valPrev = null;
+                                                            } else if (key === 'performance_since_call') {
+                                                                valLatest = latestReport?.recommendation?.performance_since_call;
+                                                                valPrev = null;
+                                                            }
+
+                                                            // For financial metrics, check if latest value is an outlier
+                                                            let latestIsOutlier = false;
+                                                            if (isFinancial) {
+                                                                const allValues = comparisonReports.map(rep => {
+                                                                    const v = getFinancialsForYear(rep, key, targetYear);
+                                                                    return v != null && !isNaN(v) ? v : null;
+                                                                }).filter(v => v != null);
+
+                                                                const sorted = [...allValues].sort((a, b) => a - b);
+                                                                const mid = Math.floor(sorted.length / 2);
+                                                                const median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+
+                                                                if (median != null && valLatest != null && allValues.length >= 3) {
+                                                                    const deviation = Math.abs(valLatest - median) / Math.abs(median);
+                                                                    latestIsOutlier = deviation > 0.30;
+                                                                }
+                                                            }
+
+                                                            // Calculate Delta (skip if latest is outlier)
+                                                            let change = null;
+                                                            if (latestIsOutlier) {
+                                                                change = null;
+                                                            } else if (!isText && !isFinancial && key === 'target_price' && valLatest && valPrev) {
+                                                                change = ((valLatest - valPrev) / valPrev) * 100;
+                                                            } else if (isFinancial && valLatest != null && valPrev != null) {
+                                                                change = calculateChange(valLatest, valPrev);
+                                                            }
+
+                                                            if (key === 'upside_at_call' || key === 'performance_since_call') change = null;
+
+                                                            return (
+                                                                <tr key={key}>
+                                                                    <td className="text-left border-r border-gray-700"
+                                                                        style={{ position: 'sticky', left: 0, zIndex: 10, backgroundColor: '#1E1E1E' }}>
+                                                                        {label}
+                                                                    </td>
+                                                                    {(() => {
+                                                                        // For financial metrics, detect outliers first
+                                                                        let allValues = [];
+                                                                        if (isFinancial) {
+                                                                            allValues = comparisonReports.map(rep => {
+                                                                                const v = getFinancialsForYear(rep, key, targetYear);
+                                                                                return v != null && !isNaN(v) ? v : null;
+                                                                            }).filter(v => v != null);
+                                                                        }
+
+                                                                        // Calculate median for outlier detection
+                                                                        const getMedian = (arr) => {
+                                                                            if (arr.length === 0) return null;
+                                                                            const sorted = [...arr].sort((a, b) => a - b);
+                                                                            const mid = Math.floor(sorted.length / 2);
+                                                                            return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+                                                                        };
+
+                                                                        const median = getMedian(allValues);
+
+                                                                        // Check if value is outlier (differs by more than 30% from median)
+                                                                        // Only apply outlier detection if we have at least 3 data points
+                                                                        const isOutlier = (val) => {
+                                                                            if (!isFinancial || val == null) return false;
+
+                                                                            // Sanity check for specific metrics with known reasonable ranges
+                                                                            // BVPS for Vietnamese stocks should be > 100 (typically in thousands)
+                                                                            if (key === 'bvps_vnd' && val < 100) return true;
+                                                                            // EPS should typically be > 100 for VND stocks
+                                                                            if (key === 'eps_vnd' && val < 100) return true;
+
+                                                                            // Apply median-based outlier detection only if we have 3+ data points
+                                                                            if (median == null || allValues.length < 3) return false;
+                                                                            const deviation = Math.abs(val - median) / Math.abs(median);
+                                                                            return deviation > 0.30;
+                                                                        };
+
+                                                                        return comparisonReports.map((rep, idx) => {
+                                                                            // Wrap entire logic in try-catch to prevent crashes
+                                                                            try {
+                                                                                // Add null safety for rep
+                                                                                if (!rep) return <td key={`empty-${idx}`} className="text-center">-</td>;
+
+                                                                                const repKey = rep.id || rep.info_of_report?.date_of_issue || idx;
+
+                                                                                let val = null;
+                                                                                if (isFinancial) {
+                                                                                    val = getFinancialsForYear(rep, key, targetYear);
+                                                                                } else if (key === 'recommendation') {
+                                                                                    // Use raw recommendation value to match Company Reports table
+                                                                                    val = rep.recommendation?.recommendation || '-';
+                                                                                } else {
+                                                                                    val = rep.recommendation?.[key];
+                                                                                }
+
+                                                                                // Check for outlier in financial data
+                                                                                if (isFinancial && isOutlier(val)) {
+                                                                                    return <td key={repKey} className="text-center">-</td>;
+                                                                                }
+
+                                                                                // Formatting
+                                                                                if (val == null || val === undefined) return <td key={repKey} className="text-center">-</td>;
+                                                                                if (key === 'recommendation') {
+                                                                                    const recStyle = getRecommendationStyle(val);
+                                                                                    return (
+                                                                                        <td key={repKey} className="text-center">
+                                                                                            <span style={{
+                                                                                                ...recStyle,
+                                                                                                padding: '4px 12px',
+                                                                                                borderRadius: '9999px',
+                                                                                                fontWeight: 'bold',
+                                                                                                fontSize: '10px',
+                                                                                                display: 'inline-block'
+                                                                                            }}>
+                                                                                                {val}
+                                                                                            </span>
+                                                                                        </td>
+                                                                                    );
+                                                                                }
+                                                                                if (isText) return <td key={repKey} className="text-center">{val}</td>;
+                                                                                // Add safety for toFixed() - ensure val is a number
+                                                                                if (isPercent) {
+                                                                                    const numVal = typeof val === 'number' ? val : parseFloat(val);
+                                                                                    if (isNaN(numVal)) return <td key={repKey} className="text-center">-</td>;
+                                                                                    return <td key={repKey} className="text-center">{numVal.toFixed(1)}%</td>;
+                                                                                }
+                                                                                // Add safety for toLocaleString()
+                                                                                const numVal = typeof val === 'number' ? val : parseFloat(val);
+                                                                                if (isNaN(numVal)) return <td key={repKey} className="text-center">{val}</td>;
+                                                                                return <td key={repKey} className="text-center">{numVal.toLocaleString()}</td>;
+                                                                            } catch (error) {
+                                                                                console.error('Error rendering comparison cell:', error, { rep, key, targetYear });
+                                                                                return <td key={`error-${idx}`} className="text-center">-</td>;
+                                                                            }
+                                                                        });
+                                                                    })()}
+                                                                    {comparisonMode === 'historical' && (
+                                                                        <td className={`text-center ${change > 0 ? 'text-[#00ff7f]' : change < 0 ? 'text-[#ff6666]' : ''}`}>
+                                                                            {key === 'recommendation'
+                                                                                ? (valLatest !== valPrev && valPrev ? 'Change' : '')
+                                                                                : (change != null ? (change > 0 ? '+' : '') + change.toFixed(1) + '%' : '-')}
+                                                                        </td>
+                                                                    )}
+                                                                </tr>
+                                                            );
+                                                        };
 
                                                         return (
-                                                            <tr key={key}>
-                                                                <td className="text-left border-r border-gray-700"
-                                                                    style={{ position: 'sticky', left: 0, zIndex: 10, backgroundColor: '#1E1E1E' }}>
-                                                                    {label}
-                                                                </td>
-                                                                {(() => {
-                                                                    // For financial metrics, detect outliers first
-                                                                    let allValues = [];
-                                                                    if (isFinancial) {
-                                                                        allValues = comparisonReports.map(rep => {
-                                                                            const v = getFinancialsForYear(rep, key, targetYear);
-                                                                            return v != null && !isNaN(v) ? v : null;
-                                                                        }).filter(v => v != null);
-                                                                    }
-
-                                                                    // Calculate median for outlier detection
-                                                                    const getMedian = (arr) => {
-                                                                        if (arr.length === 0) return null;
-                                                                        const sorted = [...arr].sort((a, b) => a - b);
-                                                                        const mid = Math.floor(sorted.length / 2);
-                                                                        return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-                                                                    };
-
-                                                                    const median = getMedian(allValues);
-
-                                                                    // Check if value is outlier (differs by more than 30% from median)
-                                                                    // Only apply outlier detection if we have at least 3 data points
-                                                                    const isOutlier = (val) => {
-                                                                        if (!isFinancial || val == null) return false;
-
-                                                                        // Sanity check for specific metrics with known reasonable ranges
-                                                                        // BVPS for Vietnamese stocks should be > 100 (typically in thousands)
-                                                                        if (key === 'bvps_vnd' && val < 100) return true;
-                                                                        // EPS should typically be > 100 for VND stocks
-                                                                        if (key === 'eps_vnd' && val < 100) return true;
-
-                                                                        // Apply median-based outlier detection only if we have 3+ data points
-                                                                        if (median == null || allValues.length < 3) return false;
-                                                                        const deviation = Math.abs(val - median) / Math.abs(median);
-                                                                        return deviation > 0.30;
-                                                                    };
-
-                                                                    return comparisonReports.map((rep, idx) => {
-                                                                        // Wrap entire logic in try-catch to prevent crashes
-                                                                        try {
-                                                                            // Add null safety for rep
-                                                                            if (!rep) return <td key={`empty-${idx}`} className="text-center">-</td>;
-
-                                                                            const repKey = rep.id || rep.info_of_report?.date_of_issue || idx;
-
-                                                                            let val = null;
-                                                                            if (isFinancial) {
-                                                                                val = getFinancialsForYear(rep, key, targetYear);
-                                                                            } else if (key === 'recommendation') {
-                                                                                // Use raw recommendation value to match Company Reports table
-                                                                                val = rep.recommendation?.recommendation || '-';
-                                                                            } else {
-                                                                                val = rep.recommendation?.[key];
-                                                                            }
-
-                                                                            // Check for outlier in financial data
-                                                                            if (isFinancial && isOutlier(val)) {
-                                                                                return <td key={repKey} className="text-center">-</td>;
-                                                                            }
-
-                                                                            // Formatting
-                                                                            if (val == null || val === undefined) return <td key={repKey} className="text-center">-</td>;
-                                                                            if (key === 'recommendation') {
-                                                                                const recStyle = getRecommendationStyle(val);
-                                                                                return (
-                                                                                    <td key={repKey} className="text-center">
-                                                                                        <span style={{
-                                                                                            ...recStyle,
-                                                                                            padding: '4px 12px',
-                                                                                            borderRadius: '9999px',
-                                                                                            fontWeight: 'bold',
-                                                                                            fontSize: '10px',
-                                                                                            display: 'inline-block'
-                                                                                        }}>
-                                                                                            {val}
-                                                                                        </span>
-                                                                                    </td>
-                                                                                );
-                                                                            }
-                                                                            if (isText) return <td key={repKey} className="text-center">{val}</td>;
-                                                                            // Add safety for toFixed() - ensure val is a number
-                                                                            if (isPercent) {
-                                                                                const numVal = typeof val === 'number' ? val : parseFloat(val);
-                                                                                if (isNaN(numVal)) return <td key={repKey} className="text-center">-</td>;
-                                                                                return <td key={repKey} className="text-center">{numVal.toFixed(1)}%</td>;
-                                                                            }
-                                                                            // Add safety for toLocaleString()
-                                                                            const numVal = typeof val === 'number' ? val : parseFloat(val);
-                                                                            if (isNaN(numVal)) return <td key={repKey} className="text-center">{val}</td>;
-                                                                            return <td key={repKey} className="text-center">{numVal.toLocaleString()}</td>;
-                                                                        } catch (error) {
-                                                                            console.error('Error rendering comparison cell:', error, { rep, key, targetYear });
-                                                                            return <td key={`error-${idx}`} className="text-center">-</td>;
-                                                                        }
-                                                                    });
-                                                                })()}
-                                                                {comparisonMode === 'historical' && (
-                                                                    <td className={`text-center ${change > 0 ? 'text-[#00ff7f]' : change < 0 ? 'text-[#ff6666]' : ''}`}>
-                                                                        {key === 'recommendation'
-                                                                            ? (valLatest !== valPrev && valPrev ? 'Change' : '')
-                                                                            : (change != null ? (change > 0 ? '+' : '') + change.toFixed(1) + '%' : '-')}
-                                                                    </td>
-                                                                )}
-                                                            </tr>
-                                                        );
-                                                    };
-
-                                                    return (
-                                                        <div>
-                                                            {/* Header with Dropdown */}
-                                                            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '12px', marginBottom: '12px', marginTop: '12px', width: '100%' }}>
-                                                                {/* Mode Selector - Segmented Control */}
-                                                                <div style={{
-                                                                    backgroundColor: '#2C2C2E',
-                                                                    borderRadius: '10px',
-                                                                    padding: '4px',
-                                                                    display: 'inline-flex',
-                                                                    gap: '0',
-                                                                    border: '1px solid #3A3A3C'
-                                                                }}>
-                                                                    <button
-                                                                        onClick={() => setComparisonMode('historical')}
-                                                                        className="transition-all"
-                                                                        style={{
-                                                                            backgroundColor: comparisonMode === 'historical' ? '#00ff7f' : 'transparent',
-                                                                            color: comparisonMode === 'historical' ? 'black' : 'white',
-                                                                            padding: '6px 16px',
-                                                                            borderRadius: '8px',
-                                                                            border: 'none',
-                                                                            cursor: 'pointer',
-                                                                            outline: 'none',
-                                                                            fontSize: '10px',
-                                                                            fontWeight: '400',
-                                                                            whiteSpace: 'nowrap'
-                                                                        }}
-                                                                    >
-                                                                        Historical
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => setComparisonMode('peers')}
-                                                                        className="transition-all"
-                                                                        style={{
-                                                                            backgroundColor: comparisonMode === 'peers' ? '#00ff7f' : 'transparent',
-                                                                            color: comparisonMode === 'peers' ? 'black' : 'white',
-                                                                            padding: '6px 16px',
-                                                                            borderRadius: '8px',
-                                                                            border: 'none',
-                                                                            cursor: 'pointer',
-                                                                            outline: 'none',
-                                                                            fontSize: '10px',
-                                                                            fontWeight: '400',
-                                                                            whiteSpace: 'nowrap'
-                                                                        }}
-                                                                    >
-                                                                        Peers
-                                                                    </button>
-                                                                </div>
-
-                                                                {availableYears.length > 0 && (
-                                                                    <div style={{ position: 'relative', display: 'inline-block' }}>
-                                                                        <select
-                                                                            value={targetYear || ''}
-                                                                            onChange={(e) => setSelectedHistYear(e.target.value)}
+                                                            <div>
+                                                                {/* Header with Dropdown */}
+                                                                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '12px', marginBottom: '12px', marginTop: '12px', width: '100%' }}>
+                                                                    {/* Mode Selector - Segmented Control */}
+                                                                    <div style={{
+                                                                        backgroundColor: '#2C2C2E',
+                                                                        borderRadius: '10px',
+                                                                        padding: '4px',
+                                                                        display: 'inline-flex',
+                                                                        gap: '0',
+                                                                        border: '1px solid #3A3A3C'
+                                                                    }}>
+                                                                        <button
+                                                                            onClick={() => setComparisonMode('historical')}
+                                                                            className="transition-all"
                                                                             style={{
-                                                                                appearance: 'none',
-                                                                                backgroundColor: '#1E1E1E',
-                                                                                border: '1px solid #4B5563',
-                                                                                color: 'white',
-                                                                                padding: '2px 8px',
-                                                                                borderRadius: '4px',
-                                                                                fontSize: '12px',
-                                                                                outline: 'none',
+                                                                                backgroundColor: comparisonMode === 'historical' ? '#00ff7f' : 'transparent',
+                                                                                color: comparisonMode === 'historical' ? 'black' : 'white',
+                                                                                padding: '6px 16px',
+                                                                                borderRadius: '8px',
+                                                                                border: 'none',
                                                                                 cursor: 'pointer',
-                                                                                height: '24px',
-                                                                                textAlign: 'center'
+                                                                                outline: 'none',
+                                                                                fontSize: '10px',
+                                                                                fontWeight: '400',
+                                                                                whiteSpace: 'nowrap'
                                                                             }}
                                                                         >
-                                                                            {availableYears.map(year => (
-                                                                                <option key={year} value={year}>{year}</option>
-                                                                            ))}
-                                                                        </select>
+                                                                            Historical
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => setComparisonMode('peers')}
+                                                                            className="transition-all"
+                                                                            style={{
+                                                                                backgroundColor: comparisonMode === 'peers' ? '#00ff7f' : 'transparent',
+                                                                                color: comparisonMode === 'peers' ? 'black' : 'white',
+                                                                                padding: '6px 16px',
+                                                                                borderRadius: '8px',
+                                                                                border: 'none',
+                                                                                cursor: 'pointer',
+                                                                                outline: 'none',
+                                                                                fontSize: '10px',
+                                                                                fontWeight: '400',
+                                                                                whiteSpace: 'nowrap'
+                                                                            }}
+                                                                        >
+                                                                            Peers
+                                                                        </button>
                                                                     </div>
-                                                                )}
-                                                            </div>
 
-                                                            <table className="mini-table w-full relative border-collapse">
-                                                                <thead>
-                                                                    <tr>
-                                                                        <th className="text-left border-r border-b border-gray-700"
-                                                                            style={{ position: 'sticky', left: 0, top: 0, zIndex: 30, backgroundColor: '#1E1E1E' }}>
-                                                                            Metric
-                                                                        </th>
-                                                                        {comparisonReports.map(rep => (
-                                                                            <th key={rep.id} className="text-center border-b border-gray-700 whitespace-nowrap px-4"
-                                                                                style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#1E1E1E' }}>
-                                                                                {comparisonMode === 'peers' ? (
-                                                                                    <span className="font-bold text-white">{rep.info_of_report.issued_company}</span>
-                                                                                ) : (
-                                                                                    formatDate(rep.info_of_report.date_of_issue)
-                                                                                )}
-                                                                            </th>
-                                                                        ))}
-                                                                        {comparisonMode === 'historical' && (
-                                                                            <th className="text-center border-b border-gray-700"
-                                                                                style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#1E1E1E' }}>
-                                                                                Δ
-                                                                            </th>
-                                                                        )}
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    {comparisonMode === 'peers' && (
-                                                                        <tr>
-                                                                            <td className="text-left border-r border-gray-700 font-medium" style={{ position: 'sticky', left: 0, zIndex: 10, backgroundColor: '#1E1E1E' }}>
-                                                                                Date
-                                                                            </td>
-                                                                            {comparisonReports.map(rep => (
-                                                                                <td key={rep.id} className="text-center border-gray-700 px-4">
-                                                                                    {formatDate(rep.info_of_report.date_of_issue)}
-                                                                                </td>
-                                                                            ))}
-                                                                        </tr>
-                                                                    )}
-                                                                    {renderHistoricalRow('Recommendation', 'recommendation', false, false, true)}
-                                                                    {renderHistoricalRow('Target price', 'target_price', false, false, false)}
-                                                                    {renderHistoricalRow('Upside at call', 'upside_at_call', true, false, false)}
-                                                                    {renderHistoricalRow('Perf since call', 'performance_since_call', true, false, false)}
-                                                                    {renderHistoricalRow('Total assets', 'total_assets', false, true)}
-                                                                    {renderHistoricalRow('Total equity', 'total_equity', false, true)}
-                                                                    {renderHistoricalRow('Revenue', 'revenue', false, true)}
-                                                                    {renderHistoricalRow('NPAT', 'npat', false, true)}
-                                                                    {renderHistoricalRow('EPS', 'eps_vnd', false, true)}
-                                                                    {renderHistoricalRow('BVPS', 'bvps_vnd', false, true)}
-                                                                    {renderHistoricalRow('PE', 'pe', false, true)}
-                                                                    {renderHistoricalRow('PB', 'pb', false, true)}
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                    );
-                                                } catch (error) {
-                                                    console.error('Error rendering comparison section:', error);
-                                                    return (
-                                                        <div style={{ padding: '20px', textAlign: 'center', color: '#ff6666' }}>
-                                                            <p>Unable to load comparison data for this report.</p>
-                                                            <p style={{ fontSize: '12px', color: '#888' }}>Check console for details.</p>
-                                                        </div>
-                                                    );
-                                                }
-                                            })()}
-                                        </div>
-                                    </div>
-
-                                    <div className={`detail-tab-content ${activeTab === 'inv' ? 'active' : ''}`}>
-                                        {/* 1. Investment Thesis */}
-                                        {selectedReport.investment_thesis && Array.isArray(selectedReport.investment_thesis) && (
-                                            <div className="sub-section">
-                                                <h4>Investment thesis</h4>
-                                                <ul>
-                                                    {selectedReport.investment_thesis.map((pt, i) => {
-                                                        if (typeof pt === 'object' && pt !== null) {
-                                                            return (
-                                                                <li key={i}>
-                                                                    {pt.title && <strong>{pt.title}: </strong>}
-                                                                    {pt.content || pt.details || JSON.stringify(pt)}
-                                                                </li>
-                                                            );
-                                                        }
-                                                        return <li key={i}>{pt}</li>;
-                                                    })}
-                                                </ul>
-                                            </div>
-                                        )}
-                                        {/* 4. Risk Assessment */}
-                                        {(() => {
-                                            const risks = getRisks(selectedReport);
-                                            // Hide section completely if no risk data
-                                            if (!risks || (Array.isArray(risks) && risks.length === 0)) return null;
-
-                                            return (
-                                                <div className="sub-section">
-                                                    <h4>Risk</h4>
-                                                    <ul>
-                                                        {Array.isArray(risks)
-                                                            ? risks.map((r, i) => {
-                                                                if (typeof r === 'object' && r !== null) {
-                                                                    // Format as: risk. impact. mitigation. (values only, no labels)
-                                                                    // Trim trailing periods from each value, then join with ". " and add final period
-                                                                    const values = Object.values(r).filter(v => v).map(v => String(v).replace(/\.+$/, ''));
-                                                                    const text = values.join('. ');
-                                                                    return <li key={i}>{text}.</li>;
-                                                                }
-                                                                // For string values, add period only if not already ending with one
-                                                                const text = String(r).replace(/\.+$/, '');
-                                                                return <li key={i}>{text}.</li>;
-                                                            })
-                                                            : (typeof risks === 'object' && risks !== null)
-                                                                ? <li>{Object.values(risks).filter(v => v).map(v => String(v).replace(/\.+$/, '')).join('. ')}.</li>
-                                                                : <li>{String(risks).replace(/\.+$/, '')}.</li>
-                                                        }
-                                                    </ul>
-                                                </div>
-                                            );
-                                        })()}
-                                    </div>
-
-
-                                    <div className={`detail-tab-content ${activeTab === 'fin' ? 'active' : ''}`}>
-                                        {/* Financial Forecast Table */}
-                                        {selectedReport.forecast_table && (
-                                            <ForecastTable forecastData={selectedReport.forecast_table} reportDate={selectedReport.date} />
-                                        )}
-                                    </div>
-
-
-
-                                    <div className={`detail-tab-content ${activeTab === 'analyst' ? 'active' : ''}`} style={{ fontSize: '10px' }}>
-                                        {selectedReport.analyst_viewpoints && Array.isArray(selectedReport.analyst_viewpoints) && selectedReport.analyst_viewpoints.length > 0 && (
-                                            <div className="sub-section">
-                                                <h4>Analyst viewpoints</h4>
-                                                <ul>
-                                                    {selectedReport.analyst_viewpoints.map((point, idx) => (
-                                                        <li key={idx}>{point}</li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        )}
-                                        {selectedReport.key_tracking && Array.isArray(selectedReport.key_tracking) && selectedReport.key_tracking.length > 0 && (
-                                            <div className="sub-section">
-                                                <h4>Key tracking</h4>
-                                                <ul>
-                                                    {selectedReport.key_tracking.map((item, idx) => (
-                                                        <li key={idx}>{item}</li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        )}
-                                        {(!selectedReport.analyst_viewpoints || selectedReport.analyst_viewpoints.length === 0) &&
-                                            (!selectedReport.key_tracking || selectedReport.key_tracking.length === 0) && (
-                                                <div style={{ color: '#666', fontStyle: 'italic' }}>No analyst information available</div>
-                                            )}
-                                    </div>
-
-                                    <div className={`detail-tab-content ${activeTab === 'company' ? 'active' : ''}`}>
-                                        <h3 className="section-title">Company update</h3>
-                                        {selectedReport.company_update && Array.isArray(selectedReport.company_update) && (
-                                            <div className="sub-section">
-                                                <ul>
-                                                    {selectedReport.company_update.map((pt, i) => {
-                                                        if (typeof pt === 'object' && pt !== null) {
-                                                            // Handle complex table data or structured text
-                                                            if (pt.data && Array.isArray(pt.data)) {
-                                                                return (
-                                                                    <li key={i} className="block mt-[0.5rem]">
-                                                                        {pt.title && <div className="font-bold mb-1 text-green-400">{pt.title}</div>}
-                                                                        <div className="overflow-x-auto">
-                                                                            <table className="mini-table w-full text-xs">
-                                                                                <thead>
-                                                                                    <tr>
-                                                                                        {Object.keys(pt.data[0]).map(k => <th key={k}>{k.replace(/_/g, ' ')}</th>)}
-                                                                                    </tr>
-                                                                                </thead>
-                                                                                <tbody>
-                                                                                    {pt.data.map((row, rI) => (
-                                                                                        <tr key={rI}>
-                                                                                            {Object.values(row).map((val, cI) => <td key={cI}>{val}</td>)}
-                                                                                        </tr>
-                                                                                    ))}
-                                                                                </tbody>
-                                                                            </table>
+                                                                    {availableYears.length > 0 && (
+                                                                        <div style={{ position: 'relative', display: 'inline-block' }}>
+                                                                            <select
+                                                                                value={targetYear || ''}
+                                                                                onChange={(e) => setSelectedHistYear(e.target.value)}
+                                                                                style={{
+                                                                                    appearance: 'none',
+                                                                                    backgroundColor: '#1E1E1E',
+                                                                                    border: '1px solid #4B5563',
+                                                                                    color: 'white',
+                                                                                    padding: '2px 8px',
+                                                                                    borderRadius: '4px',
+                                                                                    fontSize: '12px',
+                                                                                    outline: 'none',
+                                                                                    cursor: 'pointer',
+                                                                                    height: '24px',
+                                                                                    textAlign: 'center'
+                                                                                }}
+                                                                            >
+                                                                                {availableYears.map(year => (
+                                                                                    <option key={year} value={year}>{year}</option>
+                                                                                ))}
+                                                                            </select>
                                                                         </div>
+                                                                    )}
+                                                                </div>
+
+                                                                <table className="mini-table w-full relative border-collapse">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th className="text-left border-r border-b border-gray-700"
+                                                                                style={{ position: 'sticky', left: 0, top: 0, zIndex: 30, backgroundColor: '#1E1E1E' }}>
+                                                                                Metric
+                                                                            </th>
+                                                                            {comparisonReports.map(rep => (
+                                                                                <th key={rep.id} className="text-center border-b border-gray-700 whitespace-nowrap px-4"
+                                                                                    style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#1E1E1E' }}>
+                                                                                    {comparisonMode === 'peers' ? (
+                                                                                        <span className="font-bold text-white">{rep.info_of_report.issued_company}</span>
+                                                                                    ) : (
+                                                                                        formatDate(rep.info_of_report.date_of_issue)
+                                                                                    )}
+                                                                                </th>
+                                                                            ))}
+                                                                            {comparisonMode === 'historical' && (
+                                                                                <th className="text-center border-b border-gray-700"
+                                                                                    style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#1E1E1E' }}>
+                                                                                    Δ
+                                                                                </th>
+                                                                            )}
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        {comparisonMode === 'peers' && (
+                                                                            <tr>
+                                                                                <td className="text-left border-r border-gray-700 font-medium" style={{ position: 'sticky', left: 0, zIndex: 10, backgroundColor: '#1E1E1E' }}>
+                                                                                    Date
+                                                                                </td>
+                                                                                {comparisonReports.map(rep => (
+                                                                                    <td key={rep.id} className="text-center border-gray-700 px-4">
+                                                                                        {formatDate(rep.info_of_report.date_of_issue)}
+                                                                                    </td>
+                                                                                ))}
+                                                                            </tr>
+                                                                        )}
+                                                                        {renderHistoricalRow('Recommendation', 'recommendation', false, false, true)}
+                                                                        {renderHistoricalRow('Target price', 'target_price', false, false, false)}
+                                                                        {renderHistoricalRow('Upside at call', 'upside_at_call', true, false, false)}
+                                                                        {renderHistoricalRow('Perf since call', 'performance_since_call', true, false, false)}
+                                                                        {renderHistoricalRow('Total assets', 'total_assets', false, true)}
+                                                                        {renderHistoricalRow('Total equity', 'total_equity', false, true)}
+                                                                        {renderHistoricalRow('Revenue', 'revenue', false, true)}
+                                                                        {renderHistoricalRow('NPAT', 'npat', false, true)}
+                                                                        {renderHistoricalRow('EPS', 'eps_vnd', false, true)}
+                                                                        {renderHistoricalRow('BVPS', 'bvps_vnd', false, true)}
+                                                                        {renderHistoricalRow('PE', 'pe', false, true)}
+                                                                        {renderHistoricalRow('PB', 'pb', false, true)}
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        );
+                                                    } catch (error) {
+                                                        console.error('Error rendering comparison section:', error);
+                                                        return (
+                                                            <div style={{ padding: '20px', textAlign: 'center', color: '#ff6666' }}>
+                                                                <p>Unable to load comparison data for this report.</p>
+                                                                <p style={{ fontSize: '12px', color: '#888' }}>Check console for details.</p>
+                                                            </div>
+                                                        );
+                                                    }
+                                                })()}
+                                            </div>
+                                        </div>
+
+                                        <div className={`detail-tab-content ${activeTab === 'inv' ? 'active' : ''}`}>
+                                            {/* 1. Investment Thesis */}
+                                            {selectedReport.investment_thesis && Array.isArray(selectedReport.investment_thesis) && (
+                                                <div className="sub-section">
+                                                    <h4>Investment thesis</h4>
+                                                    <ul>
+                                                        {selectedReport.investment_thesis.map((pt, i) => {
+                                                            if (typeof pt === 'object' && pt !== null) {
+                                                                return (
+                                                                    <li key={i}>
+                                                                        {pt.title && <strong>{pt.title}: </strong>}
+                                                                        {pt.content || pt.details || JSON.stringify(pt)}
                                                                     </li>
                                                                 );
                                                             }
-                                                            return (
-                                                                <li key={i}>
-                                                                    {pt.title && <strong>{pt.title}: </strong>}
-                                                                    {pt.content || pt.details || JSON.stringify(pt)}
-                                                                </li>
-                                                            );
-                                                        }
-                                                        return <li key={i}>{pt}</li>;
-                                                    })}
-                                                </ul>
-                                            </div>
-                                        )}
-                                        {(!selectedReport.company_update || selectedReport.company_update.length === 0) && (
-                                            <div style={{ color: '#666', fontStyle: 'italic', fontSize: '0.8rem' }}>No company update available</div>
-                                        )}
+                                                            return <li key={i}>{pt}</li>;
+                                                        })}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                            {/* 4. Risk Assessment */}
+                                            {(() => {
+                                                const risks = getRisks(selectedReport);
+                                                // Hide section completely if no risk data
+                                                if (!risks || (Array.isArray(risks) && risks.length === 0)) return null;
+
+                                                return (
+                                                    <div className="sub-section">
+                                                        <h4>Risk</h4>
+                                                        <ul>
+                                                            {Array.isArray(risks)
+                                                                ? risks.map((r, i) => {
+                                                                    if (typeof r === 'object' && r !== null) {
+                                                                        // Format as: risk. impact. mitigation. (values only, no labels)
+                                                                        // Trim trailing periods from each value, then join with ". " and add final period
+                                                                        const values = Object.values(r).filter(v => v).map(v => String(v).replace(/\.+$/, ''));
+                                                                        const text = values.join('. ');
+                                                                        return <li key={i}>{text}.</li>;
+                                                                    }
+                                                                    // For string values, add period only if not already ending with one
+                                                                    const text = String(r).replace(/\.+$/, '');
+                                                                    return <li key={i}>{text}.</li>;
+                                                                })
+                                                                : (typeof risks === 'object' && risks !== null)
+                                                                    ? <li>{Object.values(risks).filter(v => v).map(v => String(v).replace(/\.+$/, '')).join('. ')}.</li>
+                                                                    : <li>{String(risks).replace(/\.+$/, '')}.</li>
+                                                            }
+                                                        </ul>
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+
+
+                                        <div className={`detail-tab-content ${activeTab === 'fin' ? 'active' : ''}`}>
+                                            {/* Financial Forecast Table */}
+                                            {selectedReport.forecast_table && (
+                                                <ForecastTable forecastData={selectedReport.forecast_table} reportDate={selectedReport.date} />
+                                            )}
+                                        </div>
+
+
+
+                                        <div className={`detail-tab-content ${activeTab === 'analyst' ? 'active' : ''}`} style={{ fontSize: '10px' }}>
+                                            {selectedReport.analyst_viewpoints && Array.isArray(selectedReport.analyst_viewpoints) && selectedReport.analyst_viewpoints.length > 0 && (
+                                                <div className="sub-section">
+                                                    <h4>Analyst viewpoints</h4>
+                                                    <ul>
+                                                        {selectedReport.analyst_viewpoints.map((point, idx) => (
+                                                            <li key={idx}>{point}</li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                            {selectedReport.key_tracking && Array.isArray(selectedReport.key_tracking) && selectedReport.key_tracking.length > 0 && (
+                                                <div className="sub-section">
+                                                    <h4>Key tracking</h4>
+                                                    <ul>
+                                                        {selectedReport.key_tracking.map((item, idx) => (
+                                                            <li key={idx}>{item}</li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                            {(!selectedReport.analyst_viewpoints || selectedReport.analyst_viewpoints.length === 0) &&
+                                                (!selectedReport.key_tracking || selectedReport.key_tracking.length === 0) && (
+                                                    <div style={{ color: '#666', fontStyle: 'italic' }}>No analyst information available</div>
+                                                )}
+                                        </div>
+
+                                        <div className={`detail-tab-content ${activeTab === 'company' ? 'active' : ''}`}>
+                                            <h3 className="section-title">Company update</h3>
+                                            {selectedReport.company_update && Array.isArray(selectedReport.company_update) && (
+                                                <div className="sub-section">
+                                                    <ul>
+                                                        {selectedReport.company_update.map((pt, i) => {
+                                                            if (typeof pt === 'object' && pt !== null) {
+                                                                // Handle complex table data or structured text
+                                                                if (pt.data && Array.isArray(pt.data)) {
+                                                                    return (
+                                                                        <li key={i} className="block mt-[0.5rem]">
+                                                                            {pt.title && <div className="font-bold mb-1 text-green-400">{pt.title}</div>}
+                                                                            <div className="overflow-x-auto">
+                                                                                <table className="mini-table w-full text-xs">
+                                                                                    <thead>
+                                                                                        <tr>
+                                                                                            {Object.keys(pt.data[0]).map(k => <th key={k}>{k.replace(/_/g, ' ')}</th>)}
+                                                                                        </tr>
+                                                                                    </thead>
+                                                                                    <tbody>
+                                                                                        {pt.data.map((row, rI) => (
+                                                                                            <tr key={rI}>
+                                                                                                {Object.values(row).map((val, cI) => <td key={cI}>{val}</td>)}
+                                                                                            </tr>
+                                                                                        ))}
+                                                                                    </tbody>
+                                                                                </table>
+                                                                            </div>
+                                                                        </li>
+                                                                    );
+                                                                }
+                                                                return (
+                                                                    <li key={i}>
+                                                                        {pt.title && <strong>{pt.title}: </strong>}
+                                                                        {pt.content || pt.details || JSON.stringify(pt)}
+                                                                    </li>
+                                                                );
+                                                            }
+                                                            return <li key={i}>{pt}</li>;
+                                                        })}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                            {(!selectedReport.company_update || selectedReport.company_update.length === 0) && (
+                                                <div style={{ color: '#666', fontStyle: 'italic', fontSize: '0.8rem' }}>No company update available</div>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            </>
+                                </>
+                            </ReportDetailErrorBoundary>
                         ) : (
                             <div className="text-center text-gray-500 mt-10">Select a report</div>
                         )}
