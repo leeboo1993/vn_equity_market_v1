@@ -1602,7 +1602,11 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                     });
 
                                                     // Sort alphabetically by Broker, but put Selected Report's broker first? Or just Alpha.
-                                                    comparisonReports = Object.values(latestPerBroker).sort((a, b) => a.info_of_report.issued_company.localeCompare(b.info_of_report.issued_company));
+                                                    comparisonReports = Object.values(latestPerBroker).sort((a, b) => {
+                                                        const brokerA = a?.info_of_report?.issued_company || '';
+                                                        const brokerB = b?.info_of_report?.issued_company || '';
+                                                        return brokerA.localeCompare(brokerB);
+                                                    });
 
                                                 } else {
                                                     // === HISTORICAL MODE (Existing Logic) ===
