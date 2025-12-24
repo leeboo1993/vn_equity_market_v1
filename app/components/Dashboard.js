@@ -20,9 +20,30 @@ const safeToFixed = (val, digits = 1) => {
 
 const getQuarterFromDate = (dateString) => {
     if (!dateString || dateString.length !== 6) return null;
-    const year = parseInt(`20${dateString.substring(0, 2)}`);
-    const month = parseInt(dateString.substring(2, 4));
-    const quarter = Math.ceil(month / 3);
+
+    // Prioritize DDMMYY format (e.g. 251117 -> 25th Nov 2017)
+    // Check if valid DDMMYY
+    const d1 = parseInt(dateString.substring(0, 2));
+    const m1 = parseInt(dateString.substring(2, 4));
+    const y1 = parseInt(dateString.substring(4, 6));
+
+    let quarter, year;
+
+    // Basic validity check for DDMMYY
+    if (m1 >= 1 && m1 <= 12 && d1 >= 1 && d1 <= 31) {
+        // It is a valid DDMMYY
+        quarter = Math.ceil(m1 / 3);
+        year = 2000 + y1;
+    } else {
+        // Fallback to YYMMDD (e.g. 231225 -> 2023)
+        // Only if DDMMYY is invalid (e.g. Month > 12)
+        const y2 = parseInt(dateString.substring(0, 2));
+        const m2 = parseInt(dateString.substring(2, 4));
+        const d2 = parseInt(dateString.substring(4, 6)); // unused for quarter
+        quarter = Math.ceil(m2 / 3);
+        year = 2000 + y2;
+    }
+
     return { quarter, year, label: `Q${quarter} ${year}` };
 };
 
@@ -53,8 +74,9 @@ const formatDate = (dateStr) => {
 
 // Determine Call Type (Buy/Hold/Sell)
 const getCallType = (call) => {
-    if (!call || call === 'No Rating') return 'Neutral';
+    if (!call || call === 'No Rating') return 'No Rating';
     const c = call.toLowerCase();
+    if (c === 'neutral') return 'Hold'; // Map standard Neutral to Hold logic for summary
     if (['buy', 'outperform', 'add', 'accumulate', 'overweight'].some(k => c.includes(k))) return 'Buy';
     if (['sell', 'underperform', 'reduce', 'underweight'].some(k => c.includes(k))) return 'Sell';
     return 'Hold';
@@ -192,8 +214,12 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
     useEffect(() => {
         if (shouldFetchData) {
             setIsLoading(true);
-            fetch('/reports.json')
-                .then(res => res.json())
+            // Add timestamp to bypass browser cache and ensure fresh data
+            fetch(`/reports.json?t=${new Date().getTime()}`)
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                    return res.json();
+                })
                 .then(data => {
                     if (Array.isArray(data)) {
                         setReports(data.reverse()); // Match previous reverse logic
@@ -203,6 +229,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                 .catch(err => {
                     console.error("Failed to load reports:", err);
                     setIsLoading(false);
+                    // Optionally set error state to show UI message
                 });
         }
     }, [shouldFetchData]);
@@ -261,19 +288,23 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
     const [filterTicker, setFilterTicker] = useState('All');
     const [filterBroker, setFilterBroker] = useState('All');
     const [filterSector, setFilterSector] = useState('All');
-    const [filterPeriod, setFilterPeriod] = useState(() => {
-        // Default to newest quarter
-        if (!reports || reports.length === 0) return 'All';
-        const dates = reports.map(r => getQuarterFromDate(r.info_of_report.date_of_issue)).filter(Boolean);
-        if (dates.length === 0) return 'All';
-        // Find max
-        const max = dates.reduce((prev, curr) => {
-            const pVal = prev.year * 10 + prev.quarter;
-            const cVal = curr.year * 10 + curr.quarter;
-            return cVal > pVal ? curr : prev;
-        });
-        return max.label;
-    });
+    const [filterPeriod, setFilterPeriod] = useState('All');
+
+    // Update filterPeriod to latest when reports are loaded
+    useEffect(() => {
+        if (reports.length > 0 && filterPeriod === 'All') {
+            const dates = reports.map(r => getQuarterFromDate(r.info_of_report?.date_of_issue)).filter(Boolean);
+            if (dates.length > 0) {
+                const max = dates.reduce((prev, curr) => {
+                    const pVal = prev.year * 10 + prev.quarter;
+                    const cVal = curr.year * 10 + curr.quarter;
+                    return cVal > pVal ? curr : prev;
+                });
+                if (max) setFilterPeriod(max.label);
+            }
+        }
+    }, [reports, filterPeriod]);
+
     // Checkbox filter
     const [shouldFilterTargets, setShouldFilterTargets] = useState(true);
 
@@ -1205,23 +1236,21 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                         <th style={{ position: 'sticky', left: 0, top: 0, zIndex: 50, backgroundColor: '#141414', textAlign: 'left' }} className="shadow-sm cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('date_of_issue')}>
                                             Date {sortConfig.key === 'date_of_issue' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                                         </th>
-                                        <th style={{ top: 0, zIndex: 50, backgroundColor: '#141414', textAlign: 'left' }} className="shadow-sm cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('ticker')}>
+                                        <th style={{ position: 'sticky', top: 0, zIndex: 50, backgroundColor: '#141414', textAlign: 'left' }} className="shadow-sm cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('ticker')}>
                                             Ticker {sortConfig.key === 'ticker' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                                         </th>
                                         <th className="sticky-col-header shadow-sm cursor-pointer hover:text-white transition-colors" style={{ textAlign: 'left' }} onClick={() => handleSort('broker')}>
                                             Broker {sortConfig.key === 'broker' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                                         </th>
-                                        <th className="sticky-col-header shadow-sm cursor-pointer hover:text-white transition-colors" style={{ textAlign: 'left' }} onClick={() => handleSort('recommendation')}>
+                                        <th className="sticky-col-header shadow-sm cursor-pointer hover:text-white transition-colors" style={{ textAlign: 'left', width: '1%', whiteSpace: 'nowrap' }} onClick={() => handleSort('recommendation')}>
                                             Recommendation {sortConfig.key === 'recommendation' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                                         </th>
                                         <th className="sticky-col-header shadow-sm cursor-pointer hover:text-white transition-colors" style={{ textAlign: 'right' }} onClick={() => handleSort('target_price')}>
                                             Target price {sortConfig.key === 'target_price' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                                         </th>
-                                        <th className="sticky-col-header shadow-sm cursor-pointer hover:text-white transition-colors" style={{ textAlign: 'right' }} onClick={() => handleSort('price_at_call')}>
-                                            Price (Call) {sortConfig.key === 'price_at_call' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                                        </th>
+                                        {/* Price (Call) removed as requested */}
                                         <th className="sticky-col-header shadow-sm cursor-pointer hover:text-white transition-colors" style={{ textAlign: 'right' }} onClick={() => handleSort('price_now')}>
-                                            Price (Now) {sortConfig.key === 'price_now' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                                            Current Price {sortConfig.key === 'price_now' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                                         </th>
                                         <th className="sticky-col-header shadow-sm cursor-pointer hover:text-white transition-colors" style={{ textAlign: 'right' }} onClick={() => handleSort('upside_at_call')}>
                                             Upside (Call) {sortConfig.key === 'upside_at_call' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
@@ -1233,19 +1262,19 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                             TP Change {sortConfig.key === 'target_price_change' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                                         </th>
                                         <th className="sticky-col-header shadow-sm cursor-pointer hover:text-white transition-colors" style={{ textAlign: 'right' }} onClick={() => handleSort('performance_since_call')}>
-                                            YTD {sortConfig.key === 'performance_since_call' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                                            Since Call {sortConfig.key === 'performance_since_call' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                                         </th>
                                         <th className="sticky-col-header shadow-sm cursor-pointer hover:text-white transition-colors" style={{ textAlign: 'right' }} onClick={() => handleSort('return_1m')}>
-                                            Fwd 1M {sortConfig.key === 'return_1m' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                                            1M {sortConfig.key === 'return_1m' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                                         </th>
                                         <th className="sticky-col-header shadow-sm cursor-pointer hover:text-white transition-colors" style={{ textAlign: 'right' }} onClick={() => handleSort('return_3m')}>
-                                            Fwd 3M {sortConfig.key === 'return_3m' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                                            3M {sortConfig.key === 'return_3m' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                                         </th>
                                         <th className="sticky-col-header shadow-sm cursor-pointer hover:text-white transition-colors" style={{ textAlign: 'right' }} onClick={() => handleSort('return_6m')}>
-                                            Fwd 6M {sortConfig.key === 'return_6m' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                                            6M {sortConfig.key === 'return_6m' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                                         </th>
                                         <th className="sticky-col-header shadow-sm cursor-pointer hover:text-white transition-colors" style={{ textAlign: 'right' }} onClick={() => handleSort('return_1y')}>
-                                            Fwd 1Y {sortConfig.key === 'return_1y' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                                            1Y {sortConfig.key === 'return_1y' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                                         </th>
                                     </tr>
                                 </thead>
@@ -1286,7 +1315,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                 <td style={{ textAlign: 'right' }} className="text-gray-300">
                                                     {r.recommendation?.target_price?.toLocaleString() || '-'}
                                                 </td>
-                                                <td style={{ textAlign: 'right' }}>{r.recommendation?.price_at_call?.toLocaleString() || r.recommendation?.current_price?.toLocaleString() || '-'}</td>
+                                                {/* Price (Call) Removed */}
                                                 <td style={{ textAlign: 'right' }} className="text-blue-400 font-medium">{r.recommendation?.price_now?.toLocaleString() || '-'}</td>
                                                 <td style={{ textAlign: 'right' }}>
                                                     {r.recommendation?.upside_at_call != null
