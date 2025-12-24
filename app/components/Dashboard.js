@@ -359,6 +359,23 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
         });
     }, [reports, filterTicker, filterBroker, filterSector, filterPeriod, shouldFilterTargets]);
 
+    // Separate filtered reports for rankings (Top 10 lists)
+    // This excludes the "Has Target Price" checkbox filter to ensure rankings are consistent
+    const filteredReportsForRankings = useMemo(() => {
+        return reports.filter(r => {
+            const mTicker = filterTicker === 'All' || r.info_of_report.ticker === filterTicker;
+            const mBroker = filterBroker === 'All' || r.info_of_report.issued_company === filterBroker;
+            const mSector = filterSector === 'All' || r.info_of_report.sector === filterSector;
+            let mPeriod = true;
+            if (filterPeriod !== 'All') {
+                const q = getQuarterFromDate(r.info_of_report.date_of_issue);
+                mPeriod = q && q.label === filterPeriod;
+            }
+            // NO target price filter for rankings
+            return mTicker && mBroker && mSector && mPeriod;
+        });
+    }, [reports, filterTicker, filterBroker, filterSector, filterPeriod]);
+
     const sortedReports = useMemo(() => {
         let sortableItems = [...filteredReports];
         if (sortConfig.key) {
@@ -754,34 +771,11 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                     </thead>
                                     <tbody>
                                         {(() => {
-                                            // === FIX: Use quarter-filtered reports, not table-filtered ===
-                                            // Top 10 should be based on ALL reports in the selected quarter,
-                                            // not influenced by table filters like "Has Target Price" checkbox
-
-                                            // Get all reports from the selected quarter (not filtered by table filters)
-                                            const quarterReports = filterPeriod === 'All'
-                                                ? reports
-                                                : reports.filter(r => {
-                                                    // Add null safety for report structure
-                                                    if (!r || !r.info_of_report || !r.info_of_report.date_of_issue) return false;
-
-                                                    const q = getQuarterFromDate(r.info_of_report.date_of_issue);
-                                                    return q && q.label === filterPeriod;
-                                                });
-
-                                            // Apply only the ticker/broker/sector filters (header filters)
-                                            const headerFilteredReports = quarterReports.filter(r => {
-                                                // Safety check
-                                                if (!r || !r.info_of_report) return false;
-
-                                                if (filterTicker && r.info_of_report.ticker !== filterTicker) return false;
-                                                if (filterBroker && r.info_of_report.issued_company !== filterBroker) return false;
-                                                if (filterSector && r.info_of_report.sector !== filterSector) return false;
-                                                return true;
-                                            });
+                                            // === USE filteredReportsForRankings for Top 10 ===
+                                            // This ensures rankings use all filters EXCEPT "Has Target Price" checkbox
 
                                             // Aggregate by ticker - calculate average upside and target price
-                                            const reportsWithUpside = headerFilteredReports.filter(r =>
+                                            const reportsWithUpside = filteredReportsForRankings.filter(r =>
                                                 r.recommendation?.upside_at_call != null &&
                                                 r.recommendation?.target_price != null
                                             );
@@ -842,7 +836,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                             }
 
                                             return rankedTickers.map((t) => {
-                                                const summary = getTickerCallsSummary(t.ticker, headerFilteredReports);
+                                                const summary = getTickerCallsSummary(t.ticker, filteredReportsForRankings);
                                                 const isPositive = t.avgUpside >= 0;
                                                 return (
                                                     <tr key={t.ticker} onClick={() => setSelectedReportId(t.latestReport.id)}>
