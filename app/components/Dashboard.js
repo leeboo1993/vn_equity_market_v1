@@ -1861,44 +1861,63 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                                     return deviation > 0.30;
                                                                 };
 
-                                                                return comparisonReports.map(rep => {
-                                                                    let val = null;
-                                                                    if (isFinancial) {
-                                                                        val = getFinancialsForYear(rep, key, targetYear);
-                                                                    } else if (key === 'recommendation') {
-                                                                        // Use raw recommendation value to match Company Reports table
-                                                                        val = rep.recommendation?.recommendation || '-';
-                                                                    } else {
-                                                                        val = rep.recommendation?.[key];
-                                                                    }
+                                                                return comparisonReports.map((rep, idx) => {
+                                                                    // Wrap entire logic in try-catch to prevent crashes
+                                                                    try {
+                                                                        // Add null safety for rep
+                                                                        if (!rep) return <td key={`empty-${idx}`} className="text-center">-</td>;
 
-                                                                    // Check for outlier in financial data
-                                                                    if (isFinancial && isOutlier(val)) {
-                                                                        return <td key={rep.id} className="text-center">-</td>;
-                                                                    }
+                                                                        const repKey = rep.id || rep.info_of_report?.date_of_issue || idx;
 
-                                                                    // Formatting
-                                                                    if (val == null) return <td key={rep.id} className="text-center">-</td>;
-                                                                    if (key === 'recommendation') {
-                                                                        const recStyle = getRecommendationStyle(val);
-                                                                        return (
-                                                                            <td key={rep.id} className="text-center">
-                                                                                <span style={{
-                                                                                    ...recStyle,
-                                                                                    padding: '4px 12px',
-                                                                                    borderRadius: '9999px',
-                                                                                    fontWeight: 'bold',
-                                                                                    fontSize: '10px',
-                                                                                    display: 'inline-block'
-                                                                                }}>
-                                                                                    {val}
-                                                                                </span>
-                                                                            </td>
-                                                                        );
+                                                                        let val = null;
+                                                                        if (isFinancial) {
+                                                                            val = getFinancialsForYear(rep, key, targetYear);
+                                                                        } else if (key === 'recommendation') {
+                                                                            // Use raw recommendation value to match Company Reports table
+                                                                            val = rep.recommendation?.recommendation || '-';
+                                                                        } else {
+                                                                            val = rep.recommendation?.[key];
+                                                                        }
+
+                                                                        // Check for outlier in financial data
+                                                                        if (isFinancial && isOutlier(val)) {
+                                                                            return <td key={repKey} className="text-center">-</td>;
+                                                                        }
+
+                                                                        // Formatting
+                                                                        if (val == null || val === undefined) return <td key={repKey} className="text-center">-</td>;
+                                                                        if (key === 'recommendation') {
+                                                                            const recStyle = getRecommendationStyle(val);
+                                                                            return (
+                                                                                <td key={repKey} className="text-center">
+                                                                                    <span style={{
+                                                                                        ...recStyle,
+                                                                                        padding: '4px 12px',
+                                                                                        borderRadius: '9999px',
+                                                                                        fontWeight: 'bold',
+                                                                                        fontSize: '10px',
+                                                                                        display: 'inline-block'
+                                                                                    }}>
+                                                                                        {val}
+                                                                                    </span>
+                                                                                </td>
+                                                                            );
+                                                                        }
+                                                                        if (isText) return <td key={repKey} className="text-center">{val}</td>;
+                                                                        // Add safety for toFixed() - ensure val is a number
+                                                                        if (isPercent) {
+                                                                            const numVal = typeof val === 'number' ? val : parseFloat(val);
+                                                                            if (isNaN(numVal)) return <td key={repKey} className="text-center">-</td>;
+                                                                            return <td key={repKey} className="text-center">{numVal.toFixed(1)}%</td>;
+                                                                        }
+                                                                        // Add safety for toLocaleString()
+                                                                        const numVal = typeof val === 'number' ? val : parseFloat(val);
+                                                                        if (isNaN(numVal)) return <td key={repKey} className="text-center">{val}</td>;
+                                                                        return <td key={repKey} className="text-center">{numVal.toLocaleString()}</td>;
+                                                                    } catch (error) {
+                                                                        console.error('Error rendering comparison cell:', error, { rep, key, targetYear });
+                                                                        return <td key={`error-${idx}`} className="text-center">-</td>;
                                                                     }
-                                                                    if (isText) return <td key={rep.id} className="text-center">{val}</td>;
-                                                                    if (isPercent) return <td key={rep.id} className="text-center">{val.toFixed(1)}%</td>;
-                                                                    return <td key={rep.id} className="text-center">{val.toLocaleString()}</td>;
                                                                 });
                                                             })()}
                                                             {comparisonMode === 'historical' && (
