@@ -93,6 +93,17 @@ const formatNumber = (numStr) => {
     return num.toLocaleString('en-US');
 };
 
+// Clean up broker names
+const formatBrokerName = (broker) => {
+    if (!broker) return '';
+    let name = broker;
+    // Replace Vietcap with VCI
+    name = name.replace(/Vietcap/gi, 'VCI');
+    // Remove "Research" text
+    name = name.replace(/\s*Research\s*/gi, '');
+    return name.trim();
+};
+
 export default function DailyTrackingPage() {
     const [dailyData, setDailyData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -509,16 +520,29 @@ export default function DailyTrackingPage() {
                                     ) : (
                                         stockRecommendations.map((rec, idx) => {
                                             const callType = rec.recommendation?.toLowerCase() || '';
-                                            const badgeClass = callType.includes('buy') ? 'buy' : callType.includes('sell') ? 'sell' : 'hold';
+                                            let badgeClass = 'hold'; // default
+                                            let badgeText = rec.recommendation || 'Neutral';
+
+                                            // Determine badge class based on recommendation text
+                                            if (callType.includes('buy') || callType.includes('mua') || callType.includes('khả quan')) {
+                                                badgeClass = 'buy';
+                                                badgeText = 'BUY';
+                                            } else if (callType.includes('sell') || callType.includes('bán') || callType === 'negative') {
+                                                badgeClass = 'sell';
+                                                badgeText = 'Sell';
+                                            } else if (callType.includes('neutral') || callType.includes('hold') || callType.includes('trung lập')) {
+                                                badgeClass = 'hold';
+                                                badgeText = 'Neutral';
+                                            }
 
                                             return (
                                                 <tr key={idx}>
                                                     <td>{formatDateDisplay(rec.date)}</td>
                                                     <td><strong style={{ color: '#fff' }}>{rec.ticker}</strong></td>
-                                                    <td>{rec.broker}</td>
+                                                    <td>{formatBrokerName(rec.broker)}</td>
                                                     <td>
                                                         <span className={`call-badge ${badgeClass}`}>
-                                                            {rec.recommendation || '-'}
+                                                            {badgeText}
                                                         </span>
                                                     </td>
                                                     <td>{rec.target_price ? formatNumber(String(rec.target_price)) : '-'}</td>
