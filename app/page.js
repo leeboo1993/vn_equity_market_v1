@@ -221,14 +221,15 @@ export default function DailyTrackingPage() {
         return { brokers: uniqueBrokers, dates, data: heatmap };
     }, [allReports, uniqueBrokers, uniqueDates]);
 
-    // Get stock recommendations
+    // Get stock recommendations (only those with target price)
     const stockRecommendations = useMemo(() => {
         const recs = [];
         reportsForDate.forEach(r => {
             const sr = r.stock_recommendation?.recommendations;
             if (sr && Array.isArray(sr)) {
                 sr.forEach(rec => {
-                    if (rec.ticker) {
+                    // Only include if has ticker AND target_price
+                    if (rec.ticker && rec.target_price) {
                         recs.push({
                             ...rec,
                             broker: r.info_of_report?.issued_company || r.broker,
