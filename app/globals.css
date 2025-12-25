@@ -802,8 +802,10 @@ body {
 .thesis-cell {
   max-width: 400px;
   min-width: 250px;
-  white-space: normal;
+  white-space: normal !important;
   vertical-align: top;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .thesis-text {
@@ -827,6 +829,8 @@ body {
   font-size: 10px;
   line-height: 1.5;
   word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal !important;
 }
 
 /* Heatmap cells */
