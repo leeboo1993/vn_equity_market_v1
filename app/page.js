@@ -185,8 +185,13 @@ export default function DailyTrackingPage() {
 
     // Set default selected date to latest
     useEffect(() => {
-        if (uniqueDates.length > 0 && !selectedDate) {
-            setSelectedDate(uniqueDates[0]);
+        if (uniqueDates.length > 0) {
+            // Check if current selectedDate is valid
+            const isCurrentValid = selectedDate && uniqueDates.includes(selectedDate);
+            if (!isCurrentValid) {
+                console.log("Setting default date to:", uniqueDates[0]);
+                setSelectedDate(uniqueDates[0]);
+            }
         }
     }, [uniqueDates, selectedDate]);
 
@@ -545,13 +550,20 @@ export default function DailyTrackingPage() {
                                     .filter(item => marketBrokerFilter === 'all' || formatBrokerName(item.broker) === marketBrokerFilter)
                                     .slice(0, 15)
                                     .map((item, idx) => (
-                                        <div key={idx} className="news-item">
+                                        <div key={idx} className="market-view-item" style={{ marginBottom: '12px', borderBottom: 'none', paddingBottom: '0' }}>
                                             {marketBrokerFilter === 'all' && (
-                                                <span className="broker-name" style={{ color: 'var(--accent)', fontSize: '11px', fontWeight: '600' }}>
-                                                    {formatBrokerName(item.broker)} Research
-                                                </span>
+                                                <div className="market-view-header" style={{ marginBottom: '4px' }}>
+                                                    <span className="broker-name" style={{ color: 'var(--accent)' }}>
+                                                        {formatBrokerName(item.broker)} Research
+                                                    </span>
+                                                </div>
                                             )}
-                                            <span className="news-text">{item.text}</span>
+                                            <div className="section-block" style={{ marginTop: '0' }}>
+                                                {/* Optional: Add a title like 'Market News' or just the text? User wants 'format like market overview' */}
+                                                {/* If I add a title it might be repetitive. Market Overview has 'Market view'. */}
+                                                {/* I will mimic the content style strictly. */}
+                                                <p className="section-text" style={{ margin: 0 }}>{item.text}</p>
+                                            </div>
                                         </div>
                                     ))
                             ) : (
