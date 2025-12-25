@@ -992,20 +992,16 @@ body {
 
 /* Section blocks in Market Overview */
 .section-block {
-  margin-top: 12px;
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 8px;
-  border-left: 3px solid var(--accent);
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .section-title {
   font-size: 10px;
   color: var(--accent);
   font-weight: 600;
-  text-transform: uppercase;
   margin-bottom: 6px;
-  letter-spacing: 0.5px;
 }
 
 .section-text {

@@ -412,22 +412,32 @@ export default function DailyTrackingPage() {
                                             )}
 
                                             {/* Analyst View Section */}
-                                            {(r.analyst_viewpoints?.length > 0 || r.featured_analysis?.length > 0) && (
+                                            {r.analyst_viewpoints?.length > 0 && (
                                                 <div className="section-block">
                                                     <div className="section-title">Analyst view</div>
                                                     {r.analyst_viewpoints?.slice(0, 2).map((vp, idx) => (
                                                         <p key={idx} className="section-text">{vp.viewpoint}</p>
                                                     ))}
-                                                    {r.featured_analysis?.filter(fa =>
-                                                        !fa.topic?.toLowerCase().includes('bsc30') &&
-                                                        !fa.topic?.toLowerCase().includes('bsc50')
-                                                    ).slice(0, 2).map((fa, idx) => (
-                                                        <p key={`fa-${idx}`} className="section-text">
-                                                            <strong>{fa.topic}:</strong> {fa.summary}
-                                                        </p>
-                                                    ))}
                                                 </div>
                                             )}
+
+                                            {/* Other Analysis Section */}
+                                            {r.featured_analysis?.filter(fa =>
+                                                !fa.topic?.toLowerCase().includes('bsc30') &&
+                                                !fa.topic?.toLowerCase().includes('bsc50')
+                                            ).length > 0 && (
+                                                    <div className="section-block">
+                                                        <div className="section-title">Other analysis</div>
+                                                        {r.featured_analysis?.filter(fa =>
+                                                            !fa.topic?.toLowerCase().includes('bsc30') &&
+                                                            !fa.topic?.toLowerCase().includes('bsc50')
+                                                        ).slice(0, 2).map((fa, idx) => (
+                                                            <p key={`fa-${idx}`} className="section-text">
+                                                                <strong>{fa.topic}:</strong> {fa.summary}
+                                                            </p>
+                                                        ))}
+                                                    </div>
+                                                )}
 
                                             {/* Upcoming Events Section */}
                                             {r.upcoming_events?.length > 0 && (
