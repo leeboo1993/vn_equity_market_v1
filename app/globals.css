@@ -114,8 +114,8 @@ body {
 /* Dashboard Layout */
 .dashboard-grid {
   display: grid;
-  /* Percentage-based layout: 30% - 30% - 40% distribution */
-  grid-template-columns: 30% 30% 40%;
+  /* Percentage-based layout: 30% - 30% - 40% distribution with gaps accounted for */
+  grid-template-columns: calc(30% - 1.07rem) calc(30% - 1.07rem) calc(40% - 1.07rem);
   gap: 1.6rem;
   padding: 1.6rem 2rem 2.2rem;
   align-items: start;
@@ -416,14 +416,14 @@ body {
 /* Media Queries */
 @media (max-width: 1400px) {
   .dashboard-grid {
-    grid-template-columns: 30% 30% 40%;
+    grid-template-columns: calc(30% - 0.8rem) calc(30% - 0.8rem) calc(40% - 0.8rem);
     gap: 1.2rem;
   }
 }
 
 @media (max-width: 1200px) {
   .dashboard-grid {
-    grid-template-columns: 30% 30% 40%;
+    grid-template-columns: calc(30% - 0.67rem) calc(30% - 0.67rem) calc(40% - 0.67rem);
     gap: 1rem;
     padding: 1.2rem;
   }
