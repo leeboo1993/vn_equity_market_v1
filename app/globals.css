@@ -111,9 +111,11 @@ body {
 
 /* Dashboard Layout */
 /* Dashboard Layout */
+/* Dashboard Layout */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 25% minmax(0, 1fr) 30%;
+  /* Fixed width sidebars are safer for data density than percentages */
+  grid-template-columns: 280px minmax(0, 1fr) 300px;
   gap: 1.6rem;
   padding: 1.6rem 2rem 2.2rem;
   align-items: start;
@@ -412,17 +414,41 @@ body {
 }
 
 /* Media Queries */
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
   .dashboard-grid {
-    grid-template-columns: 320px 1fr 340px;
-    /* Maintains sidebar feel on smaller screens */
+    grid-template-columns: 240px 1fr 280px;
+    gap: 1.2rem;
   }
 }
 
+@media (max-width: 1200px) {
+  .dashboard-grid {
+    grid-template-columns: 220px 1fr 260px;
+    gap: 1rem;
+    padding: 1.2rem;
+  }
+}
+
+/* Switch to stacked layout clearly at 1100px (Tablet/Small Laptop boundary) */
 @media (max-width: 1100px) {
   .dashboard-grid {
     grid-template-columns: 1fr;
     padding: 1rem;
+    height: auto;
+    /* Allow full scroll */
+    overflow: visible;
+  }
+
+  /* When stacked, card heights can be flexible */
+  .card {
+    min-height: auto;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Make sure internal scrolls still work if needed */
+  .heatmap-lines-wrapper,
+  .rec-table-wrapper {
+    max-height: 400px;
   }
 
   .header-bar {
@@ -435,11 +461,23 @@ body {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
+    padding: 0.8rem 1rem;
   }
 
   .header-filters {
     width: 100%;
     overflow-x: auto;
+    padding-bottom: 4px;
+    /* Space for scrollbar if needed */
+  }
+
+  .dashboard-grid {
+    padding: 0.8rem;
+    gap: 1rem;
+  }
+
+  .card {
+    padding: 1rem;
   }
 }
 
@@ -694,10 +732,15 @@ body {
   min-width: 70px;
 }
 
-.heatmap-table th:first-child,
 .heatmap-table td:first-child {
   text-align: left !important;
   padding-left: 8px !important;
+}
+
+/* Ensure no wrapping in data cells to preserve alignment */
+.heatmap-table td,
+.heatmap-table th {
+  white-space: nowrap;
 }
 
 /* Recommendations Filters */
