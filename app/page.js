@@ -641,8 +641,8 @@ export default function DailyTrackingPage() {
                                                             {badgeText}
                                                         </span>
                                                     </td>
-                                                    <td style={{ textAlign: 'center' }}>{targetPrice && !isNaN(targetPrice) ? (targetPrice / 1000).toFixed(1) : '-'}</td>
-                                                    <td style={{ textAlign: 'center' }}>{currentPrice ? (currentPrice / 1000).toFixed(1) : '-'}</td>
+                                                    <td style={{ textAlign: 'center' }}>{targetPrice && !isNaN(targetPrice) ? formatNumber(String(Math.round(targetPrice))) : '-'}</td>
+                                                    <td style={{ textAlign: 'center' }}>{currentPrice ? formatNumber(String(Math.round(currentPrice))) : '-'}</td>
                                                     <td style={{ textAlign: 'center' }}>
                                                         {upsideAtCall !== null && !isNaN(upsideAtCall) ? `${upsideAtCall.toFixed(1)}%` : '-'}
                                                     </td>
