@@ -539,8 +539,8 @@ export default function DailyTrackingPage() {
                                         <th style={{ color: 'var(--accent)' }}>Ticker</th>
                                         <th style={{ color: 'var(--accent)' }}>Broker</th>
                                         <th style={{ color: 'var(--accent)' }}>Call</th>
-                                        <th style={{ color: 'var(--accent)' }}>Target<br />price</th>
-                                        <th style={{ color: 'var(--accent)' }}>Current<br />price</th>
+                                        <th style={{ color: 'var(--accent)' }}>Target<br />(K)</th>
+                                        <th style={{ color: 'var(--accent)' }}>Current<br />(K)</th>
                                         <th style={{ color: 'var(--accent)' }}>Upside<br />(at call)</th>
                                         <th style={{ color: 'var(--accent)' }}>Upside<br />(now)</th>
                                         <th style={{ color: 'var(--accent)' }}>Performance<br />(since call)</th>
@@ -573,11 +573,32 @@ export default function DailyTrackingPage() {
                                             // Get price data for this recommendation
                                             const priceKey = `${rec.ticker}_${rec.date}`;
                                             const prices = priceData[priceKey] || {};
-                                            // Parse target price as number (might be string with comma)
+
+                                            // Parse target price - handle ranges like "100-120" or "100000-120000"
                                             let targetPrice = rec.target_price;
                                             if (typeof targetPrice === 'string') {
-                                                targetPrice = parseFloat(targetPrice.replace(/[,\s]/g, ''));
+                                                // Remove text like "VND", "đ", spaces, commas
+                                                let cleanStr = targetPrice.replace(/[VNDđ,\s]/gi, '');
+
+                                                // Check for range (contains "-" but not at start for negative)
+                                                const rangeMatch = cleanStr.match(/^(\d+(?:\.\d+)?)\s*[-–~]\s*(\d+(?:\.\d+)?)$/);
+                                                if (rangeMatch) {
+                                                    let low = parseFloat(rangeMatch[1]);
+                                                    let high = parseFloat(rangeMatch[2]);
+                                                    // Normalize if <1000 (quoted in thousands)
+                                                    if (low < 1000) low *= 1000;
+                                                    if (high < 1000) high *= 1000;
+                                                    targetPrice = (low + high) / 2; // Use average
+                                                } else {
+                                                    targetPrice = parseFloat(cleanStr);
+                                                    // Normalize if <1000 (quoted in thousands)
+                                                    if (targetPrice && targetPrice < 1000) targetPrice *= 1000;
+                                                }
+                                            } else if (typeof targetPrice === 'number') {
+                                                // Normalize if <1000 (quoted in thousands)
+                                                if (targetPrice < 1000) targetPrice *= 1000;
                                             }
+
                                             const priceAtCall = prices.priceAtCall;
                                             const currentPrice = prices.priceNow;
 
@@ -620,8 +641,8 @@ export default function DailyTrackingPage() {
                                                             {badgeText}
                                                         </span>
                                                     </td>
-                                                    <td style={{ textAlign: 'center' }}>{targetPrice && !isNaN(targetPrice) ? formatNumber(String(Math.round(targetPrice))) : '-'}</td>
-                                                    <td style={{ textAlign: 'center' }}>{currentPrice ? formatNumber(String(Math.round(currentPrice))) : '-'}</td>
+                                                    <td style={{ textAlign: 'center' }}>{targetPrice && !isNaN(targetPrice) ? (targetPrice / 1000).toFixed(1) : '-'}</td>
+                                                    <td style={{ textAlign: 'center' }}>{currentPrice ? (currentPrice / 1000).toFixed(1) : '-'}</td>
                                                     <td style={{ textAlign: 'center' }}>
                                                         {upsideAtCall !== null && !isNaN(upsideAtCall) ? `${upsideAtCall.toFixed(1)}%` : '-'}
                                                     </td>
