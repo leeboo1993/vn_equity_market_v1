@@ -49,9 +49,9 @@ const adjustToWeekday = (dateStr) => {
 const getSentimentColor = (sentiment) => {
     if (!sentiment) return 'transparent'; // No rating = no color
     const s = sentiment.toLowerCase();
-    if (s === 'positive') return '#2e7d32'; // Muted forest green
-    if (s === 'negative') return '#c62828'; // Muted deep red
-    if (s === 'neutral') return '#424242'; // Dark grey
+    if (s === 'positive') return '#00ff7f'; // Same as Buy badge (--accent)
+    if (s === 'negative') return '#ff4444'; // Same as Sell badge
+    if (s === 'neutral') return '#444'; // Same as Hold badge
     return 'transparent'; // Unknown = no color
 };
 
