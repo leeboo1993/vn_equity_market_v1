@@ -380,15 +380,23 @@ export default function DailyTrackingPage() {
                             <div className="filter-group">
                                 <div className="date-selector">
                                     <label>Date:</label>
-                                    <select
+                                    <input
+                                        type="date"
                                         value={selectedDate || ''}
-                                        onChange={e => setSelectedDate(e.target.value)}
-                                        className="date-select"
-                                    >
-                                        {uniqueDates.map(d => (
-                                            <option key={d} value={d}>{formatDateDisplay(d)}</option>
-                                        ))}
-                                    </select>
+                                        min={uniqueDates[uniqueDates.length - 1]}
+                                        max={uniqueDates[0]}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            if (uniqueDates.includes(val)) {
+                                                setSelectedDate(val);
+                                            } else {
+                                                // If date has no data, revert to previous valid date (by not updating state)
+                                                // Ideally show a toast, but for now strict blocking
+                                                alert(`No data available for ${val}`);
+                                            }
+                                        }}
+                                        className="date-input"
+                                    />
                                 </div>
                                 <div className="broker-selector">
                                     <label>Broker:</label>
