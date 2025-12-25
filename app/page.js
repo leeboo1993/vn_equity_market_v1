@@ -363,665 +363,666 @@ export default function DailyTrackingPage() {
 
         return { brokers: uniqueBrokers, dates, data: heatmap, actuals };
 
+    }, [allReports, uniqueBrokers, uniqueDates]);
 
 
-        // Get stock recommendations (from ALL reports, filtered by date range and broker)
-        const stockRecommendations = useMemo(() => {
-            const recs = [];
-            allReports.forEach(r => {
-                const sr = r.stock_recommendation?.recommendations;
-                if (sr && Array.isArray(sr)) {
-                    sr.forEach(rec => {
-                        // Build investment summary (thesis + viewpoint)
-                        const thesisParts = [];
-                        if (rec.investment_thesis?.length > 0) {
-                            thesisParts.push(...rec.investment_thesis);
-                        }
-                        if (rec.analyst_viewpoint?.viewpoint) {
-                            thesisParts.push(rec.analyst_viewpoint.viewpoint);
-                        }
-                        const investmentSummary = thesisParts.join(' ');
-
-                        // Get forecast - only if it's meaningful (string with >10 words)
-                        let forecast = rec.forecast || null;
-                        let forecastWordCount = 0;
-                        if (forecast) {
-                            const forecastStr = typeof forecast === 'string' ? forecast : JSON.stringify(forecast);
-                            forecastWordCount = forecastStr.trim().split(/\s+/).filter(w => w.length > 0).length;
-                            if (forecastWordCount <= 10) {
-                                forecast = null; // Ignore short forecasts like "-1.7%"
-                            }
-                        }
-
-                        // Check if summary has enough words (>10 words to be useful)
-                        const summaryWordCount = investmentSummary.trim().split(/\s+/).filter(w => w.length > 0).length;
-                        const hasValidSummary = summaryWordCount > 10;
-
-                        // Must have ticker, target_price, and a valid summary (forecast alone not enough)
-                        const hasContent = hasValidSummary;
-
-                        if (rec.ticker && rec.target_price && hasContent) {
-                            const reportDate = r.info_of_report?.date_of_issue;
-                            const brokerName = r.info_of_report?.issued_company || r.broker;
-
-                            recs.push({
-                                ...rec,
-                                broker: brokerName,
-                                date: reportDate,
-                                investmentSummary,
-                                forecast
-                            });
-                        }
-                    });
-                }
-            });
-
-            // Apply filters
-            return recs.filter(rec => {
-                // Date filter
-                if (recFromDate && rec.date) {
-                    const recDateObj = parseDateYYMMDD(rec.date);
-                    const fromDateObj = new Date(recFromDate);
-                    if (recDateObj && recDateObj < fromDateObj) return false;
-                }
-                if (recToDate && rec.date) {
-                    const recDateObj = parseDateYYMMDD(rec.date);
-                    const toDateObj = new Date(recToDate);
-                    if (recDateObj && recDateObj > toDateObj) return false;
-                }
-
-                // Broker filter
-                if (recBrokerFilter !== 'all' && rec.broker) {
-                    if (!rec.broker.toLowerCase().includes(recBrokerFilter.toLowerCase())) return false;
-                }
-
-                // Ticker filter
-                if (recTickerFilter && rec.ticker) {
-                    if (!rec.ticker.toLowerCase().includes(recTickerFilter.toLowerCase())) return false;
-                }
-
-                return true;
-            });
-        }, [allReports, recFromDate, recToDate, recBrokerFilter, recTickerFilter]);
-
-        // --- SORTING ADDITION ---
-        // 1. Process Recommendations with Calculated Fields for Sorting
-        const processedRecs = useMemo(() => {
-            return stockRecommendations.map(rec => {
-                // Helper to parse target price
-                let targetPriceVal = 0;
-                const targetString = rec.target_price;
-                if (typeof targetString === 'string') {
-                    let cleanStr = targetString.replace(/[VNDđ,\s]/gi, '');
-                    const rangeMatch = cleanStr.match(/^(\d+(?:\.\d+)?)\s*[-–~]\s*(\d+(?:\.\d+)?)$/);
-                    if (rangeMatch) {
-                        let low = parseFloat(rangeMatch[1]);
-                        let high = parseFloat(rangeMatch[2]);
-                        if (low < 1000) low *= 1000;
-                        if (high < 1000) high *= 1000;
-                        targetPriceVal = (low + high) / 2;
-                    } else {
-                        targetPriceVal = parseFloat(cleanStr);
-                        if (targetPriceVal && targetPriceVal < 1000) targetPriceVal *= 1000;
+    // Get stock recommendations (from ALL reports, filtered by date range and broker)
+    const stockRecommendations = useMemo(() => {
+        const recs = [];
+        allReports.forEach(r => {
+            const sr = r.stock_recommendation?.recommendations;
+            if (sr && Array.isArray(sr)) {
+                sr.forEach(rec => {
+                    // Build investment summary (thesis + viewpoint)
+                    const thesisParts = [];
+                    if (rec.investment_thesis?.length > 0) {
+                        thesisParts.push(...rec.investment_thesis);
                     }
-                } else if (typeof targetString === 'number') {
-                    targetPriceVal = targetString;
-                    if (targetPriceVal < 1000) targetPriceVal *= 1000;
-                }
+                    if (rec.analyst_viewpoint?.viewpoint) {
+                        thesisParts.push(rec.analyst_viewpoint.viewpoint);
+                    }
+                    const investmentSummary = thesisParts.join(' ');
 
-                const priceKey = `${rec.ticker}_${rec.date}`;
-                const prices = priceData[priceKey] || {};
-                const callPrice = prices.close_at_call || 0;
-                const currentPrice = prices.current_price || 0;
-
-                // Derived
-                const upsideAtCall = (targetPriceVal && callPrice) ? ((targetPriceVal - callPrice) / callPrice * 100) : null;
-                const upsideNow = (targetPriceVal && currentPrice) ? ((targetPriceVal - currentPrice) / currentPrice * 100) : null;
-                const performance = (currentPrice && callPrice) ? ((currentPrice - callPrice) / callPrice * 100) : null;
-
-                return {
-                    ...rec,
-                    targetPriceVal, // Numeric target used for sorting and calcs
-                    currentPrice,
-                    callPrice,
-                    upsideAtCall,
-                    upsideNow,
-                    performance
-                };
-            });
-        }, [stockRecommendations, priceData]);
-
-        // 2. Sort Logic
-        const sortedRecs = useMemo(() => {
-            let sortable = [...processedRecs];
-            if (sortConfig.key) {
-                sortable.sort((a, b) => {
-                    let valA = a[sortConfig.key];
-                    let valB = b[sortConfig.key];
-
-                    // Handle nulls/undefined (push to bottom)
-                    if (valA === null || valA === undefined) return 1;
-                    if (valB === null || valB === undefined) return -1;
-
-                    if (typeof valA === 'string') {
-                        valA = valA.toLowerCase();
-                        valB = valB.toLowerCase();
+                    // Get forecast - only if it's meaningful (string with >10 words)
+                    let forecast = rec.forecast || null;
+                    let forecastWordCount = 0;
+                    if (forecast) {
+                        const forecastStr = typeof forecast === 'string' ? forecast : JSON.stringify(forecast);
+                        forecastWordCount = forecastStr.trim().split(/\s+/).filter(w => w.length > 0).length;
+                        if (forecastWordCount <= 10) {
+                            forecast = null; // Ignore short forecasts like "-1.7%"
+                        }
                     }
 
-                    if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
-                    if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
-                    return 0;
+                    // Check if summary has enough words (>10 words to be useful)
+                    const summaryWordCount = investmentSummary.trim().split(/\s+/).filter(w => w.length > 0).length;
+                    const hasValidSummary = summaryWordCount > 10;
+
+                    // Must have ticker, target_price, and a valid summary (forecast alone not enough)
+                    const hasContent = hasValidSummary;
+
+                    if (rec.ticker && rec.target_price && hasContent) {
+                        const reportDate = r.info_of_report?.date_of_issue;
+                        const brokerName = r.info_of_report?.issued_company || r.broker;
+
+                        recs.push({
+                            ...rec,
+                            broker: brokerName,
+                            date: reportDate,
+                            investmentSummary,
+                            forecast
+                        });
+                    }
                 });
             }
-            return sortable;
-        }, [processedRecs, sortConfig]);
+        });
 
-        const requestSort = (key) => {
-            let direction = 'desc';
-            // If sorting same key, toggle. Otherwise default desc (good for nums/dates)
-            if (sortConfig.key === key && sortConfig.direction === 'desc') {
-                direction = 'asc';
+        // Apply filters
+        return recs.filter(rec => {
+            // Date filter
+            if (recFromDate && rec.date) {
+                const recDateObj = parseDateYYMMDD(rec.date);
+                const fromDateObj = new Date(recFromDate);
+                if (recDateObj && recDateObj < fromDateObj) return false;
             }
-            setSortConfig({ key, direction });
-        };
+            if (recToDate && rec.date) {
+                const recDateObj = parseDateYYMMDD(rec.date);
+                const toDateObj = new Date(recToDate);
+                if (recDateObj && recDateObj > toDateObj) return false;
+            }
 
-        const getSortIcon = (key) => {
-            // Only show icon if active
-            if (sortConfig.key !== key) return <span style={{ opacity: 0.3, fontSize: '9px', marginLeft: '4px' }}>⇵</span>;
-            return sortConfig.direction === 'asc'
-                ? <span style={{ color: 'var(--accent)', fontSize: '9px', marginLeft: '4px' }}>▲</span>
-                : <span style={{ color: 'var(--accent)', fontSize: '9px', marginLeft: '4px' }}>▼</span>;
-        };
+            // Broker filter
+            if (recBrokerFilter !== 'all' && rec.broker) {
+                if (!rec.broker.toLowerCase().includes(recBrokerFilter.toLowerCase())) return false;
+            }
 
-        // Fetch price data for stock recommendations
-        useEffect(() => {
-            if (stockRecommendations.length === 0) return;
+            // Ticker filter
+            if (recTickerFilter && rec.ticker) {
+                if (!rec.ticker.toLowerCase().includes(recTickerFilter.toLowerCase())) return false;
+            }
 
-            const tickers = stockRecommendations.map(r => r.ticker);
-            const callDates = stockRecommendations.map(r => r.date);
+            return true;
+        });
+    }, [allReports, recFromDate, recToDate, recBrokerFilter, recTickerFilter]);
 
-            fetch('/api/ticker-prices', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tickers, callDates })
+    // --- SORTING ADDITION ---
+    // 1. Process Recommendations with Calculated Fields for Sorting
+    const processedRecs = useMemo(() => {
+        return stockRecommendations.map(rec => {
+            // Helper to parse target price
+            let targetPriceVal = 0;
+            const targetString = rec.target_price;
+            if (typeof targetString === 'string') {
+                let cleanStr = targetString.replace(/[VNDđ,\s]/gi, '');
+                const rangeMatch = cleanStr.match(/^(\d+(?:\.\d+)?)\s*[-–~]\s*(\d+(?:\.\d+)?)$/);
+                if (rangeMatch) {
+                    let low = parseFloat(rangeMatch[1]);
+                    let high = parseFloat(rangeMatch[2]);
+                    if (low < 1000) low *= 1000;
+                    if (high < 1000) high *= 1000;
+                    targetPriceVal = (low + high) / 2;
+                } else {
+                    targetPriceVal = parseFloat(cleanStr);
+                    if (targetPriceVal && targetPriceVal < 1000) targetPriceVal *= 1000;
+                }
+            } else if (typeof targetString === 'number') {
+                targetPriceVal = targetString;
+                if (targetPriceVal < 1000) targetPriceVal *= 1000;
+            }
+
+            const priceKey = `${rec.ticker}_${rec.date}`;
+            const prices = priceData[priceKey] || {};
+            const callPrice = prices.close_at_call || 0;
+            const currentPrice = prices.current_price || 0;
+
+            // Derived
+            const upsideAtCall = (targetPriceVal && callPrice) ? ((targetPriceVal - callPrice) / callPrice * 100) : null;
+            const upsideNow = (targetPriceVal && currentPrice) ? ((targetPriceVal - currentPrice) / currentPrice * 100) : null;
+            const performance = (currentPrice && callPrice) ? ((currentPrice - callPrice) / callPrice * 100) : null;
+
+            return {
+                ...rec,
+                targetPriceVal, // Numeric target used for sorting and calcs
+                currentPrice,
+                callPrice,
+                upsideAtCall,
+                upsideNow,
+                performance
+            };
+        });
+    }, [stockRecommendations, priceData]);
+
+    // 2. Sort Logic
+    const sortedRecs = useMemo(() => {
+        let sortable = [...processedRecs];
+        if (sortConfig.key) {
+            sortable.sort((a, b) => {
+                let valA = a[sortConfig.key];
+                let valB = b[sortConfig.key];
+
+                // Handle nulls/undefined (push to bottom)
+                if (valA === null || valA === undefined) return 1;
+                if (valB === null || valB === undefined) return -1;
+
+                if (typeof valA === 'string') {
+                    valA = valA.toLowerCase();
+                    valB = valB.toLowerCase();
+                }
+
+                if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+        return sortable;
+    }, [processedRecs, sortConfig]);
+
+    const requestSort = (key) => {
+        let direction = 'desc';
+        // If sorting same key, toggle. Otherwise default desc (good for nums/dates)
+        if (sortConfig.key === key && sortConfig.direction === 'desc') {
+            direction = 'asc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const getSortIcon = (key) => {
+        // Only show icon if active
+        if (sortConfig.key !== key) return <span style={{ opacity: 0.3, fontSize: '9px', marginLeft: '4px' }}>⇵</span>;
+        return sortConfig.direction === 'asc'
+            ? <span style={{ color: 'var(--accent)', fontSize: '9px', marginLeft: '4px' }}>▲</span>
+            : <span style={{ color: 'var(--accent)', fontSize: '9px', marginLeft: '4px' }}>▼</span>;
+    };
+
+    // Fetch price data for stock recommendations
+    useEffect(() => {
+        if (stockRecommendations.length === 0) return;
+
+        const tickers = stockRecommendations.map(r => r.ticker);
+        const callDates = stockRecommendations.map(r => r.date);
+
+        fetch('/api/ticker-prices', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tickers, callDates })
+        })
+            .then(res => res.json())
+            .then(data => {
+                console.log('Price data loaded:', data);
+                setPriceData(data);
             })
-                .then(res => res.json())
-                .then(data => {
-                    console.log('Price data loaded:', data);
-                    setPriceData(data);
-                })
-                .catch(err => console.error('Failed to load price data:', err));
-        }, [stockRecommendations]);
+            .catch(err => console.error('Failed to load price data:', err));
+    }, [stockRecommendations]);
 
-        return (
-            <>
-                <Header title="Daily Tracking" />
+    return (
+        <>
+            <Header title="Daily Tracking" />
 
-                <main className="daily-tracking-grid">
-                    {/* LEFT COLUMN */}
-                    <div className="daily-left-column">
-                        {/* Market Overview */}
-                        <section className="card daily-card">
-                            <div className="daily-card-header">
-                                <h3 className="daily-card-title">Market Overview</h3>
-                                <div className="filter-group">
-                                    <div className="date-selector">
-                                        <label>Date:</label>
-                                        <input
-                                            type="date"
-                                            value={(() => {
-                                                if (!selectedDate) return '';
-                                                const d = parseDateYYMMDD(selectedDate);
-                                                return d ? d.toISOString().split('T')[0] : '';
-                                            })()}
-                                            min={(() => {
-                                                const oldest = uniqueDates[uniqueDates.length - 1];
-                                                const d = parseDateYYMMDD(oldest);
-                                                return d ? d.toISOString().split('T')[0] : '';
-                                            })()}
-                                            max={(() => {
-                                                const newest = uniqueDates[0];
-                                                const d = parseDateYYMMDD(newest);
-                                                return d ? d.toISOString().split('T')[0] : '';
-                                            })()}
-                                            onChange={e => {
-                                                const val = e.target.value; // YYYY-MM-DD
-                                                if (!val) return;
-                                                const [year, month, day] = val.split('-');
-                                                const yy = year.slice(2);
-                                                const yymmdd = `${yy}${month}${day}`;
+            <main className="daily-tracking-grid">
+                {/* LEFT COLUMN */}
+                <div className="daily-left-column">
+                    {/* Market Overview */}
+                    <section className="card daily-card">
+                        <div className="daily-card-header">
+                            <h3 className="daily-card-title">Market Overview</h3>
+                            <div className="filter-group">
+                                <div className="date-selector">
+                                    <label>Date:</label>
+                                    <input
+                                        type="date"
+                                        value={(() => {
+                                            if (!selectedDate) return '';
+                                            const d = parseDateYYMMDD(selectedDate);
+                                            return d ? d.toISOString().split('T')[0] : '';
+                                        })()}
+                                        min={(() => {
+                                            const oldest = uniqueDates[uniqueDates.length - 1];
+                                            const d = parseDateYYMMDD(oldest);
+                                            return d ? d.toISOString().split('T')[0] : '';
+                                        })()}
+                                        max={(() => {
+                                            const newest = uniqueDates[0];
+                                            const d = parseDateYYMMDD(newest);
+                                            return d ? d.toISOString().split('T')[0] : '';
+                                        })()}
+                                        onChange={e => {
+                                            const val = e.target.value; // YYYY-MM-DD
+                                            if (!val) return;
+                                            const [year, month, day] = val.split('-');
+                                            const yy = year.slice(2);
+                                            const yymmdd = `${yy}${month}${day}`;
 
-                                                if (uniqueDates.includes(yymmdd)) {
-                                                    setSelectedDate(yymmdd);
-                                                } else {
-                                                    alert(`No data available for ${val}`);
-                                                    // Force re-render to revert input value if needed (mostly auto-handled by React controlled component)
-                                                }
-                                            }}
-                                            className="date-input"
-                                        />
-                                    </div>
-                                    <div className="broker-selector">
-                                        <label>Broker:</label>
-                                        <select
-                                            value={marketBrokerFilter}
-                                            onChange={e => setMarketBrokerFilter(e.target.value)}
-                                            className="date-select"
-                                        >
-                                            <option value="all">All Brokers</option>
-                                            {uniqueBrokers.map(broker => (
-                                                <option key={broker} value={formatBrokerName(broker)}>{formatBrokerName(broker)}</option>
-                                            ))}
-                                        </select>
-                                    </div>
+                                            if (uniqueDates.includes(yymmdd)) {
+                                                setSelectedDate(yymmdd);
+                                            } else {
+                                                alert(`No data available for ${val}`);
+                                                // Force re-render to revert input value if needed (mostly auto-handled by React controlled component)
+                                            }
+                                        }}
+                                        className="date-input"
+                                    />
+                                </div>
+                                <div className="broker-selector">
+                                    <label>Broker:</label>
+                                    <select
+                                        value={marketBrokerFilter}
+                                        onChange={e => setMarketBrokerFilter(e.target.value)}
+                                        className="date-select"
+                                    >
+                                        <option value="all">All Brokers</option>
+                                        {uniqueBrokers.map(broker => (
+                                            <option key={broker} value={formatBrokerName(broker)}>{formatBrokerName(broker)}</option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
-                            <div className="daily-card-content">
-                                {isLoading ? (
-                                    <div className="placeholder-text">Loading...</div>
-                                ) : reportsForDate.length === 0 ? (
-                                    <div className="placeholder-text">No data available</div>
-                                ) : (
-                                    <div className="market-views-list">
-                                        {reportsForDate
-                                            .filter(r => marketBrokerFilter === 'all' || formatBrokerName(r.info_of_report?.issued_company || r.broker) === marketBrokerFilter)
-                                            .map(r => (
-                                                <div key={r.id} className="market-view-item">
-                                                    {/* Broker Header */}
-                                                    <div className="market-view-header">
-                                                        <span className="broker-name" style={{ color: 'var(--accent)' }}>{formatBrokerName(r.info_of_report?.issued_company || r.broker)} Research</span>
-                                                        <span className={`sentiment-badge ${getSentimentBadgeClass(r.market_view?.sentiment)}`}>
-                                                            {r.market_view?.sentiment || 'N/A'}
-                                                        </span>
+                        </div>
+                        <div className="daily-card-content">
+                            {isLoading ? (
+                                <div className="placeholder-text">Loading...</div>
+                            ) : reportsForDate.length === 0 ? (
+                                <div className="placeholder-text">No data available</div>
+                            ) : (
+                                <div className="market-views-list">
+                                    {reportsForDate
+                                        .filter(r => marketBrokerFilter === 'all' || formatBrokerName(r.info_of_report?.issued_company || r.broker) === marketBrokerFilter)
+                                        .map(r => (
+                                            <div key={r.id} className="market-view-item">
+                                                {/* Broker Header */}
+                                                <div className="market-view-header">
+                                                    <span className="broker-name" style={{ color: 'var(--accent)' }}>{formatBrokerName(r.info_of_report?.issued_company || r.broker)} Research</span>
+                                                    <span className={`sentiment-badge ${getSentimentBadgeClass(r.market_view?.sentiment)}`}>
+                                                        {r.market_view?.sentiment || 'N/A'}
+                                                    </span>
+                                                </div>
+
+                                                {/* Market View Section */}
+                                                {(r.market_view?.summary_commentary || r.market_view?.market_viewpoint) && (
+                                                    <div className="section-block">
+                                                        <div className="section-title">Market view</div>
+                                                        {r.market_view?.summary_commentary && (
+                                                            <p className="section-text">{r.market_view.summary_commentary}</p>
+                                                        )}
+                                                        {r.market_view?.market_viewpoint && r.market_view.market_viewpoint !== r.market_view.summary_commentary && (
+                                                            <p className="section-text">{r.market_view.market_viewpoint}</p>
+                                                        )}
                                                     </div>
+                                                )}
 
-                                                    {/* Market View Section */}
-                                                    {(r.market_view?.summary_commentary || r.market_view?.market_viewpoint) && (
-                                                        <div className="section-block">
-                                                            <div className="section-title">Market view</div>
-                                                            {r.market_view?.summary_commentary && (
-                                                                <p className="section-text">{r.market_view.summary_commentary}</p>
-                                                            )}
-                                                            {r.market_view?.market_viewpoint && r.market_view.market_viewpoint !== r.market_view.summary_commentary && (
-                                                                <p className="section-text">{r.market_view.market_viewpoint}</p>
-                                                            )}
-                                                        </div>
-                                                    )}
+                                                {/* Analyst View Section */}
+                                                {r.analyst_viewpoints?.length > 0 && (
+                                                    <div className="section-block">
+                                                        <div className="section-title">Analyst view</div>
+                                                        {r.analyst_viewpoints?.slice(0, 2).map((vp, idx) => (
+                                                            <p key={idx} className="section-text">{vp.viewpoint}</p>
+                                                        ))}
+                                                    </div>
+                                                )}
 
-                                                    {/* Analyst View Section */}
-                                                    {r.analyst_viewpoints?.length > 0 && (
+                                                {/* Other Analysis Section */}
+                                                {r.featured_analysis?.filter(fa =>
+                                                    !fa.topic?.toLowerCase().includes('bsc30') &&
+                                                    !fa.topic?.toLowerCase().includes('bsc50')
+                                                ).length > 0 && (
                                                         <div className="section-block">
-                                                            <div className="section-title">Analyst view</div>
-                                                            {r.analyst_viewpoints?.slice(0, 2).map((vp, idx) => (
-                                                                <p key={idx} className="section-text">{vp.viewpoint}</p>
+                                                            <div className="section-title">Other analysis</div>
+                                                            {r.featured_analysis?.filter(fa =>
+                                                                !fa.topic?.toLowerCase().includes('bsc30') &&
+                                                                !fa.topic?.toLowerCase().includes('bsc50')
+                                                            ).slice(0, 2).map((fa, idx) => (
+                                                                <p key={`fa-${idx}`} className="section-text">
+                                                                    <strong>{fa.topic}:</strong> {fa.summary}
+                                                                </p>
                                                             ))}
                                                         </div>
                                                     )}
 
-                                                    {/* Other Analysis Section */}
-                                                    {r.featured_analysis?.filter(fa =>
-                                                        !fa.topic?.toLowerCase().includes('bsc30') &&
-                                                        !fa.topic?.toLowerCase().includes('bsc50')
-                                                    ).length > 0 && (
-                                                            <div className="section-block">
-                                                                <div className="section-title">Other analysis</div>
-                                                                {r.featured_analysis?.filter(fa =>
-                                                                    !fa.topic?.toLowerCase().includes('bsc30') &&
-                                                                    !fa.topic?.toLowerCase().includes('bsc50')
-                                                                ).slice(0, 2).map((fa, idx) => (
-                                                                    <p key={`fa-${idx}`} className="section-text">
-                                                                        <strong>{fa.topic}:</strong> {fa.summary}
-                                                                    </p>
-                                                                ))}
-                                                            </div>
-                                                        )}
-
-                                                    {/* Upcoming Events Section */}
-                                                    {r.upcoming_events?.length > 0 && (
-                                                        <div className="section-block">
-                                                            <div className="section-title">Upcoming events</div>
-                                                            {r.upcoming_events.slice(0, 3).map((evt, idx) => {
-                                                                // Format date as DD/MM/YYYY or MM/YYYY
-                                                                let dateStr = '';
-                                                                if (evt.date) {
-                                                                    const parts = evt.date.split('-');
-                                                                    if (parts.length === 3) {
-                                                                        dateStr = `${parts[2]}/${parts[1]}/${parts[0]}`;
-                                                                    } else if (parts.length === 2) {
-                                                                        dateStr = `${parts[1]}/${parts[0]}`;
-                                                                    } else {
-                                                                        dateStr = evt.date;
-                                                                    }
+                                                {/* Upcoming Events Section */}
+                                                {r.upcoming_events?.length > 0 && (
+                                                    <div className="section-block">
+                                                        <div className="section-title">Upcoming events</div>
+                                                        {r.upcoming_events.slice(0, 3).map((evt, idx) => {
+                                                            // Format date as DD/MM/YYYY or MM/YYYY
+                                                            let dateStr = '';
+                                                            if (evt.date) {
+                                                                const parts = evt.date.split('-');
+                                                                if (parts.length === 3) {
+                                                                    dateStr = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                                                                } else if (parts.length === 2) {
+                                                                    dateStr = `${parts[1]}/${parts[0]}`;
+                                                                } else {
+                                                                    dateStr = evt.date;
                                                                 }
-                                                                return (
-                                                                    <p key={idx} className="section-text event-text">
-                                                                        {dateStr && <span className="event-date">{dateStr}</span>}
-                                                                        {dateStr && ' - '}
-                                                                        {evt.event}
-                                                                    </p>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ))}
-                                    </div>
-                                )}
-                            </div>
-                        </section>
-
-                        {/* Market News */}
-                        <section className="card daily-card">
-                            <div className="daily-card-header">
-                                <h3 className="daily-card-title">Market News</h3>
-                                <div className="tab-group">
-                                    {['macro', 'market', 'sector', 'companies', 'global'].map(tab => (
-                                        <button
-                                            key={tab}
-                                            className={`tab-btn ${newsTab === tab ? 'active' : ''}`}
-                                            onClick={() => setNewsTab(tab)}
-                                        >
-                                            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="daily-card-content news-list">
-                                {aggregatedNews[newsTab]?.length > 0 ? (
-                                    (() => {
-                                        const filtered = aggregatedNews[newsTab].filter(item =>
-                                            marketBrokerFilter === 'all' || formatBrokerName(item.broker) === marketBrokerFilter
-                                        );
-
-                                        // Group by broker
-                                        const grouped = {};
-                                        const brokerOrder = [];
-
-                                        filtered.slice(0, 15).forEach(item => {
-                                            const bName = formatBrokerName(item.broker);
-                                            if (!grouped[bName]) {
-                                                grouped[bName] = [];
-                                                brokerOrder.push(bName);
-                                            }
-                                            grouped[bName].push(item);
-                                        });
-
-                                        return brokerOrder.map(brokerName => (
-                                            <div key={brokerName} className="market-view-item" style={{ marginBottom: '12px', borderBottom: 'none', paddingBottom: '0' }}>
-                                                {/* Show header if "All Brokers" is selected OR if we want to confirm the source even when filtered */}
-                                                {/* User request implies grouping headers: "ACBS Research" then list */}
-                                                <div className="market-view-header" style={{ marginBottom: '4px' }}>
-                                                    <span className="broker-name" style={{ color: 'var(--accent)' }}>
-                                                        {brokerName} Research
-                                                    </span>
-                                                </div>
-                                                <div className="section-block" style={{ marginTop: '0' }}>
-                                                    <ul style={{ listStyleType: 'disc', paddingLeft: '20px', margin: 0 }}>
-                                                        {grouped[brokerName].map((item, idx) => (
-                                                            <li key={idx} className="section-text" style={{ marginBottom: '4px' }}>
-                                                                {item.text}
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
+                                                            }
+                                                            return (
+                                                                <p key={idx} className="section-text event-text">
+                                                                    {dateStr && <span className="event-date">{dateStr}</span>}
+                                                                    {dateStr && ' - '}
+                                                                    {evt.event}
+                                                                </p>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
                                             </div>
-                                        ));
-                                    })()
-                                ) : (
-                                    <div className="placeholder-text">No {newsTab} news available</div>
-                                )}
-                            </div>
-                        </section>
-                    </div>
+                                        ))}
+                                </div>
+                            )}
+                        </div>
+                    </section>
 
-                    {/* RIGHT COLUMN */}
-                    <div className="daily-right-column">
-                        {/* Market Sentiment Heatmap */}
-                        <section className="card daily-card">
-                            <div className="daily-card-header">
-                                <h3 className="daily-card-title" style={{ color: 'var(--accent)' }}>Market Sentiment</h3>
+                    {/* Market News */}
+                    <section className="card daily-card">
+                        <div className="daily-card-header">
+                            <h3 className="daily-card-title">Market News</h3>
+                            <div className="tab-group">
+                                {['macro', 'market', 'sector', 'companies', 'global'].map(tab => (
+                                    <button
+                                        key={tab}
+                                        className={`tab-btn ${newsTab === tab ? 'active' : ''}`}
+                                        onClick={() => setNewsTab(tab)}
+                                    >
+                                        {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                                    </button>
+                                ))}
                             </div>
-                            <div className="heatmap-container">
-                                {isLoading ? (
-                                    <div className="placeholder-text">Loading...</div>
-                                ) : (
-                                    <table className="heatmap-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Broker</th>
-                                                {sentimentHeatmap.dates.map(d => (
-                                                    <th key={d}>{formatDateDisplay(d).slice(0, 5)}</th>
-                                                ))}
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {sentimentHeatmap.brokers.map(broker => (
-                                                <tr key={broker}>
-                                                    <td className="broker-cell">{broker.toUpperCase()}</td>
-                                                    {sentimentHeatmap.dates.map(d => {
-                                                        const cellData = sentimentHeatmap.data[broker]?.[d];
-                                                        return (
-                                                            <td
-                                                                key={d}
-                                                                className="heatmap-cell"
-                                                                style={{
-                                                                    backgroundColor: getSentimentColor(cellData?.sentiment),
-                                                                }}
-                                                                title={cellData?.sentiment || 'No data'}
-                                                            >
-                                                                {cellData?.target && (
-                                                                    <span className="cell-target">{formatTarget(cellData.target)}</span>
-                                                                )}
-                                                            </td>
-                                                        );
-                                                    })}
-                                                </tr>
+                        </div>
+                        <div className="daily-card-content news-list">
+                            {aggregatedNews[newsTab]?.length > 0 ? (
+                                (() => {
+                                    const filtered = aggregatedNews[newsTab].filter(item =>
+                                        marketBrokerFilter === 'all' || formatBrokerName(item.broker) === marketBrokerFilter
+                                    );
+
+                                    // Group by broker
+                                    const grouped = {};
+                                    const brokerOrder = [];
+
+                                    filtered.slice(0, 15).forEach(item => {
+                                        const bName = formatBrokerName(item.broker);
+                                        if (!grouped[bName]) {
+                                            grouped[bName] = [];
+                                            brokerOrder.push(bName);
+                                        }
+                                        grouped[bName].push(item);
+                                    });
+
+                                    return brokerOrder.map(brokerName => (
+                                        <div key={brokerName} className="market-view-item" style={{ marginBottom: '12px', borderBottom: 'none', paddingBottom: '0' }}>
+                                            {/* Show header if "All Brokers" is selected OR if we want to confirm the source even when filtered */}
+                                            {/* User request implies grouping headers: "ACBS Research" then list */}
+                                            <div className="market-view-header" style={{ marginBottom: '4px' }}>
+                                                <span className="broker-name" style={{ color: 'var(--accent)' }}>
+                                                    {brokerName} Research
+                                                </span>
+                                            </div>
+                                            <div className="section-block" style={{ marginTop: '0' }}>
+                                                <ul style={{ listStyleType: 'disc', paddingLeft: '20px', margin: 0 }}>
+                                                    {grouped[brokerName].map((item, idx) => (
+                                                        <li key={idx} className="section-text" style={{ marginBottom: '4px' }}>
+                                                            {item.text}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    ));
+                                })()
+                            ) : (
+                                <div className="placeholder-text">No {newsTab} news available</div>
+                            )}
+                        </div>
+                    </section>
+                </div>
+
+                {/* RIGHT COLUMN */}
+                <div className="daily-right-column">
+                    {/* Market Sentiment Heatmap */}
+                    <section className="card daily-card">
+                        <div className="daily-card-header">
+                            <h3 className="daily-card-title" style={{ color: 'var(--accent)' }}>Market Sentiment</h3>
+                        </div>
+                        <div className="heatmap-container">
+                            {isLoading ? (
+                                <div className="placeholder-text">Loading...</div>
+                            ) : (
+                                <table className="heatmap-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Broker</th>
+                                            {sentimentHeatmap.dates.map(d => (
+                                                <th key={d}>{formatDateDisplay(d).slice(0, 5)}</th>
                                             ))}
-
-                                            {/* Spacer Row */}
-                                            <tr style={{ height: '10px' }}><td colSpan={sentimentHeatmap.dates.length + 1}></td></tr>
-
-                                            {/* Comparison Row: VNINDEX T+1 (At Bottom) */}
-                                            <tr className="comparison-row" style={{ borderTop: '2px solid rgba(255,255,255,0.2)' }}>
-                                                <td className="broker-cell" style={{ color: '#fff', borderRight: '1px solid rgba(255,255,255,0.1)', lineHeight: '1.2' }}>
-                                                    VN-Index (T+1)
-                                                </td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {sentimentHeatmap.brokers.map(broker => (
+                                            <tr key={broker}>
+                                                <td className="broker-cell">{broker.toUpperCase()}</td>
                                                 {sentimentHeatmap.dates.map(d => {
-                                                    const data = sentimentHeatmap.actuals[d];
-                                                    let bgColor = 'transparent';
-                                                    let textColor = '#ccc';
-                                                    if (data.hasData && data.returnVal !== 0) {
-                                                        // Use green for positive return, red for negative
-                                                        // Using same palette as sentiment: #00ff7f (pos), #ff4444 (neg)
-                                                        // But maybe darker background? Let's use slight tint or just text color?
-                                                        // User said "row which have the color based on the performance"
-                                                        // Usually that means background color like the heatmap.
-                                                        if (data.returnVal > 0) bgColor = '#00ff7f';
-                                                        else if (data.returnVal < 0) bgColor = '#ff4444';
-                                                        textColor = '#000'; // Black text on colored bg
-                                                    }
-                                                    // If no current close to calc return, maybe just Neutral color or transparent?
-
+                                                    const cellData = sentimentHeatmap.data[broker]?.[d];
                                                     return (
-                                                        <td key={d} className="heatmap-cell" style={{
-                                                            backgroundColor: bgColor,
-                                                            color: textColor,
-                                                            fontSize: '11px',
-                                                            fontWeight: 'bold',
-                                                            verticalAlign: 'middle'
-                                                        }}>
-                                                            {data.hasData ? (
-                                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: '1.2' }}>
-                                                                    <span>{formatNumber(data.value)}</span>
-                                                                    {data.returnText && <span style={{ fontSize: '10px', opacity: 0.8 }}>{data.returnText}</span>}
-                                                                </div>
-                                                            ) : '-'}
+                                                        <td
+                                                            key={d}
+                                                            className="heatmap-cell"
+                                                            style={{
+                                                                backgroundColor: getSentimentColor(cellData?.sentiment),
+                                                            }}
+                                                            title={cellData?.sentiment || 'No data'}
+                                                        >
+                                                            {cellData?.target && (
+                                                                <span className="cell-target">{formatTarget(cellData.target)}</span>
+                                                            )}
                                                         </td>
                                                     );
                                                 })}
                                             </tr>
-                                        </tbody>
-                                    </table>
-                                )}
-                            </div>
-                        </section>
+                                        ))}
 
-                        {/* Stock Recommendations */}
-                        <section className="card daily-card">
-                            <div className="daily-card-header">
-                                <h3 className="daily-card-title" style={{ color: 'var(--accent)' }}>Stock Recommendations</h3>
-                            </div>
+                                        {/* Spacer Row */}
+                                        <tr style={{ height: '10px' }}><td colSpan={sentimentHeatmap.dates.length + 1}></td></tr>
 
-                            {/* Filters */}
-                            <div className="rec-filters">
-                                <label>From:</label>
-                                <input
-                                    type="date"
-                                    className="date-input"
-                                    value={recFromDate}
-                                    onChange={(e) => setRecFromDate(e.target.value)}
-                                />
-                                <label>To:</label>
-                                <input
-                                    type="date"
-                                    className="date-input"
-                                    value={recToDate}
-                                    onChange={(e) => setRecToDate(e.target.value)}
-                                />
-                                <label>Broker:</label>
-                                <select
-                                    className="broker-select"
-                                    value={recBrokerFilter}
-                                    onChange={(e) => setRecBrokerFilter(e.target.value)}
-                                >
-                                    <option value="all">All Brokers</option>
-                                    {uniqueBrokers.map(b => (
-                                        <option key={b} value={b}>{formatBrokerName(b)}</option>
-                                    ))}
-                                </select>
-
-                                <label>Ticker:</label>
-                                <input
-                                    type="text"
-                                    className="date-input"
-                                    style={{ width: '80px' }}
-                                    placeholder="Ticker"
-                                    value={recTickerFilter}
-                                    onChange={(e) => setRecTickerFilter(e.target.value)}
-                                />
-
-                                <button
-                                    className="search-btn"
-                                    onClick={() => {
-                                        // Filters are applied automatically via useMemo
-                                        // This button is mainly for UX consistency
-                                    }}
-                                >
-                                    Search
-                                </button>
-                            </div>
-
-                            {/* Recommendations Table */}
-                            <div className="rec-table-wrapper">
-                                <table className="rec-table">
-                                    <thead>
-                                        <tr>
-                                            <th style={{ color: 'var(--accent)', cursor: 'pointer' }} onClick={() => requestSort('date')}>Date {getSortIcon('date')}</th>
-                                            <th style={{ color: 'var(--accent)', cursor: 'pointer' }} onClick={() => requestSort('ticker')}>Ticker {getSortIcon('ticker')}</th>
-                                            <th style={{ color: 'var(--accent)', cursor: 'pointer' }} onClick={() => requestSort('broker')}>Broker {getSortIcon('broker')}</th>
-                                            <th style={{ color: 'var(--accent)', cursor: 'pointer' }} onClick={() => requestSort('recommendation')}>Call {getSortIcon('recommendation')}</th>
-                                            <th style={{ color: 'var(--accent)', cursor: 'pointer', textAlign: 'center' }} onClick={() => requestSort('targetPriceVal')}>Target<br />price {getSortIcon('targetPriceVal')}</th>
-                                            <th style={{ color: 'var(--accent)', cursor: 'pointer', textAlign: 'center' }} onClick={() => requestSort('currentPrice')}>Current<br />price {getSortIcon('currentPrice')}</th>
-                                            <th style={{ color: 'var(--accent)', cursor: 'pointer', textAlign: 'center' }} onClick={() => requestSort('upsideAtCall')}>Upside<br />(at call) {getSortIcon('upsideAtCall')}</th>
-                                            <th style={{ color: 'var(--accent)', cursor: 'pointer', textAlign: 'center' }} onClick={() => requestSort('upsideNow')}>Upside<br />(now) {getSortIcon('upsideNow')}</th>
-                                            <th style={{ color: 'var(--accent)', cursor: 'pointer', textAlign: 'center' }} onClick={() => requestSort('performance')}>Performance<br />(since call) {getSortIcon('performance')}</th>
-                                            <th style={{ color: 'var(--accent)' }}>Update / Thesis</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {isLoading ? (
-                                            <tr><td colSpan="10" className="loading-cell">Loading...</td></tr>
-                                        ) : sortedRecs.length === 0 ? (
-                                            <tr><td colSpan="10" className="loading-cell">No stock recommendations for this date</td></tr>
-                                        ) : (
-                                            sortedRecs.map((rec, idx) => {
-                                                const callType = rec.recommendation?.toLowerCase() || '';
-                                                let badgeClass = 'hold'; // default
-                                                let badgeText = rec.recommendation || 'Neutral';
-
-                                                // Determine Call based on upside at call (derived in processedRecs)
-                                                // Or fallback to text match if upside is missing
-                                                if (rec.upsideAtCall !== null && !isNaN(rec.upsideAtCall)) {
-                                                    if (rec.upsideAtCall >= 15) {
-                                                        badgeClass = 'buy';
-                                                        badgeText = 'BUY';
-                                                    } else if (rec.upsideAtCall <= -5) {
-                                                        badgeClass = 'sell';
-                                                        badgeText = 'Sell';
-                                                    } else {
-                                                        badgeClass = 'hold';
-                                                        badgeText = 'Neutral';
-                                                    }
-                                                } else {
-                                                    // Fallback to text matching
-                                                    if (callType.includes('buy') || callType.includes('mua') || callType.includes('khả quan')) {
-                                                        badgeClass = 'buy';
-                                                        badgeText = 'BUY';
-                                                    } else if (callType.includes('sell') || callType.includes('bán') || callType === 'negative') {
-                                                        badgeClass = 'sell';
-                                                        badgeText = 'Sell';
-                                                    } else if (callType.includes('neutral') || callType.includes('hold') || callType.includes('trung lập')) {
-                                                        badgeClass = 'hold';
-                                                        badgeText = 'Neutral';
-                                                    }
+                                        {/* Comparison Row: VNINDEX T+1 (At Bottom) */}
+                                        <tr className="comparison-row" style={{ borderTop: '2px solid rgba(255,255,255,0.2)' }}>
+                                            <td className="broker-cell" style={{ color: '#fff', borderRight: '1px solid rgba(255,255,255,0.1)', lineHeight: '1.2' }}>
+                                                VNI (+1)
+                                            </td>
+                                            {sentimentHeatmap.dates.map(d => {
+                                                const data = sentimentHeatmap.actuals[d];
+                                                let bgColor = 'transparent';
+                                                let textColor = '#ccc';
+                                                if (data.hasData && data.returnVal !== 0) {
+                                                    // Use green for positive return, red for negative
+                                                    // Using same palette as sentiment: #00ff7f (pos), #ff4444 (neg)
+                                                    // But maybe darker background? Let's use slight tint or just text color?
+                                                    // User said "row which have the color based on the performance"
+                                                    // Usually that means background color like the heatmap.
+                                                    if (data.returnVal > 0) bgColor = '#00ff7f';
+                                                    else if (data.returnVal < 0) bgColor = '#ff4444';
+                                                    textColor = '#000'; // Black text on colored bg
                                                 }
+                                                // If no current close to calc return, maybe just Neutral color or transparent?
 
                                                 return (
-                                                    <tr key={idx}>
-                                                        <td>{formatDateDisplay(rec.date)}</td>
-                                                        <td><strong style={{ color: '#fff' }}>{rec.ticker}</strong></td>
-                                                        <td>{formatBrokerName(rec.broker)}</td>
-                                                        <td>
-                                                            <span className={`call-badge ${badgeClass}`}>
-                                                                {badgeText}
-                                                            </span>
-                                                        </td>
-                                                        <td style={{ textAlign: 'center' }}>{rec.targetPriceVal ? formatNumber(String(Math.round(rec.targetPriceVal))) : '-'}</td>
-                                                        <td style={{ textAlign: 'center' }}>{rec.currentPrice ? formatNumber(String(Math.round(rec.currentPrice))) : '-'}</td>
-                                                        <td style={{ textAlign: 'center' }}>
-                                                            {rec.upsideAtCall !== null && !isNaN(rec.upsideAtCall) ? `${rec.upsideAtCall.toFixed(1)}%` : '-'}
-                                                        </td>
-                                                        <td style={{ textAlign: 'center' }}>
-                                                            {rec.upsideNow !== null && !isNaN(rec.upsideNow) ? `${rec.upsideNow.toFixed(1)}%` : '-'}
-                                                        </td>
-                                                        <td style={{ textAlign: 'center' }}>
-                                                            {rec.performance !== null && !isNaN(rec.performance) ? `${rec.performance.toFixed(1)}%` : '-'}
-                                                        </td>
-                                                        <td className="thesis-cell">
-                                                            {rec.investmentSummary && (
-                                                                <div className="investment-summary">
-                                                                    <div className="summary-title">Investment summary</div>
-                                                                    <div className="summary-text">{rec.investmentSummary}</div>
-                                                                </div>
-                                                            )}
-                                                            {rec.forecast && (
-                                                                <div className="investment-summary" style={{ marginTop: rec.investmentSummary ? '8px' : '0' }}>
-                                                                    <div className="summary-title">Forecast</div>
-                                                                    <div className="summary-text">{typeof rec.forecast === 'object' ? JSON.stringify(rec.forecast) : rec.forecast}</div>
-                                                                </div>
-                                                            )}
-                                                        </td>
-                                                    </tr>
+                                                    <td key={d} className="heatmap-cell" style={{
+                                                        backgroundColor: bgColor,
+                                                        color: textColor,
+                                                        fontSize: '11px',
+                                                        fontWeight: 'bold',
+                                                        verticalAlign: 'middle'
+                                                    }}>
+                                                        {data.hasData ? (
+                                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: '1.2' }}>
+                                                                <span>{formatNumber(data.value)}</span>
+                                                                {data.returnText && <span style={{ fontSize: '10px', opacity: 0.8 }}>{data.returnText}</span>}
+                                                            </div>
+                                                        ) : '-'}
+                                                    </td>
                                                 );
-                                            })
-                                        )}
+                                            })}
+                                        </tr>
                                     </tbody>
                                 </table>
-                            </div>
-                        </section>
+                            )}
+                        </div>
+                    </section>
 
-                    </div>
-                </main>
-            </>
-        );
-    }
+                    {/* Stock Recommendations */}
+                    <section className="card daily-card">
+                        <div className="daily-card-header">
+                            <h3 className="daily-card-title" style={{ color: 'var(--accent)' }}>Stock Recommendations</h3>
+                        </div>
+
+                        {/* Filters */}
+                        <div className="rec-filters">
+                            <label>From:</label>
+                            <input
+                                type="date"
+                                className="date-input"
+                                value={recFromDate}
+                                onChange={(e) => setRecFromDate(e.target.value)}
+                            />
+                            <label>To:</label>
+                            <input
+                                type="date"
+                                className="date-input"
+                                value={recToDate}
+                                onChange={(e) => setRecToDate(e.target.value)}
+                            />
+                            <label>Broker:</label>
+                            <select
+                                className="broker-select"
+                                value={recBrokerFilter}
+                                onChange={(e) => setRecBrokerFilter(e.target.value)}
+                            >
+                                <option value="all">All Brokers</option>
+                                {uniqueBrokers.map(b => (
+                                    <option key={b} value={b}>{formatBrokerName(b)}</option>
+                                ))}
+                            </select>
+
+                            <label>Ticker:</label>
+                            <input
+                                type="text"
+                                className="date-input"
+                                style={{ width: '80px' }}
+                                placeholder="Ticker"
+                                value={recTickerFilter}
+                                onChange={(e) => setRecTickerFilter(e.target.value)}
+                            />
+
+                            <button
+                                className="search-btn"
+                                onClick={() => {
+                                    // Filters are applied automatically via useMemo
+                                    // This button is mainly for UX consistency
+                                }}
+                            >
+                                Search
+                            </button>
+                        </div>
+
+                        {/* Recommendations Table */}
+                        <div className="rec-table-wrapper">
+                            <table className="rec-table">
+                                <thead>
+                                    <tr>
+                                        <th style={{ color: 'var(--accent)', cursor: 'pointer' }} onClick={() => requestSort('date')}>Date {getSortIcon('date')}</th>
+                                        <th style={{ color: 'var(--accent)', cursor: 'pointer' }} onClick={() => requestSort('ticker')}>Ticker {getSortIcon('ticker')}</th>
+                                        <th style={{ color: 'var(--accent)', cursor: 'pointer' }} onClick={() => requestSort('broker')}>Broker {getSortIcon('broker')}</th>
+                                        <th style={{ color: 'var(--accent)', cursor: 'pointer' }} onClick={() => requestSort('recommendation')}>Call {getSortIcon('recommendation')}</th>
+                                        <th style={{ color: 'var(--accent)', cursor: 'pointer', textAlign: 'center' }} onClick={() => requestSort('targetPriceVal')}>Target<br />price {getSortIcon('targetPriceVal')}</th>
+                                        <th style={{ color: 'var(--accent)', cursor: 'pointer', textAlign: 'center' }} onClick={() => requestSort('currentPrice')}>Current<br />price {getSortIcon('currentPrice')}</th>
+                                        <th style={{ color: 'var(--accent)', cursor: 'pointer', textAlign: 'center' }} onClick={() => requestSort('upsideAtCall')}>Upside<br />(at call) {getSortIcon('upsideAtCall')}</th>
+                                        <th style={{ color: 'var(--accent)', cursor: 'pointer', textAlign: 'center' }} onClick={() => requestSort('upsideNow')}>Upside<br />(now) {getSortIcon('upsideNow')}</th>
+                                        <th style={{ color: 'var(--accent)', cursor: 'pointer', textAlign: 'center' }} onClick={() => requestSort('performance')}>Performance<br />(since call) {getSortIcon('performance')}</th>
+                                        <th style={{ color: 'var(--accent)' }}>Update / Thesis</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {isLoading ? (
+                                        <tr><td colSpan="10" className="loading-cell">Loading...</td></tr>
+                                    ) : sortedRecs.length === 0 ? (
+                                        <tr><td colSpan="10" className="loading-cell">No stock recommendations for this date</td></tr>
+                                    ) : (
+                                        sortedRecs.map((rec, idx) => {
+                                            const callType = rec.recommendation?.toLowerCase() || '';
+                                            let badgeClass = 'hold'; // default
+                                            let badgeText = rec.recommendation || 'Neutral';
+
+                                            // Determine Call based on upside at call (derived in processedRecs)
+                                            // Or fallback to text match if upside is missing
+                                            if (rec.upsideAtCall !== null && !isNaN(rec.upsideAtCall)) {
+                                                if (rec.upsideAtCall >= 15) {
+                                                    badgeClass = 'buy';
+                                                    badgeText = 'BUY';
+                                                } else if (rec.upsideAtCall <= -5) {
+                                                    badgeClass = 'sell';
+                                                    badgeText = 'Sell';
+                                                } else {
+                                                    badgeClass = 'hold';
+                                                    badgeText = 'Neutral';
+                                                }
+                                            } else {
+                                                // Fallback to text matching
+                                                if (callType.includes('buy') || callType.includes('mua') || callType.includes('khả quan')) {
+                                                    badgeClass = 'buy';
+                                                    badgeText = 'BUY';
+                                                } else if (callType.includes('sell') || callType.includes('bán') || callType === 'negative') {
+                                                    badgeClass = 'sell';
+                                                    badgeText = 'Sell';
+                                                } else if (callType.includes('neutral') || callType.includes('hold') || callType.includes('trung lập')) {
+                                                    badgeClass = 'hold';
+                                                    badgeText = 'Neutral';
+                                                }
+                                            }
+
+                                            return (
+                                                <tr key={idx}>
+                                                    <td>{formatDateDisplay(rec.date)}</td>
+                                                    <td><strong style={{ color: '#fff' }}>{rec.ticker}</strong></td>
+                                                    <td>{formatBrokerName(rec.broker)}</td>
+                                                    <td>
+                                                        <span className={`call-badge ${badgeClass}`}>
+                                                            {badgeText}
+                                                        </span>
+                                                    </td>
+                                                    <td style={{ textAlign: 'center' }}>{rec.targetPriceVal ? formatNumber(String(Math.round(rec.targetPriceVal))) : '-'}</td>
+                                                    <td style={{ textAlign: 'center' }}>{rec.currentPrice ? formatNumber(String(Math.round(rec.currentPrice))) : '-'}</td>
+                                                    <td style={{ textAlign: 'center' }}>
+                                                        {rec.upsideAtCall !== null && !isNaN(rec.upsideAtCall) ? `${rec.upsideAtCall.toFixed(1)}%` : '-'}
+                                                    </td>
+                                                    <td style={{ textAlign: 'center' }}>
+                                                        {rec.upsideNow !== null && !isNaN(rec.upsideNow) ? `${rec.upsideNow.toFixed(1)}%` : '-'}
+                                                    </td>
+                                                    <td style={{ textAlign: 'center' }}>
+                                                        {rec.performance !== null && !isNaN(rec.performance) ? `${rec.performance.toFixed(1)}%` : '-'}
+                                                    </td>
+                                                    <td className="thesis-cell">
+                                                        {rec.investmentSummary && (
+                                                            <div className="investment-summary">
+                                                                <div className="summary-title">Investment summary</div>
+                                                                <div className="summary-text">{rec.investmentSummary}</div>
+                                                            </div>
+                                                        )}
+                                                        {rec.forecast && (
+                                                            <div className="investment-summary" style={{ marginTop: rec.investmentSummary ? '8px' : '0' }}>
+                                                                <div className="summary-title">Forecast</div>
+                                                                <div className="summary-text">{typeof rec.forecast === 'object' ? JSON.stringify(rec.forecast) : rec.forecast}</div>
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                </div>
+            </main>
+        </>
+    );
+}
