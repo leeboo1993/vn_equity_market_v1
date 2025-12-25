@@ -172,6 +172,29 @@ export default function DailyTrackingPage() {
         }
     }, [uniqueDates, selectedDate]);
 
+    // Set default recommendation filter dates (To = newest, From = T-5 working days)
+    useEffect(() => {
+        if (uniqueDates.length > 0 && !recToDate && !recFromDate) {
+            // To date = newest available
+            const newestDate = parseDateYYMMDD(uniqueDates[0]);
+            if (newestDate) {
+                setRecToDate(newestDate.toISOString().split('T')[0]);
+
+                // From date = T-5 working days from newest
+                let fromDate = new Date(newestDate);
+                let workingDaysBack = 0;
+                while (workingDaysBack < 5) {
+                    fromDate.setDate(fromDate.getDate() - 1);
+                    const dayOfWeek = fromDate.getDay();
+                    if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Not weekend
+                        workingDaysBack++;
+                    }
+                }
+                setRecFromDate(fromDate.toISOString().split('T')[0]);
+            }
+        }
+    }, [uniqueDates, recToDate, recFromDate]);
+
     // Get unique brokers
     const uniqueBrokers = useMemo(() => {
         return [...new Set(allReports.map(r => r.broker))].sort();
