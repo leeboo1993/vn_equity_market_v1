@@ -119,19 +119,17 @@ export default function ForecastTable({ forecastData, reportDate }) {
             }
         });
 
-        // Smart backfill: ensure minimum 4 columns
-        // Start with all forecast columns
-        const columnsToShow = [...forecastColumns];
+        // Simple logic: show last historical column + all forecast columns
+        // If less than 4 columns available, just show what exists
+        const columnsToShow = [];
 
-        // Calculate how many historical columns we need to reach 4
-        const minColumns = 4;
-        const neededHistorical = Math.max(1, minColumns - forecastColumns.length);
+        // Add the most recent historical column (just 1)
+        if (historicalColumns.length > 0) {
+            columnsToShow.push(historicalColumns[historicalColumns.length - 1]);
+        }
 
-        // Add the most recent historical columns (from the end of the array)
-        const historicalToAdd = historicalColumns.slice(-neededHistorical);
-
-        // Prepend historical columns (in chronological order)
-        columnsToShow.unshift(...historicalToAdd);
+        // Add all forecast columns
+        columnsToShow.push(...forecastColumns);
 
         // Rebuild filtered columns array and track which are forecasts
         // Safety check: if no columns to show, skip filtering
