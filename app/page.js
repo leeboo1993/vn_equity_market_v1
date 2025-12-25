@@ -99,6 +99,11 @@ export default function DailyTrackingPage() {
     const [newsTab, setNewsTab] = useState('market');
     const [selectedDate, setSelectedDate] = useState(null);
 
+    // Stock recommendation filters
+    const [recFromDate, setRecFromDate] = useState('');
+    const [recToDate, setRecToDate] = useState('');
+    const [recBrokerFilter, setRecBrokerFilter] = useState('all');
+
     // Load daily report data from R2
     useEffect(() => {
         setIsLoading(true);
@@ -221,10 +226,10 @@ export default function DailyTrackingPage() {
         return { brokers: uniqueBrokers, dates, data: heatmap };
     }, [allReports, uniqueBrokers, uniqueDates]);
 
-    // Get stock recommendations (only those with target price AND content)
+    // Get stock recommendations (from ALL reports, filtered by date range and broker)
     const stockRecommendations = useMemo(() => {
         const recs = [];
-        reportsForDate.forEach(r => {
+        allReports.forEach(r => {
             const sr = r.stock_recommendation?.recommendations;
             if (sr && Array.isArray(sr)) {
                 sr.forEach(rec => {
@@ -245,10 +250,13 @@ export default function DailyTrackingPage() {
                     const hasContent = investmentSummary.length > 0 || forecast;
 
                     if (rec.ticker && rec.target_price && hasContent) {
+                        const reportDate = r.info_of_report?.date_of_issue;
+                        const brokerName = r.info_of_report?.issued_company || r.broker;
+
                         recs.push({
                             ...rec,
-                            broker: r.info_of_report?.issued_company || r.broker,
-                            date: r.info_of_report?.date_of_issue,
+                            broker: brokerName,
+                            date: reportDate,
                             investmentSummary,
                             forecast
                         });
@@ -256,8 +264,29 @@ export default function DailyTrackingPage() {
                 });
             }
         });
-        return recs;
-    }, [reportsForDate]);
+
+        // Apply filters
+        return recs.filter(rec => {
+            // Date filter
+            if (recFromDate && rec.date) {
+                const recDateObj = parseDateYYMMDD(rec.date);
+                const fromDateObj = new Date(recFromDate);
+                if (recDateObj && recDateObj < fromDateObj) return false;
+            }
+            if (recToDate && rec.date) {
+                const recDateObj = parseDateYYMMDD(rec.date);
+                const toDateObj = new Date(recToDate);
+                if (recDateObj && recDateObj > toDateObj) return false;
+            }
+
+            // Broker filter
+            if (recBrokerFilter !== 'all' && rec.broker) {
+                if (!rec.broker.toLowerCase().includes(recBrokerFilter.toLowerCase())) return false;
+            }
+
+            return true;
+        });
+    }, [allReports, recFromDate, recToDate, recBrokerFilter]);
 
     return (
         <>
@@ -392,6 +421,44 @@ export default function DailyTrackingPage() {
                     <section className="card daily-card">
                         <div className="daily-card-header">
                             <h3 className="daily-card-title" style={{ color: 'var(--accent)' }}>Stock Recommendations</h3>
+                        </div>
+
+                        {/* Filters */}
+                        <div className="rec-filters">
+                            <label>From:</label>
+                            <input
+                                type="date"
+                                className="date-input"
+                                value={recFromDate}
+                                onChange={(e) => setRecFromDate(e.target.value)}
+                            />
+                            <label>To:</label>
+                            <input
+                                type="date"
+                                className="date-input"
+                                value={recToDate}
+                                onChange={(e) => setRecToDate(e.target.value)}
+                            />
+                            <label>Broker:</label>
+                            <select
+                                className="broker-select"
+                                value={recBrokerFilter}
+                                onChange={(e) => setRecBrokerFilter(e.target.value)}
+                            >
+                                <option value="all">All Brokers</option>
+                                {uniqueBrokers.map(b => (
+                                    <option key={b} value={b}>{b.toUpperCase()}</option>
+                                ))}
+                            </select>
+                            <button
+                                className="search-btn"
+                                onClick={() => {
+                                    // Filters are applied automatically via useMemo
+                                    // This button is mainly for UX consistency
+                                }}
+                            >
+                                Search
+                            </button>
                         </div>
 
                         {/* Recommendations Table */}
