@@ -689,8 +689,15 @@ body {
 
 .broker-cell {
   text-align: left !important;
+  padding-left: 8px !important;
   color: #aaa;
-  min-width: 60px;
+  min-width: 70px;
+}
+
+.heatmap-table th:first-child,
+.heatmap-table td:first-child {
+  text-align: left !important;
+  padding-left: 8px !important;
 }
 
 /* Recommendations Filters */
