@@ -411,9 +411,16 @@ export default function DailyTrackingPage() {
                                                     </td>
                                                     <td>{rec.target_price ? formatNumber(String(rec.target_price)) : '-'}</td>
                                                     <td className="thesis-cell">
-                                                        {rec.investment_thesis?.length > 0
-                                                            ? rec.investment_thesis.slice(0, 2).join('. ')
-                                                            : rec.analyst_viewpoint?.viewpoint || '-'}
+                                                        {(rec.investment_thesis?.length > 0 || rec.analyst_viewpoint?.viewpoint) ? (
+                                                            <div className="investment-summary">
+                                                                <div className="summary-title">Investment summary</div>
+                                                                <div className="summary-text">
+                                                                    {rec.investment_thesis?.length > 0
+                                                                        ? rec.investment_thesis.join(' ')
+                                                                        : rec.analyst_viewpoint?.viewpoint || ''}
+                                                                </div>
+                                                            </div>
+                                                        ) : '-'}
                                                     </td>
                                                 </tr>
                                             );

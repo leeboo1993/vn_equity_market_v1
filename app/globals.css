@@ -800,13 +800,33 @@ body {
 }
 
 .thesis-cell {
-  max-width: 200px;
+  max-width: 400px;
+  min-width: 250px;
   white-space: normal;
+  vertical-align: top;
 }
 
 .thesis-text {
   color: #888;
   font-size: 9px;
+}
+
+/* Investment Summary */
+.investment-summary {
+  padding: 4px 0;
+}
+
+.summary-title {
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.summary-text {
+  color: #aaa;
+  font-size: 10px;
+  line-height: 1.5;
+  word-wrap: break-word;
 }
 
 /* Heatmap cells */
