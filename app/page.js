@@ -109,18 +109,21 @@ const shouldExcludeNewsItem = (text, category) => {
     const t = text.toLowerCase();
 
     // 1. Filter out repetitive/generated market noise (Top contributing, Net buy/sell, Price updates)
-    const noisePatterns = [
-        'top contributing stock',
-        'top net buy stock',
-        'top net sell stock',
-        'positive performers',
-        'stock price was',
-        'cover warrant',
-        'declarer:', // Sometimes appears in scraped text
-        'bsc30', // Index composition updates
-        'bsc50'
-    ];
-    if (noisePatterns.some(p => t.includes(p))) return true;
+    // User Update: Keep these items if we are in the 'market' tab, but filter them out from companies/sector/etc.
+    if (category !== 'market') {
+        const noisePatterns = [
+            'top contributing stock',
+            'top net buy stock',
+            'top net sell stock',
+            'positive performers',
+            'stock price was',
+            'cover warrant',
+            'declarer:', // Sometimes appears in scraped text
+            'bsc30', // Index composition updates
+            'bsc50'
+        ];
+        if (noisePatterns.some(p => t.includes(p))) return true;
+    }
 
     // 2. Filter out general market index updates from specific categorical tabs
     // User doesn't want VN-Index updates in Companies, Global, or Sector tabs
