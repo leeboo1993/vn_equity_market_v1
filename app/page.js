@@ -731,7 +731,10 @@ export default function DailyTrackingPage() {
 
                                         {/* Comparison Row: VNINDEX T+1 (At Bottom) */}
                                         <tr className="comparison-row" style={{ borderTop: '2px solid rgba(255,255,255,0.2)' }}>
-                                            <td className="broker-cell" style={{ color: '#fff', fontStyle: 'italic', borderRight: '1px solid rgba(255,255,255,0.1)' }}>VNINDEX T+1</td>
+                                            <td className="broker-cell" style={{ color: '#fff', fontStyle: 'italic', borderRight: '1px solid rgba(255,255,255,0.1)', lineHeight: '1.2' }}>
+                                                <div>VN-Index</div>
+                                                <div style={{ fontSize: '10px', opacity: 0.7 }}>(T+1)</div>
+                                            </td>
                                             {sentimentHeatmap.dates.map(d => {
                                                 const data = sentimentHeatmap.actuals[d];
                                                 let bgColor = 'transparent';
