@@ -221,19 +221,36 @@ export default function DailyTrackingPage() {
         return { brokers: uniqueBrokers, dates, data: heatmap };
     }, [allReports, uniqueBrokers, uniqueDates]);
 
-    // Get stock recommendations (only those with target price)
+    // Get stock recommendations (only those with target price AND content)
     const stockRecommendations = useMemo(() => {
         const recs = [];
         reportsForDate.forEach(r => {
             const sr = r.stock_recommendation?.recommendations;
             if (sr && Array.isArray(sr)) {
                 sr.forEach(rec => {
-                    // Only include if has ticker AND target_price
-                    if (rec.ticker && rec.target_price) {
+                    // Build investment summary (thesis + viewpoint)
+                    const thesisParts = [];
+                    if (rec.investment_thesis?.length > 0) {
+                        thesisParts.push(...rec.investment_thesis);
+                    }
+                    if (rec.analyst_viewpoint?.viewpoint) {
+                        thesisParts.push(rec.analyst_viewpoint.viewpoint);
+                    }
+                    const investmentSummary = thesisParts.join(' ');
+
+                    // Get forecast
+                    const forecast = rec.forecast || null;
+
+                    // Must have ticker, target_price, and at least one of: summary or forecast
+                    const hasContent = investmentSummary.length > 0 || forecast;
+
+                    if (rec.ticker && rec.target_price && hasContent) {
                         recs.push({
                             ...rec,
                             broker: r.info_of_report?.issued_company || r.broker,
-                            date: r.info_of_report?.date_of_issue
+                            date: r.info_of_report?.date_of_issue,
+                            investmentSummary,
+                            forecast
                         });
                     }
                 });
@@ -412,16 +429,18 @@ export default function DailyTrackingPage() {
                                                     </td>
                                                     <td>{rec.target_price ? formatNumber(String(rec.target_price)) : '-'}</td>
                                                     <td className="thesis-cell">
-                                                        {(rec.investment_thesis?.length > 0 || rec.analyst_viewpoint?.viewpoint) ? (
+                                                        {rec.investmentSummary && (
                                                             <div className="investment-summary">
                                                                 <div className="summary-title">Investment summary</div>
-                                                                <div className="summary-text">
-                                                                    {rec.investment_thesis?.length > 0
-                                                                        ? rec.investment_thesis.join(' ')
-                                                                        : rec.analyst_viewpoint?.viewpoint || ''}
-                                                                </div>
+                                                                <div className="summary-text">{rec.investmentSummary}</div>
                                                             </div>
-                                                        ) : '-'}
+                                                        )}
+                                                        {rec.forecast && (
+                                                            <div className="investment-summary" style={{ marginTop: rec.investmentSummary ? '8px' : '0' }}>
+                                                                <div className="summary-title">Forecast</div>
+                                                                <div className="summary-text">{typeof rec.forecast === 'object' ? JSON.stringify(rec.forecast) : rec.forecast}</div>
+                                                            </div>
+                                                        )}
                                                     </td>
                                                 </tr>
                                             );
