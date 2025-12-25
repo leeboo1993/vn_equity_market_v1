@@ -308,7 +308,8 @@ export default function DailyTrackingPage() {
                 const report = allReports.find(r => r.broker === broker && r.info_of_report?.date_of_issue === date);
                 heatmap[broker][date] = {
                     sentiment: report?.market_view?.sentiment || null,
-                    target: report?.market_view?.vnindex_target || null
+                    target: report?.market_view?.vnindex_target || null,
+                    return: report?.market_view?.expected_return || null
                 };
             });
         });
@@ -671,9 +672,14 @@ export default function DailyTrackingPage() {
                                                             }}
                                                             title={cellData?.sentiment || 'No data'}
                                                         >
-                                                            {cellData?.target && (
-                                                                <span className="cell-target">{formatTarget(cellData.target)}</span>
-                                                            )}
+                                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: '1.2' }}>
+                                                                {cellData?.target && (
+                                                                    <span className="cell-target" style={{ fontSize: '11px', fontWeight: 'bold' }}>{formatTarget(cellData.target)}</span>
+                                                                )}
+                                                                {cellData?.return && (
+                                                                    <span className="cell-return" style={{ fontSize: '10px', opacity: 0.8 }}>{cellData.return}</span>
+                                                                )}
+                                                            </div>
                                                         </td>
                                                     );
                                                 })}
