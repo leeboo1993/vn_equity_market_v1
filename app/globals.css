@@ -802,6 +802,22 @@ body {
   font-size: 9px;
 }
 
+/* Heatmap cells */
+.heatmap-cell {
+  min-width: 45px;
+  height: 28px;
+  text-align: center;
+  vertical-align: middle;
+  position: relative;
+}
+
+.cell-target {
+  font-size: 8px;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+}
+
 /* ===== PLACEHOLDER PAGES ===== */
 .page-content {
   display: flex;

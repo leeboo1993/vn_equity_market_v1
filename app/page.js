@@ -144,14 +144,17 @@ export default function DailyTrackingPage() {
     const sentimentHeatmap = useMemo(() => {
         const heatmap = {};
 
-        // Get last 14 dates
-        const dates = uniqueDates.slice(0, 14);
+        // Get last 14 dates and reverse to show oldest first (left to right)
+        const dates = uniqueDates.slice(0, 14).reverse();
 
         uniqueBrokers.forEach(broker => {
             heatmap[broker] = {};
             dates.forEach(date => {
                 const report = allReports.find(r => r.broker === broker && r.info_of_report?.date_of_issue === date);
-                heatmap[broker][date] = report?.market_view?.sentiment || null;
+                heatmap[broker][date] = {
+                    sentiment: report?.market_view?.sentiment || null,
+                    target: report?.market_view?.vnindex_target || null
+                };
             });
         });
 
@@ -282,17 +285,23 @@ export default function DailyTrackingPage() {
                                         {sentimentHeatmap.brokers.map(broker => (
                                             <tr key={broker}>
                                                 <td className="broker-cell">{broker}</td>
-                                                {sentimentHeatmap.dates.map(d => (
-                                                    <td
-                                                        key={d}
-                                                        style={{
-                                                            backgroundColor: getSentimentColor(sentimentHeatmap.data[broker]?.[d]),
-                                                            minWidth: '40px',
-                                                            height: '24px'
-                                                        }}
-                                                        title={sentimentHeatmap.data[broker]?.[d] || 'No data'}
-                                                    />
-                                                ))}
+                                                {sentimentHeatmap.dates.map(d => {
+                                                    const cellData = sentimentHeatmap.data[broker]?.[d];
+                                                    return (
+                                                        <td
+                                                            key={d}
+                                                            className="heatmap-cell"
+                                                            style={{
+                                                                backgroundColor: getSentimentColor(cellData?.sentiment),
+                                                            }}
+                                                            title={cellData?.sentiment || 'No data'}
+                                                        >
+                                                            {cellData?.target && (
+                                                                <span className="cell-target">{cellData.target}</span>
+                                                            )}
+                                                        </td>
+                                                    );
+                                                })}
                                             </tr>
                                         ))}
                                     </tbody>
