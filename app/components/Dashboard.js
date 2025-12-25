@@ -1796,7 +1796,11 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                                         if (row) {
                                                                             // 1. Array format (Newer reports)
                                                                             if (row.values && Array.isArray(row.values)) {
-                                                                                return row.values[colIndex];
+                                                                                // Bounds check to prevent crash
+                                                                                if (colIndex >= 0 && colIndex < row.values.length) {
+                                                                                    return row.values[colIndex];
+                                                                                }
+                                                                                return null;
                                                                             }
                                                                             // 2. Flat Object format (Older reports)
                                                                             // Access by column name (e.g. "2026F")
