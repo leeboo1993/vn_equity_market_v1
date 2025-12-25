@@ -25,11 +25,31 @@ const formatDateDisplay = (dateStr) => {
 };
 
 const parseDateYYMMDD = (dateStr) => {
-    if (!dateStr || dateStr.length !== 6) return null;
-    const yy = parseInt(dateStr.substring(0, 2));
-    const mm = parseInt(dateStr.substring(2, 4)) - 1;
-    const dd = parseInt(dateStr.substring(4, 6));
-    return new Date(2000 + yy, mm, dd);
+    if (!dateStr) return null;
+    const s = String(dateStr).trim();
+
+    // YYYY-MM-DD
+    if (s.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        return new Date(s);
+    }
+
+    // YYMMDD (6 digits)
+    if (s.length === 6) {
+        const yy = parseInt(s.substring(0, 2));
+        const mm = parseInt(s.substring(2, 4)) - 1;
+        const dd = parseInt(s.substring(4, 6));
+        return new Date(2000 + yy, mm, dd);
+    }
+
+    // YYYYMMDD (8 digits)
+    if (s.length === 8) {
+        const yyyy = parseInt(s.substring(0, 4));
+        const mm = parseInt(s.substring(4, 6)) - 1;
+        const dd = parseInt(s.substring(6, 8));
+        return new Date(yyyy, mm, dd);
+    }
+
+    return null;
 };
 
 // Map weekend dates to Friday (Sat->Fri, Sun->Fri)
