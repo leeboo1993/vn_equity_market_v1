@@ -982,6 +982,37 @@ body {
   margin: 0;
 }
 
+/* Section blocks in Market Overview */
+.section-block {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.section-title {
+  font-size: 9px;
+  color: #888;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.section-text {
+  color: #bbb;
+  font-size: 10px;
+  line-height: 1.5;
+  margin: 0 0 4px 0;
+}
+
+.event-date {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.event-text {
+  font-size: 9px;
+}
+
 /* News List */
 .news-list {
   max-height: 250px;

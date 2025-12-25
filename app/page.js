@@ -390,30 +390,67 @@ export default function DailyTrackingPage() {
                                 <div className="market-views-list">
                                     {reportsForDate.map(r => (
                                         <div key={r.id} className="market-view-item">
+                                            {/* Broker Header */}
                                             <div className="market-view-header">
-                                                <span className="broker-name">{r.info_of_report?.issued_company || r.broker}</span>
+                                                <span className="broker-name" style={{ color: 'var(--accent)' }}>{formatBrokerName(r.info_of_report?.issued_company || r.broker)}</span>
                                                 <span className={`sentiment-badge ${getSentimentBadgeClass(r.market_view?.sentiment)}`}>
                                                     {r.market_view?.sentiment || 'N/A'}
                                                 </span>
                                             </div>
-                                            <p className="market-view-summary">
-                                                {r.market_view?.summary_commentary || r.market_view?.market_viewpoint || 'No commentary'}
-                                            </p>
-                                            {/* Analyst Viewpoints */}
-                                            {r.analyst_viewpoints?.length > 0 && (
-                                                <div className="analyst-viewpoints-inline">
-                                                    {r.analyst_viewpoints.slice(0, 2).map((vp, idx) => (
-                                                        <div key={idx} className="viewpoint-inline">
-                                                            <div className="viewpoint-text-small">{vp.viewpoint}</div>
-                                                            {vp.backing_facts?.length > 0 && (
-                                                                <ul className="viewpoint-facts-small">
-                                                                    {vp.backing_facts.slice(0, 2).map((f, i) => (
-                                                                        <li key={i}>{f}</li>
-                                                                    ))}
-                                                                </ul>
-                                                            )}
-                                                        </div>
+
+                                            {/* Market View Section */}
+                                            {(r.market_view?.summary_commentary || r.market_view?.market_viewpoint) && (
+                                                <div className="section-block">
+                                                    <div className="section-title">Market view</div>
+                                                    {r.market_view?.summary_commentary && (
+                                                        <p className="section-text">{r.market_view.summary_commentary}</p>
+                                                    )}
+                                                    {r.market_view?.market_viewpoint && r.market_view.market_viewpoint !== r.market_view.summary_commentary && (
+                                                        <p className="section-text">{r.market_view.market_viewpoint}</p>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {/* Analyst View Section */}
+                                            {(r.analyst_viewpoints?.length > 0 || r.featured_analysis?.length > 0) && (
+                                                <div className="section-block">
+                                                    <div className="section-title">Analyst view</div>
+                                                    {r.analyst_viewpoints?.slice(0, 2).map((vp, idx) => (
+                                                        <p key={idx} className="section-text">{vp.viewpoint}</p>
                                                     ))}
+                                                    {r.featured_analysis?.slice(0, 2).map((fa, idx) => (
+                                                        <p key={`fa-${idx}`} className="section-text">
+                                                            <strong>{fa.topic}:</strong> {fa.summary}
+                                                        </p>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* Upcoming Events Section */}
+                                            {r.upcoming_events?.length > 0 && (
+                                                <div className="section-block">
+                                                    <div className="section-title">Upcoming events</div>
+                                                    {r.upcoming_events.slice(0, 3).map((evt, idx) => {
+                                                        // Format date as DD/MM/YYYY or MM/YYYY
+                                                        let dateStr = '';
+                                                        if (evt.date) {
+                                                            const parts = evt.date.split('-');
+                                                            if (parts.length === 3) {
+                                                                dateStr = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                                                            } else if (parts.length === 2) {
+                                                                dateStr = `${parts[1]}/${parts[0]}`;
+                                                            } else {
+                                                                dateStr = evt.date;
+                                                            }
+                                                        }
+                                                        return (
+                                                            <p key={idx} className="section-text event-text">
+                                                                {dateStr && <span className="event-date">{dateStr}</span>}
+                                                                {dateStr && ' - '}
+                                                                {evt.event}
+                                                            </p>
+                                                        );
+                                                    })}
                                                 </div>
                                             )}
                                         </div>
