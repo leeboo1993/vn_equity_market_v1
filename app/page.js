@@ -269,8 +269,12 @@ export default function DailyTrackingPage() {
                     // Get forecast
                     const forecast = rec.forecast || null;
 
-                    // Must have ticker, target_price, and at least one of: summary or forecast
-                    const hasContent = investmentSummary.length > 0 || forecast;
+                    // Check if summary has enough words (>10 words to be useful)
+                    const summaryWordCount = investmentSummary.trim().split(/\s+/).filter(w => w.length > 0).length;
+                    const hasValidSummary = summaryWordCount > 10;
+
+                    // Must have ticker, target_price, and at least one of: valid summary or forecast
+                    const hasContent = hasValidSummary || forecast;
 
                     if (rec.ticker && rec.target_price && hasContent) {
                         const reportDate = r.info_of_report?.date_of_issue;
