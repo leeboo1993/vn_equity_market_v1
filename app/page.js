@@ -317,46 +317,45 @@ export default function DailyTrackingPage() {
         });
 
         // 2. Build Actual VN-Index T+1 row data
-        // For each date 'd', we want the Actual Close of 'd+1' (next trading day).
-        // Since 'uniqueDates' has all available dates descending, we can look up neighboring dates.
+        // For each date 'd', we want the Actual Close of 'd+1' (next trading day) AND 'd' (current day) to calc return.
         const actuals = {};
         dates.forEach(date => {
-            // Find index of this date in full uniqueDates list
             const idx = uniqueDates.indexOf(date);
-            if (idx > 0) {
-                // The date at idx-1 is the Next Available Date (newer)
-                // e.g. uniqueDates = [Dec 6, Dec 5, ...]. If date is Dec 5 (idx 1), next is Dec 6 (idx 0).
-                const nextDate = uniqueDates[idx - 1];
+            // Current Date Close
+            let currentClose = null;
+            // Try to find current date report close
+            const currentReports = allReports.filter(r => r.info_of_report?.date_of_issue === date);
+            // Heuristic: check if any report has vnindex_close. If multiple, take average or first? First.
+            const currentWithClose = currentReports.find(r => r.market_view?.vnindex_close);
+            if (currentWithClose) currentClose = currentWithClose.market_view.vnindex_close;
 
-                // Find ANY report from nextDate to get the "Current Index" mentioned in it.
-                // Assuming reports on nextDate contain market_view.current_index or we parse it.
-                // Or simply: "The VN-Index closed at X".
-                // Let's check if 'market_view' has 'current_index' or 'close'.
-                // If not available directly, we might need to parse. But usually reports have it.
-                // Let's look for a report on nextDate.
-                const nextReport = allReports.find(r => r.info_of_report?.date_of_issue === nextDate);
-                // Try to find a field. If not, we might be stuck without dedicated Close price field.
-                // However, often 'market_view.vnindex_close' or similar exists. I'll guess 'vnindex_close' or parse market_view text if desperate.
-                // Wait, if I don't have it, I can't display it reliably.
-                // For now, I will try to use 'vnindex_close' if it exists, or look for a 'close' value in the text? No that's risky.
-                // Actually, 'vnindex_target' is a prediction.
-                // I'll try to extract `current_index` if available.
-                // If not, I'll place a placeholder or skip.
-                // Inspecting previous `market_view` structure: it has sentiment, vnindex_target.
-                // I will assume `vnindex_close` might be there or I can't fulfill this accurately without it.
-                // But wait, the user showed "VNINDEX T+1" row in his mind.
-                // Maybe he just wants the row to exist for me to populate?
-                // I'll check if I can get it.
-                // Actually, let's look at `allReports` again or `parsed` data.
-                // In lieu of checking file again to delay, I will use `vnindex_close` if present, else a default.
-                if (nextReport?.market_view?.vnindex_close) {
-                    actuals[date] = nextReport.market_view.vnindex_close;
-                } else {
-                    // Fallback: try to see if nextReport brokerage prediction implies current? No.
-                    actuals[date] = '-';
+            // Next Date Close (T+1)
+            let nextClose = null;
+            if (idx > 0) {
+                const nextDate = uniqueDates[idx - 1];
+                const nextReports = allReports.filter(r => r.info_of_report?.date_of_issue === nextDate);
+                const nextWithClose = nextReports.find(r => r.market_view?.vnindex_close);
+                if (nextWithClose) nextClose = nextWithClose.market_view.vnindex_close;
+            }
+
+            if (nextClose) {
+                // Calculate return if we have current
+                let retStr = '';
+                let retVal = 0;
+                if (currentClose) {
+                    const diff = (nextClose - currentClose) / currentClose * 100;
+                    retVal = diff;
+                    retStr = diff > 0 ? `(+${diff.toFixed(2)}%)` : `(${diff.toFixed(2)}%)`;
                 }
+
+                actuals[date] = {
+                    value: nextClose,
+                    returnText: retStr,
+                    returnVal: retVal,
+                    hasData: true
+                };
             } else {
-                actuals[date] = '-'; // No T+1 data yet (today)
+                actuals[date] = { hasData: false };
             }
         });
 
@@ -704,15 +703,6 @@ export default function DailyTrackingPage() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {/* Comparison Row: VNINDEX T+1 */}
-                                        <tr className="comparison-row" style={{ borderBottom: '2px solid rgba(255,255,255,0.1)' }}>
-                                            <td className="broker-cell" style={{ color: '#fff', fontStyle: 'italic' }}>VNINDEX T+1</td>
-                                            {sentimentHeatmap.dates.map(d => (
-                                                <td key={d} className="heatmap-cell" style={{ color: '#fff', fontSize: '11px', fontWeight: 'bold' }}>
-                                                    {sentimentHeatmap.actuals[d] !== '-' ? formatNumber(sentimentHeatmap.actuals[d]) : '-'}
-                                                </td>
-                                            ))}
-                                        </tr>
                                         {sentimentHeatmap.brokers.map(broker => (
                                             <tr key={broker}>
                                                 <td className="broker-cell">{broker.toUpperCase()}</td>
@@ -735,6 +725,47 @@ export default function DailyTrackingPage() {
                                                 })}
                                             </tr>
                                         ))}
+
+                                        {/* Spacer Row */}
+                                        <tr style={{ height: '10px' }}><td colSpan={sentimentHeatmap.dates.length + 1}></td></tr>
+
+                                        {/* Comparison Row: VNINDEX T+1 (At Bottom) */}
+                                        <tr className="comparison-row" style={{ borderTop: '2px solid rgba(255,255,255,0.2)' }}>
+                                            <td className="broker-cell" style={{ color: '#fff', fontStyle: 'italic', borderRight: '1px solid rgba(255,255,255,0.1)' }}>VNINDEX T+1</td>
+                                            {sentimentHeatmap.dates.map(d => {
+                                                const data = sentimentHeatmap.actuals[d];
+                                                let bgColor = 'transparent';
+                                                let textColor = '#ccc';
+                                                if (data.hasData && data.returnVal !== 0) {
+                                                    // Use green for positive return, red for negative
+                                                    // Using same palette as sentiment: #00ff7f (pos), #ff4444 (neg)
+                                                    // But maybe darker background? Let's use slight tint or just text color?
+                                                    // User said "row which have the color based on the performance"
+                                                    // Usually that means background color like the heatmap.
+                                                    if (data.returnVal > 0) bgColor = '#00ff7f';
+                                                    else if (data.returnVal < 0) bgColor = '#ff4444';
+                                                    textColor = '#000'; // Black text on colored bg
+                                                }
+                                                // If no current close to calc return, maybe just Neutral color or transparent?
+
+                                                return (
+                                                    <td key={d} className="heatmap-cell" style={{
+                                                        backgroundColor: bgColor,
+                                                        color: textColor,
+                                                        fontSize: '11px',
+                                                        fontWeight: 'bold',
+                                                        verticalAlign: 'middle'
+                                                    }}>
+                                                        {data.hasData ? (
+                                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: '1.2' }}>
+                                                                <span>{formatNumber(data.value)}</span>
+                                                                {data.returnText && <span style={{ fontSize: '10px', opacity: 0.8 }}>{data.returnText}</span>}
+                                                            </div>
+                                                        ) : '-'}
+                                                    </td>
+                                                );
+                                            })}
+                                        </tr>
                                     </tbody>
                                 </table>
                             )}
