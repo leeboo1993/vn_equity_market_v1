@@ -546,26 +546,45 @@ export default function DailyTrackingPage() {
                         </div>
                         <div className="daily-card-content news-list">
                             {aggregatedNews[newsTab]?.length > 0 ? (
-                                aggregatedNews[newsTab]
-                                    .filter(item => marketBrokerFilter === 'all' || formatBrokerName(item.broker) === marketBrokerFilter)
-                                    .slice(0, 15)
-                                    .map((item, idx) => (
-                                        <div key={idx} className="market-view-item" style={{ marginBottom: '12px', borderBottom: 'none', paddingBottom: '0' }}>
-                                            {marketBrokerFilter === 'all' && (
-                                                <div className="market-view-header" style={{ marginBottom: '4px' }}>
-                                                    <span className="broker-name" style={{ color: 'var(--accent)' }}>
-                                                        {formatBrokerName(item.broker)} Research
-                                                    </span>
-                                                </div>
-                                            )}
+                                (() => {
+                                    const filtered = aggregatedNews[newsTab].filter(item =>
+                                        marketBrokerFilter === 'all' || formatBrokerName(item.broker) === marketBrokerFilter
+                                    );
+
+                                    // Group by broker
+                                    const grouped = {};
+                                    const brokerOrder = [];
+
+                                    filtered.slice(0, 15).forEach(item => {
+                                        const bName = formatBrokerName(item.broker);
+                                        if (!grouped[bName]) {
+                                            grouped[bName] = [];
+                                            brokerOrder.push(bName);
+                                        }
+                                        grouped[bName].push(item);
+                                    });
+
+                                    return brokerOrder.map(brokerName => (
+                                        <div key={brokerName} className="market-view-item" style={{ marginBottom: '12px', borderBottom: 'none', paddingBottom: '0' }}>
+                                            {/* Show header if "All Brokers" is selected OR if we want to confirm the source even when filtered */}
+                                            {/* User request implies grouping headers: "ACBS Research" then list */}
+                                            <div className="market-view-header" style={{ marginBottom: '4px' }}>
+                                                <span className="broker-name" style={{ color: 'var(--accent)' }}>
+                                                    {brokerName} Research
+                                                </span>
+                                            </div>
                                             <div className="section-block" style={{ marginTop: '0' }}>
-                                                {/* Optional: Add a title like 'Market News' or just the text? User wants 'format like market overview' */}
-                                                {/* If I add a title it might be repetitive. Market Overview has 'Market view'. */}
-                                                {/* I will mimic the content style strictly. */}
-                                                <p className="section-text" style={{ margin: 0 }}>{item.text}</p>
+                                                <ul style={{ listStyleType: 'disc', paddingLeft: '20px', margin: 0 }}>
+                                                    {grouped[brokerName].map((item, idx) => (
+                                                        <li key={idx} className="section-text" style={{ marginBottom: '4px' }}>
+                                                            {item.text}
+                                                        </li>
+                                                    ))}
+                                                </ul>
                                             </div>
                                         </div>
-                                    ))
+                                    ));
+                                })()
                             ) : (
                                 <div className="placeholder-text">No {newsTab} news available</div>
                             )}
