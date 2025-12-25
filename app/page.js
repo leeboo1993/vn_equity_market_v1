@@ -539,11 +539,11 @@ export default function DailyTrackingPage() {
                                         <th style={{ color: 'var(--accent)' }}>Ticker</th>
                                         <th style={{ color: 'var(--accent)' }}>Broker</th>
                                         <th style={{ color: 'var(--accent)' }}>Call</th>
-                                        <th style={{ color: 'var(--accent)' }}>Target price</th>
-                                        <th style={{ color: 'var(--accent)' }}>Upside (at call)</th>
-                                        <th style={{ color: 'var(--accent)' }}>Current price</th>
-                                        <th style={{ color: 'var(--accent)' }}>Upside (now)</th>
-                                        <th style={{ color: 'var(--accent)' }}>Performance (since call)</th>
+                                        <th style={{ color: 'var(--accent)' }}>Target<br />price</th>
+                                        <th style={{ color: 'var(--accent)' }}>Upside<br />(at call)</th>
+                                        <th style={{ color: 'var(--accent)' }}>Current<br />price</th>
+                                        <th style={{ color: 'var(--accent)' }}>Upside<br />(now)</th>
+                                        <th style={{ color: 'var(--accent)' }}>Performance<br />(since call)</th>
                                         <th style={{ color: 'var(--accent)' }}>Update / Thesis</th>
                                     </tr>
                                 </thead>
