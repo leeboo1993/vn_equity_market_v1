@@ -15,6 +15,7 @@
     "dotenv": "^17.2.3",
     "hyparquet": "^1.23.3",
     "next": "16.1.0",
+    "next-auth": "^5.0.0-beta.30",
     "parquetjs-lite": "^0.8.7",
     "react": "19.2.3",
     "react-chartjs-2": "^5.3.1",
