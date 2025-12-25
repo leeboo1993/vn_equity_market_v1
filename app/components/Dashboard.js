@@ -1744,10 +1744,10 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                             // Filter for anything looking like a year (4 digits)
                                                             const allYears = rep.forecast_table.columns.filter(c => c.toString().match(/\d{4}/));
 
-                                                            // User Request: Filter out years before 2025 (keep 2025 and newer)
+                                                            // Include all years from 2022 onwards (historical + forecast)
                                                             return allYears.filter(y => {
                                                                 const val = parseInt(y.toString().replace(/\D/g, ''));
-                                                                return val >= 2025;
+                                                                return val >= 2022;
                                                             });
                                                         };
 
