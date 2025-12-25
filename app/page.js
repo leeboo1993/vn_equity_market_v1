@@ -529,9 +529,11 @@ export default function DailyTrackingPage() {
                                     .filter(item => marketBrokerFilter === 'all' || formatBrokerName(item.broker) === marketBrokerFilter)
                                     .slice(0, 15)
                                     .map((item, idx) => (
-                                        <div key={idx} className="news-item">
-                                            <span className="news-broker">[{item.broker}]</span>
-                                            <span className="news-text">{item.text}</span>
+                                        <div key={idx} className="news-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+                                            <span className="broker-name" style={{ color: 'var(--accent)', fontSize: '11px', fontWeight: '600' }}>
+                                                {formatBrokerName(item.broker)} Research
+                                            </span>
+                                            <span className="news-text" style={{ paddingLeft: '0' }}>{item.text}</span>
                                         </div>
                                     ))
                             ) : (
