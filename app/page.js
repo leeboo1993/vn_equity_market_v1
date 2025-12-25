@@ -418,7 +418,10 @@ export default function DailyTrackingPage() {
                                                     {r.analyst_viewpoints?.slice(0, 2).map((vp, idx) => (
                                                         <p key={idx} className="section-text">{vp.viewpoint}</p>
                                                     ))}
-                                                    {r.featured_analysis?.slice(0, 2).map((fa, idx) => (
+                                                    {r.featured_analysis?.filter(fa =>
+                                                        !fa.topic?.toLowerCase().includes('bsc30') &&
+                                                        !fa.topic?.toLowerCase().includes('bsc50')
+                                                    ).slice(0, 2).map((fa, idx) => (
                                                         <p key={`fa-${idx}`} className="section-text">
                                                             <strong>{fa.topic}:</strong> {fa.summary}
                                                         </p>
