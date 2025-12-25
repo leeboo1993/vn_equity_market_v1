@@ -25,11 +25,12 @@ const parseDateYYMMDD = (dateStr) => {
 };
 
 const getSentimentColor = (sentiment) => {
-    if (!sentiment) return '#333';
+    if (!sentiment) return 'transparent'; // No rating = no color
     const s = sentiment.toLowerCase();
-    if (s === 'positive') return '#00ff7f';
-    if (s === 'negative') return '#ff4444';
-    return '#666'; // Neutral
+    if (s === 'positive') return '#00ff7f'; // Green
+    if (s === 'negative') return '#ff4444'; // Red
+    if (s === 'neutral') return '#444'; // Dark grey
+    return 'transparent'; // Unknown = no color
 };
 
 const getSentimentBadgeClass = (sentiment) => {
