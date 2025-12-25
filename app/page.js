@@ -4,13 +4,14 @@ import { useState, useMemo, useEffect } from 'react';
 import Header from './components/Header';
 
 // Helper functions
-
 const formatDateDisplay = (dateStr) => {
     if (!dateStr) return '';
-    // Check if it matches YYYY-MM-DD
-    const match = String(dateStr).match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (match) {
-        const [_, y, m, d] = match;
+    // Check if it's a full ISO string or YYYY-MM-DD
+    const dateObj = new Date(dateStr);
+    if (!isNaN(dateObj.getTime()) && String(dateStr).includes('-')) {
+        const d = String(dateObj.getDate()).padStart(2, '0');
+        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const y = dateObj.getFullYear();
         return `${d}/${m}/${y}`;
     }
     // Handle YYMMDD format - legacy
@@ -256,18 +257,18 @@ export default function DailyTrackingPage() {
 
                 setRecToDate(newestDate.toISOString().split('T')[0]);
 
-                // Disable "only recent 5 days" default. Default to ALL history.
-                // let fromDate = new Date(newestDate);
-                // let workingDaysBack = 0;
-                // while (workingDaysBack < 5) {
-                //     fromDate.setDate(fromDate.getDate() - 1);
-                //     const dayOfWeek = fromDate.getDay();
-                //     if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Not weekend
-                //         workingDaysBack++;
-                //     }
-                // }
-                // setRecFromDate(fromDate.toISOString().split('T')[0]);
-                setRecFromDate(''); // Default to all history
+                // From date = T-5 working days from newest
+                let fromDate = new Date(newestDate);
+                let workingDaysBack = 0;
+                while (workingDaysBack < 5) {
+                    fromDate.setDate(fromDate.getDate() - 1);
+                    const dayOfWeek = fromDate.getDay();
+                    if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Not weekend
+                        workingDaysBack++;
+                    }
+                }
+                setRecFromDate(fromDate.toISOString().split('T')[0]);
+                // setRecFromDate(''); // Default to all history
             }
         }
     }, [uniqueDates, recToDate, recFromDate]);
