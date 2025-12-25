@@ -63,6 +63,36 @@ const getSentimentBadgeClass = (sentiment) => {
     return 'neutral';
 };
 
+// Format VN-Index target: remove text, format numbers with commas
+const formatTarget = (target) => {
+    if (!target) return null;
+    let str = String(target);
+
+    // Remove common text suffixes (Vietnamese and English)
+    str = str.replace(/điểm/gi, '').replace(/points?/gi, '').replace(/\+\/-/g, '').replace(/~|≈/g, '').trim();
+
+    // Check if it's a range (contains dash or "to" or "-")
+    const rangeMatch = str.match(/(\d[\d,.]*)\s*[-–—]\s*(\d[\d,.]*)/);
+    if (rangeMatch) {
+        const low = formatNumber(rangeMatch[1]);
+        const high = formatNumber(rangeMatch[2]);
+        return `${low} - ${high}`;
+    }
+
+    // Single number
+    return formatNumber(str);
+};
+
+// Format a number string with commas
+const formatNumber = (numStr) => {
+    if (!numStr) return '';
+    // Remove existing formatting (dots, commas, spaces)
+    const cleaned = numStr.replace(/[,.\s]/g, '');
+    const num = parseInt(cleaned);
+    if (isNaN(num)) return numStr;
+    return num.toLocaleString('en-US');
+};
+
 export default function DailyTrackingPage() {
     const [dailyData, setDailyData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -327,7 +357,7 @@ export default function DailyTrackingPage() {
                                                             title={cellData?.sentiment || 'No data'}
                                                         >
                                                             {cellData?.target && (
-                                                                <span className="cell-target">{cellData.target}</span>
+                                                                <span className="cell-target">{formatTarget(cellData.target)}</span>
                                                             )}
                                                         </td>
                                                     );
