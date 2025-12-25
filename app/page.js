@@ -120,7 +120,10 @@ const shouldExcludeNewsItem = (text, category) => {
             'cover warrant',
             'declarer:', // Sometimes appears in scraped text
             'bsc30', // Index composition updates
-            'bsc50'
+            'bsc50',
+            'sector increased by', // Generic sector performance updates
+            'sector decreased by',
+            'sectors saw gains'
         ];
         if (noisePatterns.some(p => t.includes(p))) return true;
     }
