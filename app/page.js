@@ -4,10 +4,17 @@ import { useState, useMemo, useEffect } from 'react';
 import Header from './components/Header';
 
 // Helper functions
+
 const formatDateDisplay = (dateStr) => {
-    if (!dateStr) return '-';
-    // Handle YYMMDD format
-    if (dateStr.length === 6) {
+    if (!dateStr) return '';
+    // Check if it matches YYYY-MM-DD
+    const match = String(dateStr).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (match) {
+        const [_, y, m, d] = match;
+        return `${d}/${m}/${y}`;
+    }
+    // Handle YYMMDD format - legacy
+    if (String(dateStr).length === 6) {
         const yy = dateStr.substring(0, 2);
         const mm = dateStr.substring(2, 4);
         const dd = dateStr.substring(4, 6);
@@ -247,17 +254,20 @@ export default function DailyTrackingPage() {
             if (newestDate) {
                 setRecToDate(newestDate.toISOString().split('T')[0]);
 
-                // From date = T-5 working days from newest
-                let fromDate = new Date(newestDate);
-                let workingDaysBack = 0;
-                while (workingDaysBack < 5) {
-                    fromDate.setDate(fromDate.getDate() - 1);
-                    const dayOfWeek = fromDate.getDay();
-                    if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Not weekend
-                        workingDaysBack++;
-                    }
-                }
-                setRecFromDate(fromDate.toISOString().split('T')[0]);
+                setRecToDate(newestDate.toISOString().split('T')[0]);
+
+                // Disable "only recent 5 days" default. Default to ALL history.
+                // let fromDate = new Date(newestDate);
+                // let workingDaysBack = 0;
+                // while (workingDaysBack < 5) {
+                //     fromDate.setDate(fromDate.getDate() - 1);
+                //     const dayOfWeek = fromDate.getDay();
+                //     if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Not weekend
+                //         workingDaysBack++;
+                //     }
+                // }
+                // setRecFromDate(fromDate.toISOString().split('T')[0]);
+                setRecFromDate(''); // Default to all history
             }
         }
     }, [uniqueDates, recToDate, recFromDate]);
@@ -472,8 +482,9 @@ export default function DailyTrackingPage() {
 
             const priceKey = `${rec.ticker}_${rec.date}`;
             const prices = priceData[priceKey] || {};
-            const callPrice = prices.close_at_call || 0;
-            const currentPrice = prices.current_price || 0;
+            // FIX: Match keys returned by lib/data.js (priceAtCall, priceNow)
+            const callPrice = prices.priceAtCall || 0;
+            const currentPrice = prices.priceNow || 0;
 
             // Derived
             const upsideAtCall = (targetPriceVal && callPrice) ? ((targetPriceVal - callPrice) / callPrice * 100) : null;
