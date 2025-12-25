@@ -27,9 +27,9 @@ const parseDateYYMMDD = (dateStr) => {
 const getSentimentColor = (sentiment) => {
     if (!sentiment) return 'transparent'; // No rating = no color
     const s = sentiment.toLowerCase();
-    if (s === 'positive') return '#00ff7f'; // Green
-    if (s === 'negative') return '#ff4444'; // Red
-    if (s === 'neutral') return '#888'; // Visible grey (lighter)
+    if (s === 'positive') return '#00e676'; // Match website green (accent)
+    if (s === 'negative') return '#ff5252'; // Match website red
+    if (s === 'neutral') return '#666'; // Visible grey
     return 'transparent'; // Unknown = no color
 };
 
@@ -284,7 +284,7 @@ export default function DailyTrackingPage() {
                                     <tbody>
                                         {sentimentHeatmap.brokers.map(broker => (
                                             <tr key={broker}>
-                                                <td className="broker-cell">{broker}</td>
+                                                <td className="broker-cell">{broker.toUpperCase()}</td>
                                                 {sentimentHeatmap.dates.map(d => {
                                                     const cellData = sentimentHeatmap.data[broker]?.[d];
                                                     return (
