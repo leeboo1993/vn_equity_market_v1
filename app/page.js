@@ -101,7 +101,7 @@ const formatBrokerName = (broker) => {
     name = name.replace(/Vietcap/gi, 'VCI');
     // Remove "Research" text
     name = name.replace(/\s*Research\s*/gi, '');
-    return name.trim();
+    return name.trim().toUpperCase();
 };
 
 export default function DailyTrackingPage() {
