@@ -527,11 +527,7 @@ export default function DailyTrackingPage() {
     };
 
     const getSortIcon = (key) => {
-        // Only show icon if active
-        if (sortConfig.key !== key) return <span style={{ opacity: 0.3, fontSize: '9px', marginLeft: '4px' }}>⇵</span>;
-        return sortConfig.direction === 'asc'
-            ? <span style={{ color: 'var(--accent)', fontSize: '9px', marginLeft: '4px' }}>▲</span>
-            : <span style={{ color: 'var(--accent)', fontSize: '9px', marginLeft: '4px' }}>▼</span>;
+        return null; // Icons removed per request
     };
 
     // Fetch price data for stock recommendations
@@ -951,30 +947,43 @@ export default function DailyTrackingPage() {
                                             let badgeText = rec.recommendation || 'Neutral';
 
                                             // Determine Call based on upside at call (derived in processedRecs)
-                                            // Or fallback to text match if upside is missing
+                                            // Normalize standard calls
+                                            const normalizedCall = callType.toLowerCase();
+                                            if (
+                                                normalizedCall.includes('buy') ||
+                                                normalizedCall.includes('mua') ||
+                                                normalizedCall.includes('khả quan') ||
+                                                normalizedCall.includes('outperform') ||
+                                                normalizedCall.includes('accumulate') ||
+                                                normalizedCall.includes('add') ||
+                                                normalizedCall.includes('tăng tỷ trọng')
+                                            ) {
+                                                badgeClass = 'buy';
+                                                badgeText = 'BUY';
+                                            } else if (
+                                                normalizedCall.includes('sell') ||
+                                                normalizedCall.includes('bán') ||
+                                                normalizedCall.includes('negative') ||
+                                                normalizedCall.includes('reduce') ||
+                                                normalizedCall.includes('underperform')
+                                            ) {
+                                                badgeClass = 'sell';
+                                                badgeText = 'SELL';
+                                            } else {
+                                                badgeClass = 'hold';
+                                                badgeText = 'NEUTRAL';
+                                            }
+
+                                            // Override with calculated upside if confident
                                             if (rec.upsideAtCall !== null && !isNaN(rec.upsideAtCall)) {
                                                 if (rec.upsideAtCall >= 15) {
                                                     badgeClass = 'buy';
                                                     badgeText = 'BUY';
                                                 } else if (rec.upsideAtCall <= -5) {
                                                     badgeClass = 'sell';
-                                                    badgeText = 'Sell';
-                                                } else {
-                                                    badgeClass = 'hold';
-                                                    badgeText = 'Neutral';
+                                                    badgeText = 'SELL';
                                                 }
-                                            } else {
-                                                // Fallback to text matching
-                                                if (callType.includes('buy') || callType.includes('mua') || callType.includes('khả quan')) {
-                                                    badgeClass = 'buy';
-                                                    badgeText = 'BUY';
-                                                } else if (callType.includes('sell') || callType.includes('bán') || callType === 'negative') {
-                                                    badgeClass = 'sell';
-                                                    badgeText = 'Sell';
-                                                } else if (callType.includes('neutral') || callType.includes('hold') || callType.includes('trung lập')) {
-                                                    badgeClass = 'hold';
-                                                    badgeText = 'Neutral';
-                                                }
+                                                // If upside doesn't trigger buy/sell, keep the text-based neutral or whatever was matched
                                             }
 
                                             return (
