@@ -540,8 +540,8 @@ export default function DailyTrackingPage() {
                                         <th style={{ color: 'var(--accent)' }}>Broker</th>
                                         <th style={{ color: 'var(--accent)' }}>Call</th>
                                         <th style={{ color: 'var(--accent)' }}>Target<br />price</th>
-                                        <th style={{ color: 'var(--accent)' }}>Upside<br />(at call)</th>
                                         <th style={{ color: 'var(--accent)' }}>Current<br />price</th>
+                                        <th style={{ color: 'var(--accent)' }}>Upside<br />(at call)</th>
                                         <th style={{ color: 'var(--accent)' }}>Upside<br />(now)</th>
                                         <th style={{ color: 'var(--accent)' }}>Performance<br />(since call)</th>
                                         <th style={{ color: 'var(--accent)' }}>Update / Thesis</th>
@@ -573,7 +573,11 @@ export default function DailyTrackingPage() {
                                             // Get price data for this recommendation
                                             const priceKey = `${rec.ticker}_${rec.date}`;
                                             const prices = priceData[priceKey] || {};
-                                            const targetPrice = rec.target_price;
+                                            // Parse target price as number (might be string with comma)
+                                            let targetPrice = rec.target_price;
+                                            if (typeof targetPrice === 'string') {
+                                                targetPrice = parseFloat(targetPrice.replace(/[,\s]/g, ''));
+                                            }
                                             const priceAtCall = prices.priceAtCall;
                                             const currentPrice = prices.priceNow;
 
@@ -582,10 +586,10 @@ export default function DailyTrackingPage() {
                                             let upsideNow = null;
                                             let performanceSinceCall = null;
 
-                                            if (targetPrice && priceAtCall) {
+                                            if (targetPrice && priceAtCall && !isNaN(targetPrice)) {
                                                 upsideAtCall = ((targetPrice - priceAtCall) / priceAtCall) * 100;
                                             }
-                                            if (targetPrice && currentPrice) {
+                                            if (targetPrice && currentPrice && !isNaN(targetPrice)) {
                                                 upsideNow = ((targetPrice - currentPrice) / currentPrice) * 100;
                                             }
                                             if (currentPrice && priceAtCall) {
@@ -616,16 +620,16 @@ export default function DailyTrackingPage() {
                                                             {badgeText}
                                                         </span>
                                                     </td>
-                                                    <td>{targetPrice ? formatNumber(String(targetPrice)) : '-'}</td>
-                                                    <td className={upsideAtCall !== null && upsideAtCall >= 0 ? 'text-green' : 'text-red'}>
-                                                        {upsideAtCall !== null ? `${upsideAtCall.toFixed(1)}%` : '-'}
+                                                    <td style={{ textAlign: 'center' }}>{targetPrice && !isNaN(targetPrice) ? formatNumber(String(Math.round(targetPrice))) : '-'}</td>
+                                                    <td style={{ textAlign: 'center' }}>{currentPrice ? formatNumber(String(Math.round(currentPrice))) : '-'}</td>
+                                                    <td style={{ textAlign: 'center' }}>
+                                                        {upsideAtCall !== null && !isNaN(upsideAtCall) ? `${upsideAtCall.toFixed(1)}%` : '-'}
                                                     </td>
-                                                    <td>{currentPrice ? formatNumber(String(Math.round(currentPrice))) : '-'}</td>
-                                                    <td className={upsideNow !== null && upsideNow >= 0 ? 'text-green' : 'text-red'}>
-                                                        {upsideNow !== null ? `${upsideNow.toFixed(1)}%` : '-'}
+                                                    <td style={{ textAlign: 'center' }}>
+                                                        {upsideNow !== null && !isNaN(upsideNow) ? `${upsideNow.toFixed(1)}%` : '-'}
                                                     </td>
-                                                    <td className={performanceSinceCall !== null && performanceSinceCall >= 0 ? 'text-green' : 'text-red'}>
-                                                        {performanceSinceCall !== null ? `${performanceSinceCall.toFixed(1)}%` : '-'}
+                                                    <td style={{ textAlign: 'center' }}>
+                                                        {performanceSinceCall !== null && !isNaN(performanceSinceCall) ? `${performanceSinceCall.toFixed(1)}%` : '-'}
                                                     </td>
                                                     <td className="thesis-cell">
                                                         {rec.investmentSummary && (
