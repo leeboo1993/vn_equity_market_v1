@@ -223,30 +223,40 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
             // Check forecast_table structure if present
             if (report.forecast_table) {
                 const ft = report.forecast_table;
-                // If it has rows array, validate each row has proper structure
-                if (ft.rows && Array.isArray(ft.rows)) {
-                    for (const row of ft.rows) {
-                        // Check if values array exists and has proper length when columns exist
-                        if (ft.columns && Array.isArray(ft.columns)) {
-                            if (row.values && Array.isArray(row.values)) {
-                                // Values should not have more items than columns
-                                // This catches the "reading '5'" error case
-                            }
-                        }
-                    }
-                }
 
-                // Check for flat object format with year keys
-                if (!ft.rows && ft.columns && Array.isArray(ft.columns)) {
-                    // Flat format - validate column count
-                    const yearColumns = ft.columns.filter(c => /^\d{4}F?$/.test(c));
-                    // Test access pattern that caused FRT crash
+                // Validate columns array exists
+                if (ft.columns && Array.isArray(ft.columns)) {
+                    // Check for null/undefined columns
                     for (let i = 0; i < ft.columns.length; i++) {
-                        // This mimics what the render code does
-                        const testCol = ft.columns[i];
-                        if (!testCol && i > 0) {
+                        if (ft.columns[i] == null || ft.columns[i] === '') {
                             console.warn(`Invalid report ${report.id}: missing column at index ${i}`);
                             return false;
+                        }
+                    }
+
+                    // If it has rows array, validate each row has proper structure
+                    if (ft.rows && Array.isArray(ft.rows)) {
+                        for (const row of ft.rows) {
+                            // Check if values array exists and validate bounds
+                            if (row.values && Array.isArray(row.values)) {
+                                // Values array should not exceed columns length
+                                if (row.values.length > ft.columns.length) {
+                                    console.warn(`Invalid report ${report.id}: row has ${row.values.length} values but only ${ft.columns.length} columns`);
+                                    return false;
+                                }
+                            }
+                            // For flat object format, validate that year columns exist as keys
+                            else if (!row.values) {
+                                // Check that row has properties for year columns
+                                const yearColumns = ft.columns.filter(c => /^\d{4}F?$/.test(c));
+                                // At least some year data should exist
+                                const hasYearData = yearColumns.some(col => row[col] != null);
+                                if (yearColumns.length > 0 && !hasYearData && !row.metric && !row.item) {
+                                    // Row has no metric identifier and no year data
+                                    console.warn(`Invalid report ${report.id}: row missing data and identifiers`);
+                                    return false;
+                                }
+                            }
                         }
                     }
                 }
@@ -1784,9 +1794,15 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                                     const cols = rep.forecast_table.columns || [];
                                                                     const tYearClean = tYear.replace(/[A-Za-z]/g, '');
                                                                     const colIndex = cols.findIndex(c => c.toString().includes(tYearClean));
-                                                                    const colName = cols[colIndex];
 
-                                                                    if (colIndex !== -1) {
+                                                                    if (colIndex !== -1 && colIndex < cols.length) {
+                                                                        const colName = cols[colIndex];
+
+                                                                        // Additional safety: ensure column name exists
+                                                                        if (!colName) {
+                                                                            console.warn(`Column at index ${colIndex} is undefined for report ${rep.id}`);
+                                                                            return null;
+                                                                        }
                                                                         // Find row: Support "metric" OR "item", case-insensitive
                                                                         const row = (rep.forecast_table.rows || []).find(r => {
                                                                             const rKey = r.metric || r.item;

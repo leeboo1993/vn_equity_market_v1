@@ -948,8 +948,16 @@ export default function DailyTrackingPage() {
                             <button
                                 className="search-btn"
                                 onClick={() => {
-                                    // Filters are applied automatically via useMemo
-                                    // This button is mainly for UX consistency
+                                    // Log current filter values for debugging
+                                    console.log('Search clicked with filters:', {
+                                        ticker: recTickerFilter,
+                                        from: recFromDate,
+                                        to: recToDate,
+                                        broker: recBrokerFilter
+                                    });
+
+                                    // Trigger re-render by updating sort config (same values, but forces dependency update)
+                                    setSortConfig(prev => ({ ...prev }));
                                 }}
                             >
                                 Search
