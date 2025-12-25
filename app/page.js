@@ -280,15 +280,23 @@ export default function DailyTrackingPage() {
                     }
                     const investmentSummary = thesisParts.join(' ');
 
-                    // Get forecast
-                    const forecast = rec.forecast || null;
+                    // Get forecast - only if it's meaningful (string with >10 words)
+                    let forecast = rec.forecast || null;
+                    let forecastWordCount = 0;
+                    if (forecast) {
+                        const forecastStr = typeof forecast === 'string' ? forecast : JSON.stringify(forecast);
+                        forecastWordCount = forecastStr.trim().split(/\s+/).filter(w => w.length > 0).length;
+                        if (forecastWordCount <= 10) {
+                            forecast = null; // Ignore short forecasts like "-1.7%"
+                        }
+                    }
 
                     // Check if summary has enough words (>10 words to be useful)
                     const summaryWordCount = investmentSummary.trim().split(/\s+/).filter(w => w.length > 0).length;
                     const hasValidSummary = summaryWordCount > 10;
 
-                    // Must have ticker, target_price, and at least one of: valid summary or forecast
-                    const hasContent = hasValidSummary || forecast;
+                    // Must have ticker, target_price, and a valid summary (forecast alone not enough)
+                    const hasContent = hasValidSummary;
 
                     if (rec.ticker && rec.target_price && hasContent) {
                         const reportDate = r.info_of_report?.date_of_issue;
