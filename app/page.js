@@ -381,12 +381,12 @@ export default function DailyTrackingPage() {
                             <table className="rec-table">
                                 <thead>
                                     <tr>
-                                        <th>Date</th>
-                                        <th>Ticker</th>
-                                        <th>Broker</th>
-                                        <th>Call</th>
-                                        <th>Target</th>
-                                        <th>Thesis / Viewpoint</th>
+                                        <th style={{ color: 'var(--accent)' }}>Date</th>
+                                        <th style={{ color: 'var(--accent)' }}>Ticker</th>
+                                        <th style={{ color: 'var(--accent)' }}>Broker</th>
+                                        <th style={{ color: 'var(--accent)' }}>Call</th>
+                                        <th style={{ color: 'var(--accent)' }}>Target</th>
+                                        <th style={{ color: 'var(--accent)' }}>Thesis / Viewpoint</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -395,24 +395,29 @@ export default function DailyTrackingPage() {
                                     ) : stockRecommendations.length === 0 ? (
                                         <tr><td colSpan="6" className="loading-cell">No stock recommendations for this date</td></tr>
                                     ) : (
-                                        stockRecommendations.map((rec, idx) => (
-                                            <tr key={idx}>
-                                                <td>{formatDateDisplay(rec.date)}</td>
-                                                <td><strong>{rec.ticker}</strong></td>
-                                                <td>{rec.broker}</td>
-                                                <td>
-                                                    <span className={`call-badge ${rec.recommendation?.toLowerCase().includes('buy') ? 'buy' : rec.recommendation?.toLowerCase().includes('sell') ? 'sell' : 'hold'}`}>
-                                                        {rec.recommendation || '-'}
-                                                    </span>
-                                                </td>
-                                                <td>{rec.target_price || '-'}</td>
-                                                <td className="thesis-cell">
-                                                    {rec.investment_thesis?.length > 0
-                                                        ? rec.investment_thesis.slice(0, 2).join('. ')
-                                                        : rec.analyst_viewpoint?.viewpoint || '-'}
-                                                </td>
-                                            </tr>
-                                        ))
+                                        stockRecommendations.map((rec, idx) => {
+                                            const callType = rec.recommendation?.toLowerCase() || '';
+                                            const badgeClass = callType.includes('buy') ? 'buy' : callType.includes('sell') ? 'sell' : 'hold';
+
+                                            return (
+                                                <tr key={idx}>
+                                                    <td>{formatDateDisplay(rec.date)}</td>
+                                                    <td><strong style={{ color: '#fff' }}>{rec.ticker}</strong></td>
+                                                    <td>{rec.broker}</td>
+                                                    <td>
+                                                        <span className={`call-badge ${badgeClass}`}>
+                                                            {rec.recommendation || '-'}
+                                                        </span>
+                                                    </td>
+                                                    <td>{rec.target_price ? formatNumber(String(rec.target_price)) : '-'}</td>
+                                                    <td className="thesis-cell">
+                                                        {rec.investment_thesis?.length > 0
+                                                            ? rec.investment_thesis.slice(0, 2).join('. ')
+                                                            : rec.analyst_viewpoint?.viewpoint || '-'}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
                                     )}
                                 </tbody>
                             </table>
