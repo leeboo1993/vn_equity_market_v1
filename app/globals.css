@@ -114,8 +114,8 @@ body {
 /* Dashboard Layout */
 .dashboard-grid {
   display: grid;
-  /* Fixed width sidebars are safer for data density than percentages */
-  grid-template-columns: 280px minmax(0, 1fr) 300px;
+  /* Percentage-based layout: 30% - 30% - 40% distribution */
+  grid-template-columns: 30% 30% 40%;
   gap: 1.6rem;
   padding: 1.6rem 2rem 2.2rem;
   align-items: start;
