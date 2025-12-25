@@ -247,10 +247,28 @@ export default function ForecastTable({ forecastData, reportDate }) {
                 const yearRow = rows.find(row => row.Year === yearLabel);
                 return yearRow ? yearRow[metricKey] : null;
             } else if (isMetricBased) {
-                // Metric-based format: find row by metric, get value by original index
+                // Metric-based format: find row by metric
                 const metricRow = rows.find(row => row.metric === metricKey);
+                if (!metricRow) return null;
+
                 const originalIndex = columnMapping[filteredIndex];
-                return metricRow && originalIndex !== undefined ? metricRow.values[originalIndex] : null;
+
+                // Try array format first (row.values = [...])
+                if (metricRow.values && Array.isArray(metricRow.values)) {
+                    if (originalIndex !== undefined && originalIndex >= 0 && originalIndex < metricRow.values.length) {
+                        return metricRow.values[originalIndex];
+                    }
+                    return null;
+                }
+
+                // Fallback to flat object format (row["2024F"] = value)
+                // Get the column name from original columns array
+                if (originalIndex !== undefined && columns[originalIndex]) {
+                    const colName = columns[originalIndex];
+                    return metricRow[colName] !== undefined ? metricRow[colName] : null;
+                }
+
+                return null;
             }
             return null;
         };
