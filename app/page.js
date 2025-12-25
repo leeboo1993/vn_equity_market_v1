@@ -29,7 +29,7 @@ const getSentimentColor = (sentiment) => {
     const s = sentiment.toLowerCase();
     if (s === 'positive') return '#00ff7f'; // Green
     if (s === 'negative') return '#ff4444'; // Red
-    if (s === 'neutral') return '#444'; // Dark grey
+    if (s === 'neutral') return '#888'; // Visible grey (lighter)
     return 'transparent'; // Unknown = no color
 };
 
