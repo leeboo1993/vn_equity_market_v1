@@ -764,8 +764,15 @@ body {
 .rec-table td {
   padding: 8px 10px;
   text-align: left;
+  vertical-align: top;
   border-bottom: 1px solid #222;
   white-space: nowrap;
+}
+
+/* Center align price and return columns (columns 5-9) */
+.rec-table th:nth-child(n+5):not(:last-child),
+.rec-table td:nth-child(n+5):not(:last-child) {
+  text-align: center;
 }
 
 .rec-table th {
