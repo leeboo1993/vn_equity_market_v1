@@ -24,6 +24,28 @@ const parseDateYYMMDD = (dateStr) => {
     return new Date(2000 + yy, mm, dd);
 };
 
+// Map weekend dates to Friday (Sat->Fri, Sun->Fri)
+const adjustToWeekday = (dateStr) => {
+    if (!dateStr || dateStr.length !== 6) return dateStr;
+    const date = parseDateYYMMDD(dateStr);
+    if (!date) return dateStr;
+
+    const day = date.getDay(); // 0=Sun, 6=Sat
+    if (day === 0) { // Sunday -> Friday (subtract 2 days)
+        date.setDate(date.getDate() - 2);
+    } else if (day === 6) { // Saturday -> Friday (subtract 1 day)
+        date.setDate(date.getDate() - 1);
+    } else {
+        return dateStr; // Not a weekend
+    }
+
+    // Format back to YYMMDD
+    const yy = String(date.getFullYear()).slice(2);
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yy}${mm}${dd}`;
+};
+
 const getSentimentColor = (sentiment) => {
     if (!sentiment) return 'transparent'; // No rating = no color
     const s = sentiment.toLowerCase();
@@ -73,10 +95,18 @@ export default function DailyTrackingPage() {
             if (typeof brokerReports === 'object') {
                 Object.entries(brokerReports).forEach(([reportId, report]) => {
                     if (report && report.info_of_report) {
+                        // Adjust weekend dates to Friday
+                        const originalDate = report.info_of_report.date_of_issue;
+                        const adjustedDate = adjustToWeekday(originalDate);
+
                         reports.push({
                             id: reportId,
                             broker: brokerKey,
-                            ...report
+                            ...report,
+                            info_of_report: {
+                                ...report.info_of_report,
+                                date_of_issue: adjustedDate
+                            }
                         });
                     }
                 });
