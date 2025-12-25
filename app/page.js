@@ -392,7 +392,7 @@ export default function DailyTrackingPage() {
                                         <div key={r.id} className="market-view-item">
                                             {/* Broker Header */}
                                             <div className="market-view-header">
-                                                <span className="broker-name" style={{ color: 'var(--accent)' }}>{formatBrokerName(r.info_of_report?.issued_company || r.broker)}</span>
+                                                <span className="broker-name" style={{ color: 'var(--accent)' }}>{formatBrokerName(r.info_of_report?.issued_company || r.broker)} Research</span>
                                                 <span className={`sentiment-badge ${getSentimentBadgeClass(r.market_view?.sentiment)}`}>
                                                     {r.market_view?.sentiment || 'N/A'}
                                                 </span>
