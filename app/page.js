@@ -116,8 +116,9 @@ export default function DailyTrackingPage() {
     const [recBrokerFilter, setRecBrokerFilter] = useState('all');
     const [recTickerFilter, setRecTickerFilter] = useState('');
 
-    // Market Overview and News broker filter
-    const [marketBrokerFilter, setMarketBrokerFilter] = useState('all');
+    // Broker filters
+    const [overviewBrokerFilter, setOverviewBrokerFilter] = useState('all');
+    const [newsBrokerFilter, setNewsBrokerFilter] = useState('all');
 
     // Price data for recommendations
     const [priceData, setPriceData] = useState({});
@@ -393,15 +394,14 @@ export default function DailyTrackingPage() {
                                 <div className="broker-selector">
                                     <label>Broker:</label>
                                     <select
-                                        value={marketBrokerFilter}
-                                        onChange={e => setMarketBrokerFilter(e.target.value)}
+                                        value={overviewBrokerFilter}
+                                        onChange={e => setOverviewBrokerFilter(e.target.value)}
                                         className="date-select"
                                     >
                                         <option value="all">All Brokers</option>
-                                        {reportsForDate.map(r => {
-                                            const brokerName = formatBrokerName(r.info_of_report?.issued_company || r.broker);
-                                            return <option key={r.id} value={brokerName}>{brokerName}</option>;
-                                        })}
+                                        {uniqueBrokers.map(broker => (
+                                            <option key={broker} value={formatBrokerName(broker)}>{formatBrokerName(broker)}</option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>
@@ -414,7 +414,7 @@ export default function DailyTrackingPage() {
                             ) : (
                                 <div className="market-views-list">
                                     {reportsForDate
-                                        .filter(r => marketBrokerFilter === 'all' || formatBrokerName(r.info_of_report?.issued_company || r.broker) === marketBrokerFilter)
+                                        .filter(r => overviewBrokerFilter === 'all' || formatBrokerName(r.info_of_report?.issued_company || r.broker) === overviewBrokerFilter)
                                         .map(r => (
                                             <div key={r.id} className="market-view-item">
                                                 {/* Broker Header */}
@@ -504,22 +504,35 @@ export default function DailyTrackingPage() {
                     <section className="card daily-card">
                         <div className="daily-card-header">
                             <h3 className="daily-card-title">Market News</h3>
-                            <div className="tab-group">
-                                {['macro', 'market', 'sector', 'companies', 'global'].map(tab => (
-                                    <button
-                                        key={tab}
-                                        className={`tab-btn ${newsTab === tab ? 'active' : ''}`}
-                                        onClick={() => setNewsTab(tab)}
-                                    >
-                                        {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                                    </button>
-                                ))}
+                            <div className="tab-group" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                <select
+                                    value={newsBrokerFilter}
+                                    onChange={e => setNewsBrokerFilter(e.target.value)}
+                                    className="date-select"
+                                    style={{ padding: '4px 8px', fontSize: '10px' }}
+                                >
+                                    <option value="all">All Brokers</option>
+                                    {uniqueBrokers.map(broker => (
+                                        <option key={broker} value={formatBrokerName(broker)}>{formatBrokerName(broker)}</option>
+                                    ))}
+                                </select>
+                                <div className="tabs">
+                                    {['macro', 'market', 'sector', 'companies', 'global'].map(tab => (
+                                        <button
+                                            key={tab}
+                                            className={`tab-btn ${newsTab === tab ? 'active' : ''}`}
+                                            onClick={() => setNewsTab(tab)}
+                                        >
+                                            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                         <div className="daily-card-content news-list">
                             {aggregatedNews[newsTab]?.length > 0 ? (
                                 aggregatedNews[newsTab]
-                                    .filter(item => marketBrokerFilter === 'all' || formatBrokerName(item.broker) === marketBrokerFilter)
+                                    .filter(item => newsBrokerFilter === 'all' || formatBrokerName(item.broker) === newsBrokerFilter)
                                     .slice(0, 15)
                                     .map((item, idx) => (
                                         <div key={idx} className="news-item">
