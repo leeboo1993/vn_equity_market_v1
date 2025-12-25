@@ -1043,9 +1043,12 @@ body {
 }
 
 .news-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   font-size: 10px;
   line-height: 1.5;
-  padding: 6px 0;
+  padding: 8px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 

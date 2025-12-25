@@ -382,17 +382,33 @@ export default function DailyTrackingPage() {
                                     <label>Date:</label>
                                     <input
                                         type="date"
-                                        value={selectedDate || ''}
-                                        min={uniqueDates[uniqueDates.length - 1]}
-                                        max={uniqueDates[0]}
+                                        value={(() => {
+                                            if (!selectedDate) return '';
+                                            const d = parseDateYYMMDD(selectedDate);
+                                            return d ? d.toISOString().split('T')[0] : '';
+                                        })()}
+                                        min={(() => {
+                                            const oldest = uniqueDates[uniqueDates.length - 1];
+                                            const d = parseDateYYMMDD(oldest);
+                                            return d ? d.toISOString().split('T')[0] : '';
+                                        })()}
+                                        max={(() => {
+                                            const newest = uniqueDates[0];
+                                            const d = parseDateYYMMDD(newest);
+                                            return d ? d.toISOString().split('T')[0] : '';
+                                        })()}
                                         onChange={e => {
-                                            const val = e.target.value;
-                                            if (uniqueDates.includes(val)) {
-                                                setSelectedDate(val);
+                                            const val = e.target.value; // YYYY-MM-DD
+                                            if (!val) return;
+                                            const [year, month, day] = val.split('-');
+                                            const yy = year.slice(2);
+                                            const yymmdd = `${yy}${month}${day}`;
+
+                                            if (uniqueDates.includes(yymmdd)) {
+                                                setSelectedDate(yymmdd);
                                             } else {
-                                                // If date has no data, revert to previous valid date (by not updating state)
-                                                // Ideally show a toast, but for now strict blocking
                                                 alert(`No data available for ${val}`);
+                                                // Force re-render to revert input value if needed (mostly auto-handled by React controlled component)
                                             }
                                         }}
                                         className="date-input"
@@ -529,11 +545,13 @@ export default function DailyTrackingPage() {
                                     .filter(item => marketBrokerFilter === 'all' || formatBrokerName(item.broker) === marketBrokerFilter)
                                     .slice(0, 15)
                                     .map((item, idx) => (
-                                        <div key={idx} className="news-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
-                                            <span className="broker-name" style={{ color: 'var(--accent)', fontSize: '11px', fontWeight: '600' }}>
-                                                {formatBrokerName(item.broker)} Research
-                                            </span>
-                                            <span className="news-text" style={{ paddingLeft: '0' }}>{item.text}</span>
+                                        <div key={idx} className="news-item">
+                                            {marketBrokerFilter === 'all' && (
+                                                <span className="broker-name" style={{ color: 'var(--accent)', fontSize: '11px', fontWeight: '600' }}>
+                                                    {formatBrokerName(item.broker)} Research
+                                                </span>
+                                            )}
+                                            <span className="news-text">{item.text}</span>
                                         </div>
                                     ))
                             ) : (
