@@ -104,6 +104,33 @@ const formatBrokerName = (broker) => {
     return name.trim().toUpperCase();
 };
 
+const shouldExcludeNewsItem = (text, category) => {
+    if (!text) return true;
+    const t = text.toLowerCase();
+
+    // 1. Filter out repetitive/generated market noise (Top contributing, Net buy/sell, Price updates)
+    const noisePatterns = [
+        'top contributing stock',
+        'top net buy stock',
+        'top net sell stock',
+        'positive performers',
+        'stock price was',
+        'cover warrant',
+        'declarer:', // Sometimes appears in scraped text
+        'bsc30', // Index composition updates
+        'bsc50'
+    ];
+    if (noisePatterns.some(p => t.includes(p))) return true;
+
+    // 2. Filter out general market index updates from specific categorical tabs
+    // User doesn't want VN-Index updates in Companies, Global, or Sector tabs
+    if (['companies', 'global', 'sector'].includes(category)) {
+        if (t.includes('vn-index') || t.includes('hnx-index')) return true;
+    }
+
+    return false;
+};
+
 export default function DailyTrackingPage() {
     const [dailyData, setDailyData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -242,7 +269,9 @@ export default function DailyTrackingPage() {
             ['global', 'macro', 'market', 'sector', 'companies', 'other'].forEach(key => {
                 if (mn[key] && Array.isArray(mn[key])) {
                     mn[key].forEach(item => {
-                        news[key].push({ text: item, broker });
+                        if (!shouldExcludeNewsItem(item, key)) {
+                            news[key].push({ text: item, broker });
+                        }
                     });
                 }
             });
