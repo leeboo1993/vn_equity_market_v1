@@ -115,6 +115,9 @@ export default function DailyTrackingPage() {
     const [recToDate, setRecToDate] = useState('');
     const [recBrokerFilter, setRecBrokerFilter] = useState('all');
 
+    // Price data for recommendations
+    const [priceData, setPriceData] = useState({});
+
     // Load daily report data from R2
     useEffect(() => {
         setIsLoading(true);
@@ -326,6 +329,26 @@ export default function DailyTrackingPage() {
         });
     }, [allReports, recFromDate, recToDate, recBrokerFilter]);
 
+    // Fetch price data for stock recommendations
+    useEffect(() => {
+        if (stockRecommendations.length === 0) return;
+
+        const tickers = stockRecommendations.map(r => r.ticker);
+        const callDates = stockRecommendations.map(r => r.date);
+
+        fetch('/api/ticker-prices', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tickers, callDates })
+        })
+            .then(res => res.json())
+            .then(data => {
+                console.log('Price data loaded:', data);
+                setPriceData(data);
+            })
+            .catch(err => console.error('Failed to load price data:', err));
+    }, [stockRecommendations]);
+
     return (
         <>
             <Header title="Daily Tracking" />
@@ -508,15 +531,19 @@ export default function DailyTrackingPage() {
                                         <th style={{ color: 'var(--accent)' }}>Ticker</th>
                                         <th style={{ color: 'var(--accent)' }}>Broker</th>
                                         <th style={{ color: 'var(--accent)' }}>Call</th>
-                                        <th style={{ color: 'var(--accent)' }}>Target</th>
-                                        <th style={{ color: 'var(--accent)' }}>Thesis / Viewpoint</th>
+                                        <th style={{ color: 'var(--accent)' }}>Target price</th>
+                                        <th style={{ color: 'var(--accent)' }}>Upside (at call)</th>
+                                        <th style={{ color: 'var(--accent)' }}>Current price</th>
+                                        <th style={{ color: 'var(--accent)' }}>Upside (now)</th>
+                                        <th style={{ color: 'var(--accent)' }}>Performance (since call)</th>
+                                        <th style={{ color: 'var(--accent)' }}>Update / Thesis</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {isLoading ? (
-                                        <tr><td colSpan="6" className="loading-cell">Loading...</td></tr>
+                                        <tr><td colSpan="10" className="loading-cell">Loading...</td></tr>
                                     ) : stockRecommendations.length === 0 ? (
-                                        <tr><td colSpan="6" className="loading-cell">No stock recommendations for this date</td></tr>
+                                        <tr><td colSpan="10" className="loading-cell">No stock recommendations for this date</td></tr>
                                     ) : (
                                         stockRecommendations.map((rec, idx) => {
                                             const callType = rec.recommendation?.toLowerCase() || '';
@@ -535,6 +562,42 @@ export default function DailyTrackingPage() {
                                                 badgeText = 'Neutral';
                                             }
 
+                                            // Get price data for this recommendation
+                                            const priceKey = `${rec.ticker}_${rec.date}`;
+                                            const prices = priceData[priceKey] || {};
+                                            const targetPrice = rec.target_price;
+                                            const priceAtCall = prices.priceAtCall;
+                                            const currentPrice = prices.priceNow;
+
+                                            // Calculate metrics
+                                            let upsideAtCall = null;
+                                            let upsideNow = null;
+                                            let performanceSinceCall = null;
+
+                                            if (targetPrice && priceAtCall) {
+                                                upsideAtCall = ((targetPrice - priceAtCall) / priceAtCall) * 100;
+                                            }
+                                            if (targetPrice && currentPrice) {
+                                                upsideNow = ((targetPrice - currentPrice) / currentPrice) * 100;
+                                            }
+                                            if (currentPrice && priceAtCall) {
+                                                performanceSinceCall = ((currentPrice - priceAtCall) / priceAtCall) * 100;
+                                            }
+
+                                            // Determine Call based on upside at call
+                                            if (upsideAtCall !== null) {
+                                                if (upsideAtCall >= 15) {
+                                                    badgeClass = 'buy';
+                                                    badgeText = 'BUY';
+                                                } else if (upsideAtCall <= -5) {
+                                                    badgeClass = 'sell';
+                                                    badgeText = 'Sell';
+                                                } else {
+                                                    badgeClass = 'hold';
+                                                    badgeText = 'Neutral';
+                                                }
+                                            }
+
                                             return (
                                                 <tr key={idx}>
                                                     <td>{formatDateDisplay(rec.date)}</td>
@@ -545,7 +608,17 @@ export default function DailyTrackingPage() {
                                                             {badgeText}
                                                         </span>
                                                     </td>
-                                                    <td>{rec.target_price ? formatNumber(String(rec.target_price)) : '-'}</td>
+                                                    <td>{targetPrice ? formatNumber(String(targetPrice)) : '-'}</td>
+                                                    <td className={upsideAtCall !== null && upsideAtCall >= 0 ? 'text-green' : 'text-red'}>
+                                                        {upsideAtCall !== null ? `${upsideAtCall.toFixed(1)}%` : '-'}
+                                                    </td>
+                                                    <td>{currentPrice ? formatNumber(String(Math.round(currentPrice))) : '-'}</td>
+                                                    <td className={upsideNow !== null && upsideNow >= 0 ? 'text-green' : 'text-red'}>
+                                                        {upsideNow !== null ? `${upsideNow.toFixed(1)}%` : '-'}
+                                                    </td>
+                                                    <td className={performanceSinceCall !== null && performanceSinceCall >= 0 ? 'text-green' : 'text-red'}>
+                                                        {performanceSinceCall !== null ? `${performanceSinceCall.toFixed(1)}%` : '-'}
+                                                    </td>
                                                     <td className="thesis-cell">
                                                         {rec.investmentSummary && (
                                                             <div className="investment-summary">
