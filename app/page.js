@@ -129,9 +129,18 @@ const shouldExcludeNewsItem = (text, category) => {
     }
 
     // 2. Filter out general market index updates from specific categorical tabs
-    // User doesn't want VN-Index updates in Companies, Global, or Sector tabs
+    // User doesn't want VN-Index updates or repetitive stock lists in Companies, Global, or Sector tabs
     if (['companies', 'global', 'sector'].includes(category)) {
         if (t.includes('vn-index') || t.includes('hnx-index')) return true;
+        // Filter out "stock positively impacted index" lines
+        if (t.includes('positively impacted the')) return true;
+        if (t.includes('negatively impacted the')) return true;
+        // Filter out simple price change lines "Ticker increased/decreased by X%"
+        if (t.match(/[A-Z]{3} increased by \d/)) return true;
+        if (t.match(/[A-Z]{3} decreased by \d/)) return true;
+        if (t.match(/[A-Z]{3} stock price was/)) return true;
+        // Filter out "among the stocks foreign investors bought/sold"
+        if (t.includes('among the stocks foreign investors')) return true;
     }
 
     return false;
