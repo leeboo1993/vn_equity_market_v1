@@ -1744,11 +1744,28 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                             // Filter for anything looking like a year (4 digits)
                                                             const allYears = rep.forecast_table.columns.filter(c => c.toString().match(/\d{4}/));
 
-                                                            // Include all years from 2022 onwards (historical + forecast)
-                                                            return allYears.filter(y => {
-                                                                const val = parseInt(y.toString().replace(/\D/g, ''));
-                                                                return val >= 2022;
-                                                            });
+                                                            // Parse and sort all available years
+                                                            const parsedYears = allYears.map(y => ({
+                                                                original: y,
+                                                                numeric: parseInt(y.toString().replace(/\D/g, ''))
+                                                            })).sort((a, b) => a.numeric - b.numeric);
+
+                                                            // Get forecast years (2025+) first
+                                                            const forecastYears = parsedYears.filter(y => y.numeric >= 2025);
+
+                                                            // If we have 4+ forecast years, return only those
+                                                            if (forecastYears.length >= 4) {
+                                                                return forecastYears.map(y => y.original);
+                                                            }
+
+                                                            // Otherwise, backfill with historical years to reach minimum 4
+                                                            const historicalYears = parsedYears.filter(y => y.numeric < 2025).reverse(); // Most recent first
+                                                            const neededHistorical = 4 - forecastYears.length;
+                                                            const backfillYears = historicalYears.slice(0, neededHistorical).reverse(); // Back to chronological
+
+                                                            // Combine: historical (ascending) + forecast (ascending)
+                                                            const combined = [...backfillYears, ...forecastYears];
+                                                            return combined.map(y => y.original);
                                                         };
 
                                                         const availableYears = getAvailableForecastYears(latestReport);
