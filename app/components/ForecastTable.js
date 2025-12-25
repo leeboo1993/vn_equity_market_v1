@@ -119,12 +119,19 @@ export default function ForecastTable({ forecastData, reportDate }) {
             }
         });
 
-        // Keep only the last historical column + all forecast columns
-        const columnsToShow = [];
-        if (historicalColumns.length > 0) {
-            columnsToShow.push(historicalColumns[historicalColumns.length - 1]);
-        }
-        columnsToShow.push(...forecastColumns);
+        // Smart backfill: ensure minimum 4 columns
+        // Start with all forecast columns
+        const columnsToShow = [...forecastColumns];
+
+        // Calculate how many historical columns we need to reach 4
+        const minColumns = 4;
+        const neededHistorical = Math.max(1, minColumns - forecastColumns.length);
+
+        // Add the most recent historical columns (from the end of the array)
+        const historicalToAdd = historicalColumns.slice(-neededHistorical);
+
+        // Prepend historical columns (in chronological order)
+        columnsToShow.unshift(...historicalToAdd);
 
         // Rebuild filtered columns array and track which are forecasts
         const columnsInfo = columnsToShow.map(c => {
