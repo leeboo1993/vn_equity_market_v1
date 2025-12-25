@@ -1048,6 +1048,36 @@ body {
   margin-bottom: 2px;
 }
 
+/* Inline viewpoints in Market Overview */
+.analyst-viewpoints-inline {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.viewpoint-inline {
+  margin-bottom: 6px;
+}
+
+.viewpoint-text-small {
+  font-size: 9px;
+  color: #aaa;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+.viewpoint-facts-small {
+  margin: 4px 0 0 12px;
+  padding: 0;
+  list-style: circle;
+}
+
+.viewpoint-facts-small li {
+  font-size: 8px;
+  color: #777;
+  margin-bottom: 2px;
+}
+
 /* Responsive */
 @media (max-width: 1100px) {
   .daily-tracking-grid {

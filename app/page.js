@@ -399,6 +399,23 @@ export default function DailyTrackingPage() {
                                             <p className="market-view-summary">
                                                 {r.market_view?.summary_commentary || r.market_view?.market_viewpoint || 'No commentary'}
                                             </p>
+                                            {/* Analyst Viewpoints */}
+                                            {r.analyst_viewpoints?.length > 0 && (
+                                                <div className="analyst-viewpoints-inline">
+                                                    {r.analyst_viewpoints.slice(0, 2).map((vp, idx) => (
+                                                        <div key={idx} className="viewpoint-inline">
+                                                            <div className="viewpoint-text-small">{vp.viewpoint}</div>
+                                                            {vp.backing_facts?.length > 0 && (
+                                                                <ul className="viewpoint-facts-small">
+                                                                    {vp.backing_facts.slice(0, 2).map((f, i) => (
+                                                                        <li key={i}>{f}</li>
+                                                                    ))}
+                                                                </ul>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -675,29 +692,6 @@ export default function DailyTrackingPage() {
                         </div>
                     </section>
 
-                    {/* Analyst Viewpoints */}
-                    <section className="card daily-card">
-                        <div className="daily-card-header">
-                            <h3 className="daily-card-title" style={{ color: 'var(--accent)' }}>Analyst Viewpoints</h3>
-                        </div>
-                        <div className="viewpoints-list">
-                            {reportsForDate.slice(0, 3).map(r => (
-                                r.analyst_viewpoints?.slice(0, 2).map((vp, idx) => (
-                                    <div key={`${r.id}-${idx}`} className="viewpoint-item">
-                                        <div className="viewpoint-broker">{r.info_of_report?.issued_company || r.broker}</div>
-                                        <div className="viewpoint-text">{vp.viewpoint}</div>
-                                        {vp.backing_facts?.length > 0 && (
-                                            <ul className="viewpoint-facts">
-                                                {vp.backing_facts.slice(0, 2).map((f, i) => (
-                                                    <li key={i}>{f}</li>
-                                                ))}
-                                            </ul>
-                                        )}
-                                    </div>
-                                ))
-                            ))}
-                        </div>
-                    </section>
                 </div>
             </main>
         </>
