@@ -827,7 +827,7 @@ body {
   max-width: 400px;
   min-width: 250px;
   white-space: normal !important;
-  vertical-align: top;
+  vertical-align: top !important;
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
