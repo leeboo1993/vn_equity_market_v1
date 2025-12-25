@@ -49,6 +49,12 @@ const parseDateYYMMDD = (dateStr) => {
         return new Date(yyyy, mm, dd);
     }
 
+    // Fallback: Try native Date parse for ISO strings or other formats
+    const nativeDate = new Date(s);
+    if (!isNaN(nativeDate.getTime())) {
+        return nativeDate;
+    }
+
     return null;
 };
 
