@@ -49,9 +49,9 @@ const adjustToWeekday = (dateStr) => {
 const getSentimentColor = (sentiment) => {
     if (!sentiment) return 'transparent'; // No rating = no color
     const s = sentiment.toLowerCase();
-    if (s === 'positive') return '#00e676'; // Match website green (accent)
-    if (s === 'negative') return '#ff5252'; // Match website red
-    if (s === 'neutral') return '#666'; // Visible grey
+    if (s === 'positive') return '#4cd964'; // Match website green (softer)
+    if (s === 'negative') return '#ff6b6b'; // Match website red (salmon)
+    if (s === 'neutral') return '#555'; // Dark grey
     return 'transparent'; // Unknown = no color
 };
 
