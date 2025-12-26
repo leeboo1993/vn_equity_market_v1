@@ -491,7 +491,7 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                         }
 
                                         return (
-                                            <td key={colIdx} style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                            <td key={colIdx} style={{ padding: '8px 16px', textAlign: 'center' }}>
                                                 {value || '-'}
                                             </td>
                                         );
