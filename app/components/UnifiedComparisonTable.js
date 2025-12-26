@@ -174,19 +174,12 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
         return { bg: 'transparent', color: 'gray', border: '1px solid #3A3A3C' };
     };
 
-    // Define metrics to display
+    // Define metrics to display (only 4 key recommendation metrics)
     const metrics = [
-        { key: 'date', label: 'Date' },
         { key: 'recommendation', label: 'Recommendation' },
         { key: 'target_price', label: 'Target price' },
         { key: 'upside_at_call', label: 'Upside at call' },
-        { key: 'perf_since_call', label: 'Perf since call' },
-        { key: 'revenue', label: 'Revenue' },
-        { key: 'npat', label: 'NPAT' },
-        { key: 'eps', label: 'EPS' },
-        { key: 'bvps', label: 'BVPS' },
-        { key: 'pe', label: 'PE' },
-        { key: 'pb', label: 'PB' }
+        { key: 'perf_since_call', label: 'Perf since call' }
     ];
 
     // Get value for a metric from a report
@@ -202,24 +195,38 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                 return formatPercentage(report.recommendation?.upside_at_call);
             case 'perf_since_call':
                 return formatPercentage(report.recommendation?.performance_since_call);
-            case 'revenue':
-                const forecast = report.forecast_summary;
-                return formatNumber(forecast?.revenue ?? forecast?.['Revenue (bn VND)']);
-            case 'npat':
-                return formatNumber(report.forecast_summary?.npat ?? report.forecast_summary?.['NPAT (bn VND)']);
-            case 'eps':
-                return formatNumber(report.forecast_summary?.eps ?? report.forecast_summary?.['EPS (VND)']);
-            case 'bvps':
-                return formatNumber(report.forecast_summary?.bvps ?? report.forecast_summary?.['BVPS (VND)']);
-            case 'pe':
-                const peVal = report.forecast_summary?.pe ?? report.forecast_summary?.['P/E'];
-                return peVal != null ? peVal.toFixed(1) : '-';
-            case 'pb':
-                const pbVal = report.forecast_summary?.pb ?? report.forecast_summary?.['P/B'];
-                return pbVal != null ? pbVal.toFixed(2) : '-';
             default:
                 return '-';
         }
+    };
+
+    // Calculate delta (change) for the last column
+    const calculateDelta = (reports, metricKey) => {
+        if (reports.length < 2) return null;
+
+        const latest = reports[reports.length - 1];
+        const previous = reports[reports.length - 2];
+
+        if (metricKey === 'target_price') {
+            const latestVal = latest.recommendation?.target_price;
+            const prevVal = previous.recommendation?.target_price;
+            if (latestVal != null && prevVal != null && prevVal !== 0) {
+                const change = ((latestVal - prevVal) / prevVal) * 100;
+                return formatPercentage(change);
+            }
+        } else if (metricKey === 'upside_at_call' || metricKey === 'perf_since_call') {
+            const latestVal = metricKey === 'upside_at_call'
+                ? latest.recommendation?.upside_at_call
+                : latest.recommendation?.performance_since_call;
+            const prevVal = metricKey === 'upside_at_call'
+                ? previous.recommendation?.upside_at_call
+                : previous.recommendation?.performance_since_call;
+            if (latestVal != null && prevVal != null) {
+                const change = latestVal - prevVal;
+                return formatPercentage(change);
+            }
+        }
+        return null;
     };
 
     if (!tableData || tableData.columns.length === 0) {
@@ -256,12 +263,35 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                     {tableData.getColumnHeader(col)}
                                 </th>
                             ))}
+                            <th>Δ</th>
                         </tr>
                     </thead>
 
                     <tbody>
+                        {/* Date row - only for brokers/peers modes */}
+                        {mode !== 'historical' && (
+                            <tr>
+                                <td style={{
+                                    position: 'sticky',
+                                    left: 0,
+                                    backgroundColor: '#1E1E1E',
+                                    zIndex: 10
+                                }}>
+                                    Date
+                                </td>
+                                {tableData.columns.map((col, colIdx) => (
+                                    <td key={colIdx}>
+                                        {formatDate(col.info_of_report?.date_of_issue)}
+                                    </td>
+                                ))}
+                                <td>-</td>
+                            </tr>
+                        )}
+
+                        {/* Metric rows */}
                         {metrics.map((metric, metricIdx) => {
                             const isRec = metric.key === 'recommendation';
+                            const delta = calculateDelta(tableData.columns, metric.key);
 
                             return (
                                 <tr key={metric.key}>
@@ -281,7 +311,9 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                             return (
                                                 <td key={colIdx}>
                                                     <span style={{
-                                                        ...style,
+                                                        backgroundColor: style.bg,
+                                                        color: style.color,
+                                                        border: style.border,
                                                         padding: '4px 12px',
                                                         borderRadius: '9999px',
                                                         fontWeight: 'bold',
@@ -300,6 +332,7 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                             </td>
                                         );
                                     })}
+                                    <td>{delta || '-'}</td>
                                 </tr>
                             );
                         })}

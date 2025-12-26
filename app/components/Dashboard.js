@@ -1717,20 +1717,18 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                 </div>
                                             </div>
 
-                                            {/* Use UnifiedComparisonTable only for Brokers and Peers */}
-                                            {(comparisonMode === 'brokers' || comparisonMode === 'peers') && (
-                                                <div className="mt-4">
-                                                    <UnifiedComparisonTable
-                                                        mode={comparisonMode}
-                                                        currentReport={selectedReport}
-                                                        allReports={reports}
-                                                    />
-                                                </div>
-                                            )}
+                                            {/* Unified Comparison Table for all modes */}
+                                            <div className="mt-4">
+                                                <UnifiedComparisonTable
+                                                    mode={comparisonMode}
+                                                    currentReport={selectedReport}
+                                                    allReports={reports}
+                                                />
+                                            </div>
 
-                                            {/* Keep original Historicals rendering */}
-                                            {comparisonMode === 'historical' && (
-                                                <div className="overflow-x-auto mt-4">
+                                            {/* Old historical rendering hidden for reference */}
+                                            {comparisonMode === 'historical' && false && (
+                                                <div className="overflow-x-auto mt-4" style={{ display: 'none' }}>
                                                     {(() => {
                                                         try {
                                                             // 1. Get Comparisons
