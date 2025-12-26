@@ -109,7 +109,7 @@ export default function ReportDetailClient({ report, allReports }) {
                             : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                             }`}
                     >
-                        Details
+                        Historicals
                     </button>
                     <button
                         onClick={() => setActiveTab('broker')}
