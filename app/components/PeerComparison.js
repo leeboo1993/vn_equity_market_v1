@@ -95,13 +95,7 @@ export default function PeerComparison({ currentReport, allReports }) {
 
     // Define metrics to display
     const metrics = [
-        {
-            key: 'date', label: 'Date', accessor: r => {
-                const d = r.info_of_report?.date_of_issue;
-                if (!d || d.length !== 6) return d || '-';
-                return `${d.substring(4, 6)}/${d.substring(2, 4)}/20${d.substring(0, 2)}`;
-            }
-        },
+        { key: 'ticker', label: 'Company', accessor: r => r.info_of_report?.ticker || '-' },
         { key: 'recommendation', label: 'Recommendation', accessor: r => r.recommendation?.recommendation || '-' },
         { key: 'target_price', label: 'Target Price', accessor: r => safeLocaleString(r.recommendation?.target_price) },
         {
@@ -191,7 +185,13 @@ export default function PeerComparison({ currentReport, allReports }) {
                                 minWidth: '120px',
                                 backgroundColor: '#1a1a1a'
                             }}>
-                                <div>{peer.info_of_report?.ticker}</div>
+                                <div>
+                                    {(() => {
+                                        const d = peer.info_of_report?.date_of_issue;
+                                        if (!d || d.length !== 6) return d;
+                                        return `${d.substring(4, 6)}/${d.substring(2, 4)}/20${d.substring(0, 2)}`;
+                                    })()}
+                                </div>
                             </th>
                         ))}
                     </tr>
