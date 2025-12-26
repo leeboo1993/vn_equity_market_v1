@@ -86,9 +86,26 @@ const getCallType = (call) => {
     if (!call || call === 'No Rating') return 'No Rating';
     const c = call.toLowerCase();
     if (c === 'neutral') return 'Hold'; // Map standard Neutral to Hold logic for summary
-    if (['buy', 'outperform', 'add', 'accumulate', 'overweight'].some(k => c.includes(k))) return 'Buy';
+    if (['buy', 'outperform', 'add', 'accumulate', 'overweight', 'strong buy'].some(k => c.includes(k))) return 'Buy';
     if (['sell', 'underperform', 'reduce', 'underweight'].some(k => c.includes(k))) return 'Sell';
     return 'Hold';
+};
+
+// Normalize Recommendation Label for Display
+const normalizeRecLabel = (rec) => {
+    if (!rec || rec === '-' || rec === 'No Rating') return 'No Rating';
+    const r = String(rec).toLowerCase();
+
+    // BUY
+    if (['buy', 'outperform', 'add', 'accumulate', 'overweight', 'strong buy'].some(k => r.includes(k))) return 'Buy';
+
+    // SELL
+    if (['sell', 'underperform', 'reduce', 'underweight'].some(k => r.includes(k))) return 'Sell';
+
+    // NEUTRAL
+    if (['neutral', 'hold', 'market perform'].some(k => r.includes(k))) return 'Neutral';
+
+    return rec; // Fallback
 };
 
 // Get recommendation pill styling
@@ -1373,7 +1390,8 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                         // key logic change: if no target price, treat as No Rating
                                         const tp = r.recommendation?.target_price;
                                         const hasTP = tp != null && tp !== '-' && tp !== 0 && tp !== '0';
-                                        const displayRec = hasTP ? (r.recommendation?.recommendation || '-') : 'No Rating';
+                                        const rawRec = r.recommendation?.recommendation || '-';
+                                        const displayRec = hasTP ? normalizeRecLabel(rawRec) : 'No Rating';
 
                                         // Get pill styling
                                         const recStyle = getRecommendationStyle(displayRec);
@@ -1462,7 +1480,8 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                         {(() => {
                                             const tp = selectedReport.recommendation?.target_price;
                                             const hasTP = tp != null && tp !== '-' && tp !== 0 && tp !== '0';
-                                            const displayRec = hasTP ? (selectedReport.recommendation?.recommendation || '-') : 'No Rating';
+                                            const rawRec = selectedReport.recommendation?.recommendation || '-';
+                                            const displayRec = hasTP ? normalizeRecLabel(rawRec) : 'No Rating';
                                             const recStyle = getRecommendationStyle(displayRec);
                                             const upside = selectedReport.recommendation?.upside_at_call;
                                             const upsideStr = upside != null ? `(${upside >= 0 ? '+' : ''}${upside.toFixed(1)}%)` : '';
