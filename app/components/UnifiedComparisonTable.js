@@ -24,7 +24,7 @@ const formatPercentage = (value) => {
     return `${num >= 0 ? '+' : ''}${num.toFixed(1)}%`;
 };
 
-export default function UnifiedComparisonTable({ mode, currentReport, allReports }) {
+export default function UnifiedComparisonTable({ mode, currentReport, allReports, selectedYear }) {
     // Process data based on mode
     const tableData = useMemo(() => {
         if (!currentReport || !allReports) return null;
@@ -174,22 +174,108 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
         return { bg: 'transparent', color: 'gray', border: '1px solid #3A3A3C' };
     };
 
+    // Helper to get financial data for a specific year
+    const getFinancialsForYear = (rep, key, tYear) => {
+        if (!rep || !rep.forecast_table || !rep.forecast_table.columns || !Array.isArray(rep.forecast_table.columns)) return null;
+        if (!rep.forecast_table.rows || !Array.isArray(rep.forecast_table.rows)) return null;
+        if (!tYear) return null;
+
+        try {
+            const cols = rep.forecast_table.columns || [];
+            const tYearClean = tYear.replace(/[A-Za-z]/g, ''); // e.g. "2025" or "12-25"
+
+            // Find column index for the year
+            let colIndex = cols.findIndex(c => c.toString().includes(tYearClean));
+            if (colIndex === -1 && tYearClean.length === 4) {
+                const shortYear = tYearClean.substring(2);
+                colIndex = cols.findIndex(c => c.toString().includes(shortYear));
+            }
+
+            if (colIndex !== -1 && colIndex < cols.length) {
+                const colName = cols[colIndex];
+                if (!colName) return null;
+
+                const isMatch = (r) => {
+                    const rKey = r.metric || r.item || r.name;
+                    return rKey && (rKey === key || rKey.toLowerCase() === key.toLowerCase());
+                };
+
+                // Top-level row match
+                const row = rep.forecast_table.rows.find(r => isMatch(r));
+                if (row) {
+                    if (row.values && Array.isArray(row.values)) {
+                        if (colIndex >= 0 && colIndex < row.values.length) return row.values[colIndex];
+                    }
+                    if (row[colName] !== undefined) return row[colName];
+                }
+
+                // Row-per-Year Match (HSC style)
+                const yearRow = rep.forecast_table.rows.find(r => r.Year && r.Year.toString() === colName.toString());
+                if (yearRow) {
+                    if (yearRow[key] !== undefined) return yearRow[key];
+                    const categories = ['balance_sheet', 'income_statement', 'cash_flow', 'key_ratios'];
+                    for (const cat of categories) {
+                        if (yearRow[cat] && yearRow[cat][key] !== undefined) return yearRow[cat][key];
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("Error parsing financials:", e);
+        }
+        return null;
+    };
+
+    // Determine target year for financial data
+    const getAvailableForecastYears = (rep) => {
+        if (!rep || !rep.forecast_table || !rep.forecast_table.columns) return [];
+        const allYears = rep.forecast_table.columns.filter(c => c.toString().match(/\d{4}/));
+        const parsedYears = allYears.map(y => ({
+            original: y,
+            numeric: parseInt(y.toString().replace(/\D/g, ''))
+        })).sort((a, b) => a.numeric - b.numeric);
+        const forecastYears = parsedYears.filter(y => y.numeric >= 2025);
+        if (forecastYears.length >= 4) {
+            return forecastYears.map(y => y.original);
+        }
+        const historicalYears = parsedYears.filter(y => y.numeric < 2025).reverse();
+        const neededHistorical = 4 - forecastYears.length;
+        const backfillYears = historicalYears.slice(0, neededHistorical).reverse();
+        const combined = [...backfillYears, ...forecastYears];
+        return combined.map(y => y.original);
+    };
+
+    const availableYears = currentReport ? getAvailableForecastYears(currentReport) : [];
+    const targetYear = selectedYear || (availableYears.length > 0 ? availableYears[availableYears.length - 1] : null);
+
     // Define metrics to display (all 11 metrics)
     const metrics = [
         { key: 'recommendation', label: 'Recommendation' },
         { key: 'target_price', label: 'Target price' },
         { key: 'upside_at_call', label: 'Upside at call' },
         { key: 'perf_since_call', label: 'Perf since call' },
-        { key: 'revenue', label: 'Revenue' },
-        { key: 'npat', label: 'NPAT' },
-        { key: 'eps', label: 'EPS' },
-        { key: 'bvps', label: 'BVPS' },
-        { key: 'pe', label: 'PE' },
-        { key: 'pb', label: 'PB' }
+        { key: 'revenue', label: 'Revenue', isFinancial: true },
+        { key: 'npat', label: 'NPAT', isFinancial: true },
+        { key: 'eps', label: 'EPS', isFinancial: true },
+        { key: 'bvps', label: 'BVPS', isFinancial: true },
+        { key: 'pe', label: 'PE', isFinancial: true },
+        { key: 'pb', label: 'PB', isFinancial: true }
     ];
 
     // Get value for a metric from a report
-    const getValue = (report, metricKey) => {
+    const getValue = (report, metricKey, isFinancial) => {
+        if (isFinancial) {
+            const val = getFinancialsForYear(report, metricKey, targetYear);
+            if (val == null) return null;
+
+            if (metricKey === 'pe') {
+                return val != null ? val.toFixed(1) : null;
+            } else if (metricKey === 'pb') {
+                return val != null ? val.toFixed(2) : null;
+            } else {
+                return formatNumber(val);
+            }
+        }
+
         switch (metricKey) {
             case 'date':
                 return formatDate(report.info_of_report?.date_of_issue);
@@ -201,21 +287,6 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                 return formatPercentage(report.recommendation?.upside_at_call);
             case 'perf_since_call':
                 return formatPercentage(report.recommendation?.performance_since_call);
-            case 'revenue':
-                const forecast = report.forecast_summary;
-                return formatNumber(forecast?.revenue ?? forecast?.['Revenue (bn VND)']);
-            case 'npat':
-                return formatNumber(report.forecast_summary?.npat ?? report.forecast_summary?.['NPAT (bn VND)']);
-            case 'eps':
-                return formatNumber(report.forecast_summary?.eps ?? report.forecast_summary?.['EPS (VND)']);
-            case 'bvps':
-                return formatNumber(report.forecast_summary?.bvps ?? report.forecast_summary?.['BVPS (VND)']);
-            case 'pe':
-                const peVal = report.forecast_summary?.pe ?? report.forecast_summary?.['P/E'];
-                return peVal != null ? peVal.toFixed(1) : '-';
-            case 'pb':
-                const pbVal = report.forecast_summary?.pb ?? report.forecast_summary?.['P/B'];
-                return pbVal != null ? pbVal.toFixed(2) : '-';
             default:
                 return '-';
         }
@@ -314,6 +385,20 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                             const isRec = metric.key === 'recommendation';
                             const delta = calculateDelta(tableData.columns, metric.key);
 
+                            // Check if this row has any data - skip if all columns are empty
+                            let filledCount = 0;
+                            for (const col of tableData.columns) {
+                                const val = getValue(col, metric.key, metric.isFinancial);
+                                if (val !== null && val !== undefined && val !== '' && val !== '-') {
+                                    filledCount++;
+                                }
+                            }
+
+                            // Hide row if all columns are empty
+                            if (filledCount === 0) {
+                                return null;
+                            }
+
                             return (
                                 <tr key={metric.key}>
                                     <td style={{
@@ -325,7 +410,7 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                         {metric.label}
                                     </td>
                                     {tableData.columns.map((col, colIdx) => {
-                                        const value = getValue(col, metric.key);
+                                        const value = getValue(col, metric.key, metric.isFinancial);
 
                                         if (isRec) {
                                             const style = getRecommendationStyle(value);
@@ -349,7 +434,7 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
 
                                         return (
                                             <td key={colIdx}>
-                                                {value}
+                                                {value || '-'}
                                             </td>
                                         );
                                     })}

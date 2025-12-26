@@ -1715,6 +1715,56 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                         Peers
                                                     </button>
                                                 </div>
+
+                                                {/* Forecast Year Selector */}
+                                                {(() => {
+                                                    const getAvailableForecastYears = (rep) => {
+                                                        if (!rep || !rep.forecast_table || !rep.forecast_table.columns) return [];
+                                                        const allYears = rep.forecast_table.columns.filter(c => c.toString().match(/\d{4}/));
+                                                        const parsedYears = allYears.map(y => ({
+                                                            original: y,
+                                                            numeric: parseInt(y.toString().replace(/\D/g, ''))
+                                                        })).sort((a, b) => a.numeric - b.numeric);
+                                                        const forecastYears = parsedYears.filter(y => y.numeric >= 2025);
+                                                        if (forecastYears.length >= 4) {
+                                                            return forecastYears.map(y => y.original);
+                                                        }
+                                                        const historicalYears = parsedYears.filter(y => y.numeric < 2025).reverse();
+                                                        const neededHistorical = 4 - forecastYears.length;
+                                                        const backfillYears = historicalYears.slice(0, neededHistorical).reverse();
+                                                        const combined = [...backfillYears, ...forecastYears];
+                                                        return combined.map(y => y.original);
+                                                    };
+
+                                                    const availableYears = getAvailableForecastYears(selectedReport);
+                                                    if (availableYears.length === 0) return null;
+
+                                                    return (
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <span style={{ fontSize: '10px', color: '#888', whiteSpace: 'nowrap' }}>Forecast Year:</span>
+                                                            <select
+                                                                value={selectedHistYear || availableYears[availableYears.length - 1] || ''}
+                                                                onChange={(e) => setSelectedHistYear(e.target.value)}
+                                                                style={{
+                                                                    backgroundColor: '#2C2C2E',
+                                                                    color: 'white',
+                                                                    border: '1px solid #3A3A3C',
+                                                                    borderRadius: '8px',
+                                                                    padding: '6px 12px',
+                                                                    fontSize: '10px',
+                                                                    cursor: 'pointer',
+                                                                    outline: 'none'
+                                                                }}
+                                                            >
+                                                                {availableYears.map(year => (
+                                                                    <option key={year} value={year}>
+                                                                        {year}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                    );
+                                                })()}
                                             </div>
 
                                             {/* Unified Comparison Table for all modes */}
@@ -1723,6 +1773,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                     mode={comparisonMode}
                                                     currentReport={selectedReport}
                                                     allReports={reports}
+                                                    selectedYear={selectedHistYear}
                                                 />
                                             </div>
 
