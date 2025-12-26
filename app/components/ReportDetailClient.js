@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import PeerComparison from '@/app/components/PeerComparison';
+import BrokerComparison from '@/app/components/BrokerComparison';
 
 // Helper to safely render list items (string or object)
 const renderListItem = (item, i) => {
@@ -113,6 +114,15 @@ export default function ReportDetailClient({ report, allReports }) {
                     <button
                         onClick={() => setActiveTab('peers')}
                         className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeTab === 'peers'
+                            ? 'bg-primary text-gray-900'
+                            : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                            }`}
+                    >
+                        Peers
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('broker')}
+                        className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeTab === 'broker'
                             ? 'bg-primary text-gray-900'
                             : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                             }`}
@@ -235,6 +245,10 @@ export default function ReportDetailClient({ report, allReports }) {
 
             {activeTab === 'peers' && (
                 <PeerComparison currentReport={report} allReports={allReports} />
+            )}
+
+            {activeTab === 'broker' && (
+                <BrokerComparison currentReport={report} allReports={allReports} />
             )}
         </div>
     );
