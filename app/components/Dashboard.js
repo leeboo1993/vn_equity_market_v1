@@ -2184,14 +2184,6 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                                             {renderHistoricalRow('Target price', 'target_price', false, false, false)}
                                                                             {renderHistoricalRow('Upside at call', 'upside_at_call', true, false, false)}
                                                                             {renderHistoricalRow('Perf since call', 'performance_since_call', true, false, false)}
-                                                                            {renderHistoricalRow('Total assets', 'total_assets', false, true)}
-                                                                            {renderHistoricalRow('Total equity', 'total_equity', false, true)}
-                                                                            {renderHistoricalRow('Revenue', 'revenue', false, true)}
-                                                                            {renderHistoricalRow('NPAT', 'npat', false, true)}
-                                                                            {renderHistoricalRow('EPS', 'eps_vnd', false, true)}
-                                                                            {renderHistoricalRow('BVPS', 'bvps_vnd', false, true)}
-                                                                            {renderHistoricalRow('PE', 'pe', false, true)}
-                                                                            {renderHistoricalRow('PB', 'pb', false, true)}
                                                                         </tbody>
                                                                     </table>
                                                                 </div>
