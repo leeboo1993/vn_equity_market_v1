@@ -176,12 +176,7 @@ export default function PeerComparison({ currentReport, allReports }) {
                                 fontWeight: 'bold',
                                 color: '#fff',
                                 width: 'auto',
-                                whiteSpace: 'nowrap',
-                                position: 'sticky',
-                                left: 0,
-                                top: '104px',
-                                backgroundColor: '#1a1a1a',
-                                zIndex: 20
+                                whiteSpace: 'nowrap'
                             }}>
                                 Metric
                             </th>
