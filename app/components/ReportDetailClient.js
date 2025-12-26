@@ -104,34 +104,36 @@ export default function ReportDetailClient({ report, allReports }) {
             </div>
 
             {/* Sticky Tab Navigation */}
-            <div className="sticky top-0 z-50 bg-[#0c0c0c] border-b border-gray-800 py-3 mb-6 flex gap-4 pl-4 items-center shadow-lg">
-                <button
-                    onClick={() => setActiveTab('details')}
-                    className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${activeTab === 'details'
-                        ? 'bg-[#00ff7f] text-black shadow-[0_0_10px_rgba(0,255,127,0.3)]'
-                        : 'bg-[#1a1a1a] text-gray-400 hover:bg-[#333] border border-gray-800'
-                        }`}
-                >
-                    Historicals
-                </button>
-                <button
-                    onClick={() => setActiveTab('broker')}
-                    className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${activeTab === 'broker'
-                        ? 'bg-[#00ff7f] text-black shadow-[0_0_10px_rgba(0,255,127,0.3)]'
-                        : 'bg-[#1a1a1a] text-gray-400 hover:bg-[#333] border border-gray-800'
-                        }`}
-                >
-                    Brokers
-                </button>
-                <button
-                    onClick={() => setActiveTab('peers')}
-                    className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${activeTab === 'peers'
-                        ? 'bg-[#00ff7f] text-black shadow-[0_0_10px_rgba(0,255,127,0.3)]'
-                        : 'bg-[#1a1a1a] text-gray-400 hover:bg-[#333] border border-gray-800'
-                        }`}
-                >
-                    Peers
-                </button>
+            <div className="sticky top-0 z-50 bg-[#0c0c0c] border-b border-gray-800 py-3 mb-6 pl-4 shadow-lg">
+                <div className="inline-flex bg-[#1a1a1a] p-1 rounded-lg border border-gray-800">
+                    <button
+                        onClick={() => setActiveTab('details')}
+                        className={`px-6 py-1.5 rounded-md text-sm font-semibold transition-all ${activeTab === 'details'
+                            ? 'bg-[#00ff7f] text-black shadow-sm'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                            }`}
+                    >
+                        Historicals
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('broker')}
+                        className={`px-6 py-1.5 rounded-md text-sm font-semibold transition-all ${activeTab === 'broker'
+                            ? 'bg-[#00ff7f] text-black shadow-sm'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                            }`}
+                    >
+                        Brokers
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('peers')}
+                        className={`px-6 py-1.5 rounded-md text-sm font-semibold transition-all ${activeTab === 'peers'
+                            ? 'bg-[#00ff7f] text-black shadow-sm'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                            }`}
+                    >
+                        Peers
+                    </button>
+                </div>
             </div>
 
             {/* Tab Content */}
