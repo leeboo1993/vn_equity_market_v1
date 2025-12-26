@@ -2074,7 +2074,25 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                                                     whiteSpace: 'nowrap'
                                                                                 }}
                                                                             >
-                                                                                Historical
+                                                                                Historicals
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => setComparisonMode('brokers')}
+                                                                                className="transition-all"
+                                                                                style={{
+                                                                                    backgroundColor: comparisonMode === 'brokers' ? '#00ff7f' : 'transparent',
+                                                                                    color: comparisonMode === 'brokers' ? 'black' : 'white',
+                                                                                    padding: '6px 16px',
+                                                                                    borderRadius: '8px',
+                                                                                    border: 'none',
+                                                                                    cursor: 'pointer',
+                                                                                    outline: 'none',
+                                                                                    fontSize: '10px',
+                                                                                    fontWeight: '400',
+                                                                                    whiteSpace: 'nowrap'
+                                                                                }}
+                                                                            >
+                                                                                Brokers
                                                                             </button>
                                                                             <button
                                                                                 onClick={() => setComparisonMode('peers')}
