@@ -410,7 +410,8 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                 left: 0,
                                 zIndex: 20,
                                 backgroundColor: '#1E1E1E',
-                                borderBottom: '1px solid #333'
+                                borderBottom: '1px solid #333',
+                                color: '#4ade80'
                             }}>Metric</th>
                             {tableData.columns.map((col, idx) => (
                                 <th key={idx} style={{ textAlign: 'center' }}>
