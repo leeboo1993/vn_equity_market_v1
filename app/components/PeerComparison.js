@@ -1,0 +1,179 @@
+'use client';
+
+import { useMemo } from 'react';
+
+export default function PeerComparison({ currentReport, allReports }) {
+    // Find peer companies in the same sector from the same broker
+    const peerData = useMemo(() => {
+        if (!currentReport || !allReports) return null;
+
+        const currentSector = currentReport.info_of_report?.sector;
+        const currentBroker = currentReport.info_of_report?.issued_company;
+        const currentTicker = currentReport.info_of_report?.ticker;
+
+        if (!currentSector || !currentBroker) return null;
+
+        // Filter reports: same sector + same broker
+        const peerReports = allReports.filter(r => {
+            const matchesSector = r.info_of_report?.sector === currentSector;
+            const matchesBroker = r.info_of_report?.issued_company === currentBroker;
+            return matchesSector && matchesBroker;
+        });
+
+        // Group by ticker and get latest report for each
+        const tickerMap = new Map();
+        peerReports.forEach(report => {
+            const ticker = report.info_of_report?.ticker;
+            if (!ticker) return;
+
+            const existing = tickerMap.get(ticker);
+            if (!existing) {
+                tickerMap.set(ticker, report);
+            } else {
+                // Compare dates and keep the latest
+                const existingDate = existing.info_of_report?.date_of_issue || '000000';
+                const currentDate = report.info_of_report?.date_of_issue || '000000';
+                if (currentDate > existingDate) {
+                    tickerMap.set(ticker, report);
+                }
+            }
+        });
+
+        // Convert to array and sort by ticker
+        const peers = Array.from(tickerMap.values()).sort((a, b) => {
+            const tickerA = a.info_of_report?.ticker || '';
+            const tickerB = b.info_of_report?.ticker || '';
+            return tickerA.localeCompare(tickerB);
+        });
+
+        return {
+            sector: currentSector,
+            broker: currentBroker,
+            peers
+        };
+    }, [currentReport, allReports]);
+
+    if (!peerData || peerData.peers.length === 0) {
+        return (
+            <div className="text-center text-gray-500 py-8">
+                No peer companies found in {peerData?.sector} sector from {peerData?.broker}
+            </div>
+        );
+    }
+
+    // Define metrics to display
+    const metrics = [
+        { key: 'recommendation', label: 'Recommendation', accessor: r => r.recommendation?.recommendation || '-' },
+        { key: 'target_price', label: 'Target Price', accessor: r => r.recommendation?.target_price?.toLocaleString() || '-' },
+        {
+            key: 'upside_at_call', label: 'Upside at call', accessor: r => {
+                const val = r.recommendation?.upside_at_call;
+                return val != null ? `${val >= 0 ? '+' : ''}${val.toFixed(1)}%` : '-';
+            }
+        },
+        {
+            key: 'perf_since_call', label: 'Perf since call', accessor: r => {
+                const val = r.recommendation?.performance_since_call;
+                return val != null ? `${val >= 0 ? '+' : ''}${val.toFixed(1)}%` : '-';
+            }
+        },
+        {
+            key: 'revenue', label: 'Revenue', accessor: r => {
+                const forecast = r.forecast_summary;
+                return forecast?.revenue?.toLocaleString() || forecast?.['Revenue (bn VND)']?.toLocaleString() || '-';
+            }
+        },
+        {
+            key: 'npat', label: 'NPAT', accessor: r => {
+                const forecast = r.forecast_summary;
+                return forecast?.npat?.toLocaleString() || forecast?.['NPAT (bn VND)']?.toLocaleString() || '-';
+            }
+        },
+        {
+            key: 'eps', label: 'EPS', accessor: r => {
+                const forecast = r.forecast_summary;
+                return forecast?.eps?.toLocaleString() || forecast?.['EPS (VND)']?.toLocaleString() || '-';
+            }
+        },
+        {
+            key: 'bvps', label: 'BVPS', accessor: r => {
+                const forecast = r.forecast_summary;
+                return forecast?.bvps?.toLocaleString() || forecast?.['BVPS (VND)']?.toLocaleString() || '-';
+            }
+        },
+        {
+            key: 'pe', label: 'PE', accessor: r => {
+                const forecast = r.forecast_summary;
+                return forecast?.pe?.toFixed(1) || forecast?.['P/E']?.toFixed(1) || '-';
+            }
+        },
+        {
+            key: 'pb', label: 'PB', accessor: r => {
+                const forecast = r.forecast_summary;
+                return forecast?.pb?.toFixed(2) || forecast?.['P/B']?.toFixed(2) || '-';
+            }
+        }
+    ];
+
+    return (
+        <div className="card">
+            <h3 className="text-xl font-semibold mb-4 text-purple-400">
+                Sector Peers: {peerData.sector} ({peerData.broker})
+            </h3>
+            <p className="text-sm text-gray-500 mb-4">
+                Comparing {peerData.peers.length} companies in the same sector from the same broker
+            </p>
+
+            <div className="overflow-x-auto">
+                <table className="w-full text-sm border-collapse">
+                    <thead>
+                        <tr className="border-b border-gray-700">
+                            <th className="text-left p-3 text-gray-400 font-semibold sticky left-0 bg-gray-900">Metric</th>
+                            {peerData.peers.map(peer => (
+                                <th key={peer.id} className="text-center p-3 text-green-400 font-semibold min-w-[120px]">
+                                    <div>{peer.info_of_report?.stock_name || peer.info_of_report?.ticker}</div>
+                                    <div className="text-xs text-gray-500 font-normal">
+                                        {peer.info_of_report?.ticker}
+                                    </div>
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {metrics.map((metric, idx) => (
+                            <tr key={metric.key} className={`border-b border-gray-800 ${idx % 2 === 0 ? 'bg-gray-900/30' : ''}`}>
+                                <td className="p-3 font-medium text-gray-300 sticky left-0 bg-gray-900">
+                                    {metric.label}
+                                </td>
+                                {peerData.peers.map(peer => {
+                                    const value = metric.accessor(peer);
+                                    const isRecommendation = metric.key === 'recommendation';
+                                    const isPositive = typeof value === 'string' && value.includes('+');
+                                    const isNegative = typeof value === 'string' && value.includes('-') && !value.includes('+-');
+
+                                    let cellClass = 'p-3 text-center';
+                                    if (isRecommendation) {
+                                        if (value === 'Buy') cellClass += ' text-green-400 font-bold';
+                                        else if (value === 'Sell') cellClass += ' text-red-400 font-bold';
+                                        else if (value === 'Neutral') cellClass += ' text-yellow-400 font-bold';
+                                        else cellClass += ' text-gray-500';
+                                    } else if (isPositive) {
+                                        cellClass += ' text-green-400';
+                                    } else if (isNegative) {
+                                        cellClass += ' text-red-400';
+                                    }
+
+                                    return (
+                                        <td key={peer.id} className={cellClass}>
+                                            {value}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+}
