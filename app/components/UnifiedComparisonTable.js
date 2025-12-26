@@ -27,6 +27,18 @@ const formatPercentage = (value) => {
     return `${num >= 0 ? '+' : ''}${num.toFixed(1)}%`;
 };
 
+// Helper to parse DDMMYY or YYMMDD strings to Date object
+// Assuming date_of_issue is YYMMDD or DDMMYY based on existing code usage
+// Existing code parseDateDate used YYMMDD logic: 2000 + substr(0,2)
+const parseDateHelper = (dateStr) => {
+    if (!dateStr || dateStr.length !== 6) return null;
+    const y = 2000 + parseInt(dateStr.substring(0, 2));
+    const m = parseInt(dateStr.substring(2, 4)) - 1; // 0-indexed
+    const d = parseInt(dateStr.substring(4, 6));
+    const date = new Date(y, m, d);
+    return isNaN(date.getTime()) ? null : date;
+};
+
 
 export default function UnifiedComparisonTable({ mode, currentReport, allReports, selectedYear }) {
     // Helper to derive recommendation from upside/target (matches ReportList.js logic)
@@ -59,8 +71,20 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
             const currentTicker = currentReport.info_of_report?.ticker;
             if (!currentTicker) return null;
 
+            const currentRefDate = parseDateHelper(currentReport.info_of_report?.date_of_issue);
+
             const brokerReports = allReports.filter(r => {
-                return r.info_of_report?.ticker === currentTicker;
+                const matchesTicker = r.info_of_report?.ticker === currentTicker;
+                if (!matchesTicker) return false;
+
+                // Date filter: within 6 months
+                if (!currentRefDate) return true; // If currently selected date invalid, show all
+                const rDate = parseDateHelper(r.info_of_report?.date_of_issue);
+                if (!rDate) return false;
+
+                const diffTime = Math.abs(currentRefDate - rDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return diffDays <= 180;
             });
 
             const brokerMap = new Map();
@@ -121,10 +145,21 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
 
             if (!currentSector || !currentBroker) return null;
 
+            const currentRefDate = parseDateHelper(currentReport.info_of_report?.date_of_issue);
+
             const peerReports = allReports.filter(r => {
                 const matchesSector = r.info_of_report?.sector === currentSector;
                 const matchesBroker = r.info_of_report?.issued_company === currentBroker;
-                return matchesSector && matchesBroker;
+                if (!matchesSector || !matchesBroker) return false;
+
+                // Date filter: within 6 months
+                if (!currentRefDate) return true;
+                const rDate = parseDateHelper(r.info_of_report?.date_of_issue);
+                if (!rDate) return false;
+
+                const diffTime = Math.abs(currentRefDate - rDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return diffDays <= 180;
             });
 
             const tickerMap = new Map();
