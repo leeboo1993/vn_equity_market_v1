@@ -1644,535 +1644,551 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                         })()}
                                                     </tbody>
                                                 </table>
+
                                             </div>
-                                            <div className="overflow-x-auto">
-                                                {(() => {
-                                                    try {
-                                                        // 1. Get Comparisons
-                                                        // Function to parse date
-                                                        const parseDateDate = (dStr) => {
-                                                            if (!dStr) return new Date(0);
-                                                            const y = 2000 + parseInt(dStr.substring(0, 2));
-                                                            const m = parseInt(dStr.substring(2, 4)) - 1;
-                                                            const d = parseInt(dStr.substring(4, 6));
-                                                            return new Date(y, m, d);
-                                                        };
-                                                        const currentRepDate = parseDateDate(selectedReport.info_of_report?.date_of_issue);
-                                                        const oneYearAgo = new Date(currentRepDate);
-                                                        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
-                                                        let comparisonReports = [];
+                                            {comparisonMode === 'peers' && (
+                                                <div className="mt-4">
+                                                    <PeerComparison currentReport={selectedReport} allReports={reports} />
+                                                </div>
+                                            )}
 
-                                                        if (comparisonMode === 'peers') {
-                                                            // === PEERS MODE ===
-                                                            // 1. All reports for Ticker
-                                                            // 2. Within 1 year
-                                                            // 3. Latest per Broker
-                                                            const candidates = (reports || []).filter(r => {
-                                                                // Add null safety for all property accesses
-                                                                if (!r || !r.info_of_report) return false;
+                                            {comparisonMode === 'brokers' && (
+                                                <div className="mt-4">
+                                                    <BrokerComparison currentReport={selectedReport} allReports={reports} />
+                                                </div>
+                                            )}
 
-                                                                const rDate = parseDateDate(r.info_of_report.date_of_issue);
-                                                                if (!rDate) return false;
+                                            {comparisonMode === 'historical' && (
+                                                <div className="overflow-x-auto">
+                                                    {(() => {
+                                                        try {
+                                                            // 1. Get Comparisons
+                                                            // Function to parse date
+                                                            const parseDateDate = (dStr) => {
+                                                                if (!dStr) return new Date(0);
+                                                                const y = 2000 + parseInt(dStr.substring(0, 2));
+                                                                const m = parseInt(dStr.substring(2, 4)) - 1;
+                                                                const d = parseInt(dStr.substring(4, 6));
+                                                                return new Date(y, m, d);
+                                                            };
+                                                            const currentRepDate = parseDateDate(selectedReport.info_of_report?.date_of_issue);
+                                                            const oneYearAgo = new Date(currentRepDate);
+                                                            oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
-                                                                // Ticker match
-                                                                if (r.info_of_report.ticker !== selectedReport.info_of_report.ticker) return false;
-                                                                // Date window (< 1 year from NOW or Selected Report? User said <1 year, assuming relative to Selected)
-                                                                // Let's use relative to Selected Report to be consistent with "historical context". 
-                                                                // Actually, for "Peer Comparison", usually it's "Current market view". 
-                                                                // But let's stick to "Relative to Selected Report" for consistency, or "Relative to Today"? 
-                                                                // If I view an old report, I probably want to see its peers *at that time*. 
-                                                                // So relative to Selected is safer.
-                                                                if (rDate > currentRepDate || rDate < oneYearAgo) return false;
+                                                            let comparisonReports = [];
 
-                                                                const hasTP = r.recommendation?.target_price != null;
-                                                                const hasForecast = r.forecast_table != null || r.forecast_summary != null;
-                                                                return hasTP || hasForecast;
-                                                            });
-
-                                                            const latestPerBroker = {};
-                                                            candidates.forEach(r => {
-                                                                // Add null safety for broker name
-                                                                const broker = r?.info_of_report?.issued_company;
-                                                                if (!broker) return; // Skip if no broker name
-
-                                                                if (!latestPerBroker[broker] || parseDateDate(latestPerBroker[broker].info_of_report.date_of_issue) < parseDateDate(r.info_of_report.date_of_issue)) {
-                                                                    latestPerBroker[broker] = r;
-                                                                }
-                                                            });
-
-                                                            // Sort alphabetically by Broker, but put Selected Report's broker first? Or just Alpha.
-                                                            comparisonReports = Object.values(latestPerBroker).sort((a, b) => {
-                                                                const brokerA = a?.info_of_report?.issued_company || '';
-                                                                const brokerB = b?.info_of_report?.issued_company || '';
-                                                                return brokerA.localeCompare(brokerB);
-                                                            });
-
-                                                        } else {
-                                                            // === HISTORICAL MODE (Existing Logic) ===
-                                                            const comparisonReportsRaw = (reports || [])
-                                                                .filter(r => {
+                                                            if (comparisonMode === 'peers') {
+                                                                // === PEERS MODE ===
+                                                                // 1. All reports for Ticker
+                                                                // 2. Within 1 year
+                                                                // 3. Latest per Broker
+                                                                const candidates = (reports || []).filter(r => {
                                                                     // Add null safety for all property accesses
                                                                     if (!r || !r.info_of_report) return false;
 
                                                                     const rDate = parseDateDate(r.info_of_report.date_of_issue);
                                                                     if (!rDate) return false;
 
-                                                                    if (r.info_of_report.issued_company !== selectedReport.info_of_report.issued_company) return false;
+                                                                    // Ticker match
                                                                     if (r.info_of_report.ticker !== selectedReport.info_of_report.ticker) return false;
+                                                                    // Date window (< 1 year from NOW or Selected Report? User said <1 year, assuming relative to Selected)
+                                                                    // Let's use relative to Selected Report to be consistent with "historical context". 
+                                                                    // Actually, for "Peer Comparison", usually it's "Current market view". 
+                                                                    // But let's stick to "Relative to Selected Report" for consistency, or "Relative to Today"? 
+                                                                    // If I view an old report, I probably want to see its peers *at that time*. 
+                                                                    // So relative to Selected is safer.
                                                                     if (rDate > currentRepDate || rDate < oneYearAgo) return false;
+
                                                                     const hasTP = r.recommendation?.target_price != null;
                                                                     const hasForecast = r.forecast_table != null || r.forecast_summary != null;
                                                                     return hasTP || hasForecast;
-                                                                })
-                                                                .sort((a, b) => parseDateDate(a.info_of_report.date_of_issue) - parseDateDate(b.info_of_report.date_of_issue));
+                                                                });
 
-                                                            const reportsByQuarter = {};
-                                                            comparisonReportsRaw.forEach(r => {
-                                                                const d = parseDateDate(r.info_of_report.date_of_issue);
-                                                                const q = Math.floor(d.getMonth() / 3) + 1;
-                                                                const key = `${d.getFullYear()}-Q${q}`;
-                                                                if (!reportsByQuarter[key] || parseDateDate(reportsByQuarter[key].info_of_report.date_of_issue) < d) {
-                                                                    reportsByQuarter[key] = r;
-                                                                }
-                                                            });
-                                                            comparisonReports = Object.values(reportsByQuarter);
-                                                        }
-                                                        // Common End logic
-                                                        // Ensure selected report is in logic? 
-                                                        // The filters above include it (<= currentRepDate).
+                                                                const latestPerBroker = {};
+                                                                candidates.forEach(r => {
+                                                                    // Add null safety for broker name
+                                                                    const broker = r?.info_of_report?.issued_company;
+                                                                    if (!broker) return; // Skip if no broker name
 
-                                                        // For financials logic:
-                                                        // We need to know who is "Latest" to determine available years.
-                                                        const latestReport = comparisonReports.length > 0 ? comparisonReports[comparisonReports.length - 1] : selectedReport;
+                                                                    if (!latestPerBroker[broker] || parseDateDate(latestPerBroker[broker].info_of_report.date_of_issue) < parseDateDate(r.info_of_report.date_of_issue)) {
+                                                                        latestPerBroker[broker] = r;
+                                                                    }
+                                                                });
 
-                                                        // For change calculation:
-                                                        // In Peers mode: Change vs what? Maybe vs Avg? Or no change col?
-                                                        // "every other row is the same". Recommendation, TP, etc.
-                                                        // Change column in peers usually irrelevant or vs prev rating.
-                                                        // I will KEEP the `prevToLatestReport` variable but it might be undefined in Peers mode or meaningless.
-                                                        // Actually, let's just null it for Peers to avoid confusing "Change" arrows between different brokers.
-                                                        const prevToLatestReport = comparisonMode === 'historical' && comparisonReports.length > 1 ? comparisonReports[comparisonReports.length - 2] : null;
+                                                                // Sort alphabetically by Broker, but put Selected Report's broker first? Or just Alpha.
+                                                                comparisonReports = Object.values(latestPerBroker).sort((a, b) => {
+                                                                    const brokerA = a?.info_of_report?.issued_company || '';
+                                                                    const brokerB = b?.info_of_report?.issued_company || '';
+                                                                    return brokerA.localeCompare(brokerB);
+                                                                });
 
-                                                        // 2. Determine Available Years & Target Year
-                                                        const getAvailableForecastYears = (rep) => {
-                                                            if (!rep || !rep.forecast_table || !rep.forecast_table.columns) return [];
-                                                            // Columns usually ["Year", "2023", "2024A", "2025F", "2026F"...]
-                                                            // Filter for anything looking like a year (4 digits)
-                                                            const allYears = rep.forecast_table.columns.filter(c => c.toString().match(/\d{4}/));
+                                                            } else {
+                                                                // === HISTORICAL MODE (Existing Logic) ===
+                                                                const comparisonReportsRaw = (reports || [])
+                                                                    .filter(r => {
+                                                                        // Add null safety for all property accesses
+                                                                        if (!r || !r.info_of_report) return false;
 
-                                                            // Parse and sort all available years
-                                                            const parsedYears = allYears.map(y => ({
-                                                                original: y,
-                                                                numeric: parseInt(y.toString().replace(/\D/g, ''))
-                                                            })).sort((a, b) => a.numeric - b.numeric);
+                                                                        const rDate = parseDateDate(r.info_of_report.date_of_issue);
+                                                                        if (!rDate) return false;
 
-                                                            // Get forecast years (2025+) first
-                                                            const forecastYears = parsedYears.filter(y => y.numeric >= 2025);
+                                                                        if (r.info_of_report.issued_company !== selectedReport.info_of_report.issued_company) return false;
+                                                                        if (r.info_of_report.ticker !== selectedReport.info_of_report.ticker) return false;
+                                                                        if (rDate > currentRepDate || rDate < oneYearAgo) return false;
+                                                                        const hasTP = r.recommendation?.target_price != null;
+                                                                        const hasForecast = r.forecast_table != null || r.forecast_summary != null;
+                                                                        return hasTP || hasForecast;
+                                                                    })
+                                                                    .sort((a, b) => parseDateDate(a.info_of_report.date_of_issue) - parseDateDate(b.info_of_report.date_of_issue));
 
-                                                            // If we have 4+ forecast years, return only those
-                                                            if (forecastYears.length >= 4) {
-                                                                return forecastYears.map(y => y.original);
+                                                                const reportsByQuarter = {};
+                                                                comparisonReportsRaw.forEach(r => {
+                                                                    const d = parseDateDate(r.info_of_report.date_of_issue);
+                                                                    const q = Math.floor(d.getMonth() / 3) + 1;
+                                                                    const key = `${d.getFullYear()}-Q${q}`;
+                                                                    if (!reportsByQuarter[key] || parseDateDate(reportsByQuarter[key].info_of_report.date_of_issue) < d) {
+                                                                        reportsByQuarter[key] = r;
+                                                                    }
+                                                                });
+                                                                comparisonReports = Object.values(reportsByQuarter);
                                                             }
+                                                            // Common End logic
+                                                            // Ensure selected report is in logic? 
+                                                            // The filters above include it (<= currentRepDate).
 
-                                                            // Otherwise, backfill with historical years to reach minimum 4
-                                                            const historicalYears = parsedYears.filter(y => y.numeric < 2025).reverse(); // Most recent first
-                                                            const neededHistorical = 4 - forecastYears.length;
-                                                            const backfillYears = historicalYears.slice(0, neededHistorical).reverse(); // Back to chronological
+                                                            // For financials logic:
+                                                            // We need to know who is "Latest" to determine available years.
+                                                            const latestReport = comparisonReports.length > 0 ? comparisonReports[comparisonReports.length - 1] : selectedReport;
 
-                                                            // Combine: historical (ascending) + forecast (ascending)
-                                                            const combined = [...backfillYears, ...forecastYears];
-                                                            return combined.map(y => y.original);
-                                                        };
+                                                            // For change calculation:
+                                                            // In Peers mode: Change vs what? Maybe vs Avg? Or no change col?
+                                                            // "every other row is the same". Recommendation, TP, etc.
+                                                            // Change column in peers usually irrelevant or vs prev rating.
+                                                            // I will KEEP the `prevToLatestReport` variable but it might be undefined in Peers mode or meaningless.
+                                                            // Actually, let's just null it for Peers to avoid confusing "Change" arrows between different brokers.
+                                                            const prevToLatestReport = comparisonMode === 'historical' && comparisonReports.length > 1 ? comparisonReports[comparisonReports.length - 2] : null;
 
-                                                        const availableYears = getAvailableForecastYears(latestReport);
-                                                        // Default to the last one (furthest year) if no selection
-                                                        const targetYear = selectedHistYear || (availableYears.length > 0 ? availableYears[availableYears.length - 1] : null);
+                                                            // 2. Determine Available Years & Target Year
+                                                            const getAvailableForecastYears = (rep) => {
+                                                                if (!rep || !rep.forecast_table || !rep.forecast_table.columns) return [];
+                                                                // Columns usually ["Year", "2023", "2024A", "2025F", "2026F"...]
+                                                                // Filter for anything looking like a year (4 digits)
+                                                                const allYears = rep.forecast_table.columns.filter(c => c.toString().match(/\d{4}/));
 
-                                                        // 3. Helper to get Matching Data
-                                                        const getFinancialsForYear = (rep, key, tYear) => {
-                                                            // Add comprehensive null safety
-                                                            if (!rep) return null;
-                                                            if (!rep.forecast_table) return null;
-                                                            if (!rep.forecast_table.columns || !Array.isArray(rep.forecast_table.columns)) return null;
-                                                            if (!rep.forecast_table.rows || !Array.isArray(rep.forecast_table.rows)) return null;
-                                                            if (tYear && rep.forecast_table) {
-                                                                try {
-                                                                    const cols = rep.forecast_table.columns || [];
-                                                                    const tYearClean = tYear.replace(/[A-Za-z]/g, '');
-                                                                    const colIndex = cols.findIndex(c => c.toString().includes(tYearClean));
+                                                                // Parse and sort all available years
+                                                                const parsedYears = allYears.map(y => ({
+                                                                    original: y,
+                                                                    numeric: parseInt(y.toString().replace(/\D/g, ''))
+                                                                })).sort((a, b) => a.numeric - b.numeric);
 
-                                                                    if (colIndex !== -1 && colIndex < cols.length) {
-                                                                        const colName = cols[colIndex];
+                                                                // Get forecast years (2025+) first
+                                                                const forecastYears = parsedYears.filter(y => y.numeric >= 2025);
 
-                                                                        // Additional safety: ensure column name exists
-                                                                        if (!colName) {
-                                                                            console.warn(`Column at index ${colIndex} is undefined for report ${rep.id}`);
-                                                                            return null;
-                                                                        }
-                                                                        // Find row: Support "metric" OR "item", case-insensitive
-                                                                        const row = (rep.forecast_table.rows || []).find(r => {
-                                                                            const rKey = r.metric || r.item;
-                                                                            return rKey && (rKey === key || rKey.toLowerCase() === key.toLowerCase());
-                                                                        });
+                                                                // If we have 4+ forecast years, return only those
+                                                                if (forecastYears.length >= 4) {
+                                                                    return forecastYears.map(y => y.original);
+                                                                }
 
-                                                                        if (row) {
-                                                                            // 1. Array format (Newer reports)
-                                                                            if (row.values && Array.isArray(row.values)) {
-                                                                                // Bounds check to prevent crash
-                                                                                if (colIndex >= 0 && colIndex < row.values.length) {
-                                                                                    return row.values[colIndex];
-                                                                                }
+                                                                // Otherwise, backfill with historical years to reach minimum 4
+                                                                const historicalYears = parsedYears.filter(y => y.numeric < 2025).reverse(); // Most recent first
+                                                                const neededHistorical = 4 - forecastYears.length;
+                                                                const backfillYears = historicalYears.slice(0, neededHistorical).reverse(); // Back to chronological
+
+                                                                // Combine: historical (ascending) + forecast (ascending)
+                                                                const combined = [...backfillYears, ...forecastYears];
+                                                                return combined.map(y => y.original);
+                                                            };
+
+                                                            const availableYears = getAvailableForecastYears(latestReport);
+                                                            // Default to the last one (furthest year) if no selection
+                                                            const targetYear = selectedHistYear || (availableYears.length > 0 ? availableYears[availableYears.length - 1] : null);
+
+                                                            // 3. Helper to get Matching Data
+                                                            const getFinancialsForYear = (rep, key, tYear) => {
+                                                                // Add comprehensive null safety
+                                                                if (!rep) return null;
+                                                                if (!rep.forecast_table) return null;
+                                                                if (!rep.forecast_table.columns || !Array.isArray(rep.forecast_table.columns)) return null;
+                                                                if (!rep.forecast_table.rows || !Array.isArray(rep.forecast_table.rows)) return null;
+                                                                if (tYear && rep.forecast_table) {
+                                                                    try {
+                                                                        const cols = rep.forecast_table.columns || [];
+                                                                        const tYearClean = tYear.replace(/[A-Za-z]/g, '');
+                                                                        const colIndex = cols.findIndex(c => c.toString().includes(tYearClean));
+
+                                                                        if (colIndex !== -1 && colIndex < cols.length) {
+                                                                            const colName = cols[colIndex];
+
+                                                                            // Additional safety: ensure column name exists
+                                                                            if (!colName) {
+                                                                                console.warn(`Column at index ${colIndex} is undefined for report ${rep.id}`);
                                                                                 return null;
                                                                             }
-                                                                            // 2. Flat Object format (Older reports)
-                                                                            // Access by column name (e.g. "2026F")
-                                                                            if (row[colName] !== undefined) {
-                                                                                return row[colName];
+                                                                            // Find row: Support "metric" OR "item", case-insensitive
+                                                                            const row = (rep.forecast_table.rows || []).find(r => {
+                                                                                const rKey = r.metric || r.item;
+                                                                                return rKey && (rKey === key || rKey.toLowerCase() === key.toLowerCase());
+                                                                            });
+
+                                                                            if (row) {
+                                                                                // 1. Array format (Newer reports)
+                                                                                if (row.values && Array.isArray(row.values)) {
+                                                                                    // Bounds check to prevent crash
+                                                                                    if (colIndex >= 0 && colIndex < row.values.length) {
+                                                                                        return row.values[colIndex];
+                                                                                    }
+                                                                                    return null;
+                                                                                }
+                                                                                // 2. Flat Object format (Older reports)
+                                                                                // Access by column name (e.g. "2026F")
+                                                                                if (row[colName] !== undefined) {
+                                                                                    return row[colName];
+                                                                                }
                                                                             }
                                                                         }
-                                                                    }
-                                                                } catch (e) { console.error(e); }
-                                                            }
-                                                            // DISABLE Fallback to summary if year lookup fails.
-                                                            // This prevents showing 2025 data when 2026 was requested.
-                                                            return null;
-                                                        };
-
-                                                        // 4. Render Row Helper
-                                                        const renderHistoricalRow = (label, key, isPercent = false, isFinancial = false, isText = false) => {
-                                                            // Check data density - count non-null values
-                                                            let filledCount = 0;
-                                                            const totalColumns = comparisonReports.length;
-
-                                                            for (const rep of comparisonReports) {
-                                                                let val = null;
-                                                                if (isFinancial) {
-                                                                    val = getFinancialsForYear(rep, key, targetYear);
-                                                                } else if (key === 'recommendation') {
-                                                                    val = rep.recommendation?.recommendation;
-                                                                } else {
-                                                                    val = rep.recommendation?.[key];
+                                                                    } catch (e) { console.error(e); }
                                                                 }
-
-                                                                if (val !== null && val !== undefined && val !== '' && val !== '-') {
-                                                                    filledCount++;
-                                                                }
-                                                            }
-
-                                                            // Hide row only if ALL columns are empty
-                                                            if (filledCount === 0) {
+                                                                // DISABLE Fallback to summary if year lookup fails.
+                                                                // This prevents showing 2025 data when 2026 was requested.
                                                                 return null;
-                                                            }
+                                                            };
 
-                                                            // ... same calculation logic ...
-                                                            // Calculate Change only for the last 2 reports
-                                                            let valLatest = null;
-                                                            let valPrev = null;
+                                                            // 4. Render Row Helper
+                                                            const renderHistoricalRow = (label, key, isPercent = false, isFinancial = false, isText = false) => {
+                                                                // Check data density - count non-null values
+                                                                let filledCount = 0;
+                                                                const totalColumns = comparisonReports.length;
 
-                                                            if (isFinancial) { // EPS, Revenue, etc.
-                                                                valLatest = getFinancialsForYear(latestReport, key, targetYear);
-                                                                valPrev = getFinancialsForYear(prevToLatestReport, key, targetYear);
-                                                            } else if (key === 'recommendation') {
-                                                                valLatest = latestReport?.recommendation?.recommendation;
-                                                                valPrev = prevToLatestReport?.recommendation?.recommendation;
-                                                            } else if (key === 'target_price') {
-                                                                valLatest = latestReport?.recommendation?.target_price;
-                                                                valPrev = prevToLatestReport?.recommendation?.target_price;
-                                                            } else if (key === 'upside_at_call') {
-                                                                valLatest = latestReport?.recommendation?.upside_at_call;
-                                                                valPrev = null;
-                                                            } else if (key === 'performance_since_call') {
-                                                                valLatest = latestReport?.recommendation?.performance_since_call;
-                                                                valPrev = null;
-                                                            }
+                                                                for (const rep of comparisonReports) {
+                                                                    let val = null;
+                                                                    if (isFinancial) {
+                                                                        val = getFinancialsForYear(rep, key, targetYear);
+                                                                    } else if (key === 'recommendation') {
+                                                                        val = rep.recommendation?.recommendation;
+                                                                    } else {
+                                                                        val = rep.recommendation?.[key];
+                                                                    }
 
-                                                            // For financial metrics, check if latest value is an outlier
-                                                            let latestIsOutlier = false;
-                                                            if (isFinancial) {
-                                                                const allValues = comparisonReports.map(rep => {
-                                                                    const v = getFinancialsForYear(rep, key, targetYear);
-                                                                    return v != null && !isNaN(v) ? v : null;
-                                                                }).filter(v => v != null);
-
-                                                                const sorted = [...allValues].sort((a, b) => a - b);
-                                                                const mid = Math.floor(sorted.length / 2);
-                                                                const median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-
-                                                                if (median != null && valLatest != null && allValues.length >= 3) {
-                                                                    const deviation = Math.abs(valLatest - median) / Math.abs(median);
-                                                                    latestIsOutlier = deviation > 0.30;
+                                                                    if (val !== null && val !== undefined && val !== '' && val !== '-') {
+                                                                        filledCount++;
+                                                                    }
                                                                 }
-                                                            }
 
-                                                            // Calculate Delta (skip if latest is outlier)
-                                                            let change = null;
-                                                            if (latestIsOutlier) {
-                                                                change = null;
-                                                            } else if (!isText && !isFinancial && key === 'target_price' && valLatest && valPrev) {
-                                                                change = ((valLatest - valPrev) / valPrev) * 100;
-                                                            } else if (isFinancial && valLatest != null && valPrev != null) {
-                                                                change = calculateChange(valLatest, valPrev);
-                                                            }
+                                                                // Hide row only if ALL columns are empty
+                                                                if (filledCount === 0) {
+                                                                    return null;
+                                                                }
 
-                                                            if (key === 'upside_at_call' || key === 'performance_since_call') change = null;
+                                                                // ... same calculation logic ...
+                                                                // Calculate Change only for the last 2 reports
+                                                                let valLatest = null;
+                                                                let valPrev = null;
+
+                                                                if (isFinancial) { // EPS, Revenue, etc.
+                                                                    valLatest = getFinancialsForYear(latestReport, key, targetYear);
+                                                                    valPrev = getFinancialsForYear(prevToLatestReport, key, targetYear);
+                                                                } else if (key === 'recommendation') {
+                                                                    valLatest = latestReport?.recommendation?.recommendation;
+                                                                    valPrev = prevToLatestReport?.recommendation?.recommendation;
+                                                                } else if (key === 'target_price') {
+                                                                    valLatest = latestReport?.recommendation?.target_price;
+                                                                    valPrev = prevToLatestReport?.recommendation?.target_price;
+                                                                } else if (key === 'upside_at_call') {
+                                                                    valLatest = latestReport?.recommendation?.upside_at_call;
+                                                                    valPrev = null;
+                                                                } else if (key === 'performance_since_call') {
+                                                                    valLatest = latestReport?.recommendation?.performance_since_call;
+                                                                    valPrev = null;
+                                                                }
+
+                                                                // For financial metrics, check if latest value is an outlier
+                                                                let latestIsOutlier = false;
+                                                                if (isFinancial) {
+                                                                    const allValues = comparisonReports.map(rep => {
+                                                                        const v = getFinancialsForYear(rep, key, targetYear);
+                                                                        return v != null && !isNaN(v) ? v : null;
+                                                                    }).filter(v => v != null);
+
+                                                                    const sorted = [...allValues].sort((a, b) => a - b);
+                                                                    const mid = Math.floor(sorted.length / 2);
+                                                                    const median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+
+                                                                    if (median != null && valLatest != null && allValues.length >= 3) {
+                                                                        const deviation = Math.abs(valLatest - median) / Math.abs(median);
+                                                                        latestIsOutlier = deviation > 0.30;
+                                                                    }
+                                                                }
+
+                                                                // Calculate Delta (skip if latest is outlier)
+                                                                let change = null;
+                                                                if (latestIsOutlier) {
+                                                                    change = null;
+                                                                } else if (!isText && !isFinancial && key === 'target_price' && valLatest && valPrev) {
+                                                                    change = ((valLatest - valPrev) / valPrev) * 100;
+                                                                } else if (isFinancial && valLatest != null && valPrev != null) {
+                                                                    change = calculateChange(valLatest, valPrev);
+                                                                }
+
+                                                                if (key === 'upside_at_call' || key === 'performance_since_call') change = null;
+
+                                                                return (
+                                                                    <tr key={key}>
+                                                                        <td className="text-left border-r border-gray-700"
+                                                                            style={{ position: 'sticky', left: 0, zIndex: 10, backgroundColor: '#1E1E1E' }}>
+                                                                            {label}
+                                                                        </td>
+                                                                        {(() => {
+                                                                            // For financial metrics, detect outliers first
+                                                                            let allValues = [];
+                                                                            if (isFinancial) {
+                                                                                allValues = comparisonReports.map(rep => {
+                                                                                    const v = getFinancialsForYear(rep, key, targetYear);
+                                                                                    return v != null && !isNaN(v) ? v : null;
+                                                                                }).filter(v => v != null);
+                                                                            }
+
+                                                                            // Calculate median for outlier detection
+                                                                            const getMedian = (arr) => {
+                                                                                if (arr.length === 0) return null;
+                                                                                const sorted = [...arr].sort((a, b) => a - b);
+                                                                                const mid = Math.floor(sorted.length / 2);
+                                                                                return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+                                                                            };
+
+                                                                            const median = getMedian(allValues);
+
+                                                                            // Check if value is outlier (differs by more than 30% from median)
+                                                                            // Only apply outlier detection if we have at least 3 data points
+                                                                            const isOutlier = (val) => {
+                                                                                if (!isFinancial || val == null) return false;
+
+                                                                                // Sanity check for specific metrics with known reasonable ranges
+                                                                                // BVPS for Vietnamese stocks should be > 100 (typically in thousands)
+                                                                                if (key === 'bvps_vnd' && val < 100) return true;
+                                                                                // EPS should typically be > 100 for VND stocks
+                                                                                if (key === 'eps_vnd' && val < 100) return true;
+
+                                                                                // Apply median-based outlier detection only if we have 3+ data points
+                                                                                if (median == null || allValues.length < 3) return false;
+                                                                                const deviation = Math.abs(val - median) / Math.abs(median);
+                                                                                return deviation > 0.30;
+                                                                            };
+
+                                                                            return comparisonReports.map((rep, idx) => {
+                                                                                // Wrap entire logic in try-catch to prevent crashes
+                                                                                try {
+                                                                                    // Add null safety for rep
+                                                                                    if (!rep) return <td key={`empty-${idx}`} className="text-center">-</td>;
+
+                                                                                    const repKey = rep.id || rep.info_of_report?.date_of_issue || idx;
+
+                                                                                    let val = null;
+                                                                                    if (isFinancial) {
+                                                                                        val = getFinancialsForYear(rep, key, targetYear);
+                                                                                    } else if (key === 'recommendation') {
+                                                                                        // Use raw recommendation value to match Company Reports table
+                                                                                        val = rep.recommendation?.recommendation || '-';
+                                                                                    } else {
+                                                                                        val = rep.recommendation?.[key];
+                                                                                    }
+
+                                                                                    // Check for outlier in financial data
+                                                                                    if (isFinancial && isOutlier(val)) {
+                                                                                        return <td key={repKey} className="text-center">-</td>;
+                                                                                    }
+
+                                                                                    // Formatting
+                                                                                    if (val == null || val === undefined) return <td key={repKey} className="text-center">-</td>;
+                                                                                    if (key === 'recommendation') {
+                                                                                        const recStyle = getRecommendationStyle(val);
+                                                                                        return (
+                                                                                            <td key={repKey} className="text-center">
+                                                                                                <span style={{
+                                                                                                    ...recStyle,
+                                                                                                    padding: '4px 12px',
+                                                                                                    borderRadius: '9999px',
+                                                                                                    fontWeight: 'bold',
+                                                                                                    fontSize: '10px',
+                                                                                                    display: 'inline-block'
+                                                                                                }}>
+                                                                                                    {val}
+                                                                                                </span>
+                                                                                            </td>
+                                                                                        );
+                                                                                    }
+                                                                                    if (isText) return <td key={repKey} className="text-center">{val}</td>;
+                                                                                    // Add safety for toFixed() - ensure val is a number
+                                                                                    if (isPercent) {
+                                                                                        const numVal = typeof val === 'number' ? val : parseFloat(val);
+                                                                                        if (isNaN(numVal)) return <td key={repKey} className="text-center">-</td>;
+                                                                                        return <td key={repKey} className="text-center">{numVal.toFixed(1)}%</td>;
+                                                                                    }
+                                                                                    // Add safety for toLocaleString()
+                                                                                    const numVal = typeof val === 'number' ? val : parseFloat(val);
+                                                                                    if (isNaN(numVal)) return <td key={repKey} className="text-center">{val}</td>;
+                                                                                    return <td key={repKey} className="text-center">{numVal.toLocaleString()}</td>;
+                                                                                } catch (error) {
+                                                                                    console.error('Error rendering comparison cell:', error, { rep, key, targetYear });
+                                                                                    return <td key={`error-${idx}`} className="text-center">-</td>;
+                                                                                }
+                                                                            });
+                                                                        })()}
+                                                                        {comparisonMode === 'historical' && (
+                                                                            <td className={`text-center ${change > 0 ? 'text-[#00ff7f]' : change < 0 ? 'text-[#ff6666]' : ''}`}>
+                                                                                {key === 'recommendation'
+                                                                                    ? (valLatest !== valPrev && valPrev ? 'Change' : '')
+                                                                                    : (change != null ? (change > 0 ? '+' : '') + change.toFixed(1) + '%' : '-')}
+                                                                            </td>
+                                                                        )}
+                                                                    </tr>
+                                                                );
+                                                            };
 
                                                             return (
-                                                                <tr key={key}>
-                                                                    <td className="text-left border-r border-gray-700"
-                                                                        style={{ position: 'sticky', left: 0, zIndex: 10, backgroundColor: '#1E1E1E' }}>
-                                                                        {label}
-                                                                    </td>
-                                                                    {(() => {
-                                                                        // For financial metrics, detect outliers first
-                                                                        let allValues = [];
-                                                                        if (isFinancial) {
-                                                                            allValues = comparisonReports.map(rep => {
-                                                                                const v = getFinancialsForYear(rep, key, targetYear);
-                                                                                return v != null && !isNaN(v) ? v : null;
-                                                                            }).filter(v => v != null);
-                                                                        }
-
-                                                                        // Calculate median for outlier detection
-                                                                        const getMedian = (arr) => {
-                                                                            if (arr.length === 0) return null;
-                                                                            const sorted = [...arr].sort((a, b) => a - b);
-                                                                            const mid = Math.floor(sorted.length / 2);
-                                                                            return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-                                                                        };
-
-                                                                        const median = getMedian(allValues);
-
-                                                                        // Check if value is outlier (differs by more than 30% from median)
-                                                                        // Only apply outlier detection if we have at least 3 data points
-                                                                        const isOutlier = (val) => {
-                                                                            if (!isFinancial || val == null) return false;
-
-                                                                            // Sanity check for specific metrics with known reasonable ranges
-                                                                            // BVPS for Vietnamese stocks should be > 100 (typically in thousands)
-                                                                            if (key === 'bvps_vnd' && val < 100) return true;
-                                                                            // EPS should typically be > 100 for VND stocks
-                                                                            if (key === 'eps_vnd' && val < 100) return true;
-
-                                                                            // Apply median-based outlier detection only if we have 3+ data points
-                                                                            if (median == null || allValues.length < 3) return false;
-                                                                            const deviation = Math.abs(val - median) / Math.abs(median);
-                                                                            return deviation > 0.30;
-                                                                        };
-
-                                                                        return comparisonReports.map((rep, idx) => {
-                                                                            // Wrap entire logic in try-catch to prevent crashes
-                                                                            try {
-                                                                                // Add null safety for rep
-                                                                                if (!rep) return <td key={`empty-${idx}`} className="text-center">-</td>;
-
-                                                                                const repKey = rep.id || rep.info_of_report?.date_of_issue || idx;
-
-                                                                                let val = null;
-                                                                                if (isFinancial) {
-                                                                                    val = getFinancialsForYear(rep, key, targetYear);
-                                                                                } else if (key === 'recommendation') {
-                                                                                    // Use raw recommendation value to match Company Reports table
-                                                                                    val = rep.recommendation?.recommendation || '-';
-                                                                                } else {
-                                                                                    val = rep.recommendation?.[key];
-                                                                                }
-
-                                                                                // Check for outlier in financial data
-                                                                                if (isFinancial && isOutlier(val)) {
-                                                                                    return <td key={repKey} className="text-center">-</td>;
-                                                                                }
-
-                                                                                // Formatting
-                                                                                if (val == null || val === undefined) return <td key={repKey} className="text-center">-</td>;
-                                                                                if (key === 'recommendation') {
-                                                                                    const recStyle = getRecommendationStyle(val);
-                                                                                    return (
-                                                                                        <td key={repKey} className="text-center">
-                                                                                            <span style={{
-                                                                                                ...recStyle,
-                                                                                                padding: '4px 12px',
-                                                                                                borderRadius: '9999px',
-                                                                                                fontWeight: 'bold',
-                                                                                                fontSize: '10px',
-                                                                                                display: 'inline-block'
-                                                                                            }}>
-                                                                                                {val}
-                                                                                            </span>
-                                                                                        </td>
-                                                                                    );
-                                                                                }
-                                                                                if (isText) return <td key={repKey} className="text-center">{val}</td>;
-                                                                                // Add safety for toFixed() - ensure val is a number
-                                                                                if (isPercent) {
-                                                                                    const numVal = typeof val === 'number' ? val : parseFloat(val);
-                                                                                    if (isNaN(numVal)) return <td key={repKey} className="text-center">-</td>;
-                                                                                    return <td key={repKey} className="text-center">{numVal.toFixed(1)}%</td>;
-                                                                                }
-                                                                                // Add safety for toLocaleString()
-                                                                                const numVal = typeof val === 'number' ? val : parseFloat(val);
-                                                                                if (isNaN(numVal)) return <td key={repKey} className="text-center">{val}</td>;
-                                                                                return <td key={repKey} className="text-center">{numVal.toLocaleString()}</td>;
-                                                                            } catch (error) {
-                                                                                console.error('Error rendering comparison cell:', error, { rep, key, targetYear });
-                                                                                return <td key={`error-${idx}`} className="text-center">-</td>;
-                                                                            }
-                                                                        });
-                                                                    })()}
-                                                                    {comparisonMode === 'historical' && (
-                                                                        <td className={`text-center ${change > 0 ? 'text-[#00ff7f]' : change < 0 ? 'text-[#ff6666]' : ''}`}>
-                                                                            {key === 'recommendation'
-                                                                                ? (valLatest !== valPrev && valPrev ? 'Change' : '')
-                                                                                : (change != null ? (change > 0 ? '+' : '') + change.toFixed(1) + '%' : '-')}
-                                                                        </td>
-                                                                    )}
-                                                                </tr>
-                                                            );
-                                                        };
-
-                                                        return (
-                                                            <div>
-                                                                {/* Header with Dropdown */}
-                                                                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '12px', marginBottom: '12px', marginTop: '12px', width: '100%' }}>
-                                                                    {/* Mode Selector - Segmented Control */}
-                                                                    <div style={{
-                                                                        backgroundColor: '#2C2C2E',
-                                                                        borderRadius: '10px',
-                                                                        padding: '4px',
-                                                                        display: 'inline-flex',
-                                                                        gap: '0',
-                                                                        border: '1px solid #3A3A3C'
-                                                                    }}>
-                                                                        <button
-                                                                            onClick={() => setComparisonMode('historical')}
-                                                                            className="transition-all"
-                                                                            style={{
-                                                                                backgroundColor: comparisonMode === 'historical' ? '#00ff7f' : 'transparent',
-                                                                                color: comparisonMode === 'historical' ? 'black' : 'white',
-                                                                                padding: '6px 16px',
-                                                                                borderRadius: '8px',
-                                                                                border: 'none',
-                                                                                cursor: 'pointer',
-                                                                                outline: 'none',
-                                                                                fontSize: '10px',
-                                                                                fontWeight: '400',
-                                                                                whiteSpace: 'nowrap'
-                                                                            }}
-                                                                        >
-                                                                            Historical
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => setComparisonMode('peers')}
-                                                                            className="transition-all"
-                                                                            style={{
-                                                                                backgroundColor: comparisonMode === 'peers' ? '#00ff7f' : 'transparent',
-                                                                                color: comparisonMode === 'peers' ? 'black' : 'white',
-                                                                                padding: '6px 16px',
-                                                                                borderRadius: '8px',
-                                                                                border: 'none',
-                                                                                cursor: 'pointer',
-                                                                                outline: 'none',
-                                                                                fontSize: '10px',
-                                                                                fontWeight: '400',
-                                                                                whiteSpace: 'nowrap'
-                                                                            }}
-                                                                        >
-                                                                            Peers
-                                                                        </button>
-                                                                    </div>
-
-                                                                    {availableYears.length > 0 && (
-                                                                        <div style={{ position: 'relative', display: 'inline-block' }}>
-                                                                            <select
-                                                                                value={targetYear || ''}
-                                                                                onChange={(e) => setSelectedHistYear(e.target.value)}
+                                                                <div>
+                                                                    {/* Header with Dropdown */}
+                                                                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '12px', marginBottom: '12px', marginTop: '12px', width: '100%' }}>
+                                                                        {/* Mode Selector - Segmented Control */}
+                                                                        <div style={{
+                                                                            backgroundColor: '#2C2C2E',
+                                                                            borderRadius: '10px',
+                                                                            padding: '4px',
+                                                                            display: 'inline-flex',
+                                                                            gap: '0',
+                                                                            border: '1px solid #3A3A3C'
+                                                                        }}>
+                                                                            <button
+                                                                                onClick={() => setComparisonMode('historical')}
+                                                                                className="transition-all"
                                                                                 style={{
-                                                                                    appearance: 'none',
-                                                                                    backgroundColor: '#1E1E1E',
-                                                                                    border: '1px solid #4B5563',
-                                                                                    color: 'white',
-                                                                                    padding: '2px 8px',
-                                                                                    borderRadius: '4px',
-                                                                                    fontSize: '12px',
-                                                                                    outline: 'none',
+                                                                                    backgroundColor: comparisonMode === 'historical' ? '#00ff7f' : 'transparent',
+                                                                                    color: comparisonMode === 'historical' ? 'black' : 'white',
+                                                                                    padding: '6px 16px',
+                                                                                    borderRadius: '8px',
+                                                                                    border: 'none',
                                                                                     cursor: 'pointer',
-                                                                                    height: '24px',
-                                                                                    textAlign: 'center'
+                                                                                    outline: 'none',
+                                                                                    fontSize: '10px',
+                                                                                    fontWeight: '400',
+                                                                                    whiteSpace: 'nowrap'
                                                                                 }}
                                                                             >
-                                                                                {availableYears.map(year => (
-                                                                                    <option key={year} value={year}>{year}</option>
-                                                                                ))}
-                                                                            </select>
+                                                                                Historical
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => setComparisonMode('peers')}
+                                                                                className="transition-all"
+                                                                                style={{
+                                                                                    backgroundColor: comparisonMode === 'peers' ? '#00ff7f' : 'transparent',
+                                                                                    color: comparisonMode === 'peers' ? 'black' : 'white',
+                                                                                    padding: '6px 16px',
+                                                                                    borderRadius: '8px',
+                                                                                    border: 'none',
+                                                                                    cursor: 'pointer',
+                                                                                    outline: 'none',
+                                                                                    fontSize: '10px',
+                                                                                    fontWeight: '400',
+                                                                                    whiteSpace: 'nowrap'
+                                                                                }}
+                                                                            >
+                                                                                Peers
+                                                                            </button>
                                                                         </div>
-                                                                    )}
-                                                                </div>
 
-                                                                <table className="mini-table w-full relative border-collapse">
-                                                                    <thead>
-                                                                        <tr>
-                                                                            <th className="text-left border-r border-b border-gray-700"
-                                                                                style={{ position: 'sticky', left: 0, top: 0, zIndex: 30, backgroundColor: '#1E1E1E' }}>
-                                                                                Metric
-                                                                            </th>
-                                                                            {comparisonReports.map(rep => (
-                                                                                <th key={rep.id} className="text-center border-b border-gray-700 whitespace-nowrap px-4"
-                                                                                    style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#1E1E1E' }}>
-                                                                                    {comparisonMode === 'peers' ? (
-                                                                                        <span className="font-bold text-white">{rep.info_of_report.issued_company}</span>
-                                                                                    ) : (
-                                                                                        formatDate(rep.info_of_report.date_of_issue)
-                                                                                    )}
-                                                                                </th>
-                                                                            ))}
-                                                                            {comparisonMode === 'historical' && (
-                                                                                <th className="text-center border-b border-gray-700"
-                                                                                    style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#1E1E1E' }}>
-                                                                                    Δ
-                                                                                </th>
-                                                                            )}
-                                                                        </tr>
-                                                                    </thead>
-                                                                    <tbody>
-                                                                        {comparisonMode === 'peers' && (
-                                                                            <tr>
-                                                                                <td className="text-left border-r border-gray-700 font-medium" style={{ position: 'sticky', left: 0, zIndex: 10, backgroundColor: '#1E1E1E' }}>
-                                                                                    Date
-                                                                                </td>
-                                                                                {comparisonReports.map(rep => (
-                                                                                    <td key={rep.id} className="text-center border-gray-700 px-4">
-                                                                                        {formatDate(rep.info_of_report.date_of_issue)}
-                                                                                    </td>
-                                                                                ))}
-                                                                            </tr>
+                                                                        {availableYears.length > 0 && (
+                                                                            <div style={{ position: 'relative', display: 'inline-block' }}>
+                                                                                <select
+                                                                                    value={targetYear || ''}
+                                                                                    onChange={(e) => setSelectedHistYear(e.target.value)}
+                                                                                    style={{
+                                                                                        appearance: 'none',
+                                                                                        backgroundColor: '#1E1E1E',
+                                                                                        border: '1px solid #4B5563',
+                                                                                        color: 'white',
+                                                                                        padding: '2px 8px',
+                                                                                        borderRadius: '4px',
+                                                                                        fontSize: '12px',
+                                                                                        outline: 'none',
+                                                                                        cursor: 'pointer',
+                                                                                        height: '24px',
+                                                                                        textAlign: 'center'
+                                                                                    }}
+                                                                                >
+                                                                                    {availableYears.map(year => (
+                                                                                        <option key={year} value={year}>{year}</option>
+                                                                                    ))}
+                                                                                </select>
+                                                                            </div>
                                                                         )}
-                                                                        {renderHistoricalRow('Recommendation', 'recommendation', false, false, true)}
-                                                                        {renderHistoricalRow('Target price', 'target_price', false, false, false)}
-                                                                        {renderHistoricalRow('Upside at call', 'upside_at_call', true, false, false)}
-                                                                        {renderHistoricalRow('Perf since call', 'performance_since_call', true, false, false)}
-                                                                        {renderHistoricalRow('Total assets', 'total_assets', false, true)}
-                                                                        {renderHistoricalRow('Total equity', 'total_equity', false, true)}
-                                                                        {renderHistoricalRow('Revenue', 'revenue', false, true)}
-                                                                        {renderHistoricalRow('NPAT', 'npat', false, true)}
-                                                                        {renderHistoricalRow('EPS', 'eps_vnd', false, true)}
-                                                                        {renderHistoricalRow('BVPS', 'bvps_vnd', false, true)}
-                                                                        {renderHistoricalRow('PE', 'pe', false, true)}
-                                                                        {renderHistoricalRow('PB', 'pb', false, true)}
-                                                                    </tbody>
-                                                                </table>
-                                                            </div>
-                                                        );
-                                                    } catch (error) {
-                                                        console.error('Error rendering comparison section:', error);
-                                                        return (
-                                                            <div style={{ padding: '20px', textAlign: 'center', color: '#ff6666' }}>
-                                                                <p>Unable to load comparison data for this report.</p>
-                                                                <p style={{ fontSize: '12px', color: '#888' }}>Check console for details.</p>
-                                                            </div>
-                                                        );
-                                                    }
-                                                })()}
-                                            </div>
+                                                                    </div>
+
+                                                                    <table className="mini-table w-full relative border-collapse">
+                                                                        <thead>
+                                                                            <tr>
+                                                                                <th className="text-left border-r border-b border-gray-700"
+                                                                                    style={{ position: 'sticky', left: 0, top: 0, zIndex: 30, backgroundColor: '#1E1E1E' }}>
+                                                                                    Metric
+                                                                                </th>
+                                                                                {comparisonReports.map(rep => (
+                                                                                    <th key={rep.id} className="text-center border-b border-gray-700 whitespace-nowrap px-4"
+                                                                                        style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#1E1E1E' }}>
+                                                                                        {comparisonMode === 'peers' ? (
+                                                                                            <span className="font-bold text-white">{rep.info_of_report.issued_company}</span>
+                                                                                        ) : (
+                                                                                            formatDate(rep.info_of_report.date_of_issue)
+                                                                                        )}
+                                                                                    </th>
+                                                                                ))}
+                                                                                {comparisonMode === 'historical' && (
+                                                                                    <th className="text-center border-b border-gray-700"
+                                                                                        style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#1E1E1E' }}>
+                                                                                        Δ
+                                                                                    </th>
+                                                                                )}
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            {comparisonMode === 'peers' && (
+                                                                                <tr>
+                                                                                    <td className="text-left border-r border-gray-700 font-medium" style={{ position: 'sticky', left: 0, zIndex: 10, backgroundColor: '#1E1E1E' }}>
+                                                                                        Date
+                                                                                    </td>
+                                                                                    {comparisonReports.map(rep => (
+                                                                                        <td key={rep.id} className="text-center border-gray-700 px-4">
+                                                                                            {formatDate(rep.info_of_report.date_of_issue)}
+                                                                                        </td>
+                                                                                    ))}
+                                                                                </tr>
+                                                                            )}
+                                                                            {renderHistoricalRow('Recommendation', 'recommendation', false, false, true)}
+                                                                            {renderHistoricalRow('Target price', 'target_price', false, false, false)}
+                                                                            {renderHistoricalRow('Upside at call', 'upside_at_call', true, false, false)}
+                                                                            {renderHistoricalRow('Perf since call', 'performance_since_call', true, false, false)}
+                                                                            {renderHistoricalRow('Total assets', 'total_assets', false, true)}
+                                                                            {renderHistoricalRow('Total equity', 'total_equity', false, true)}
+                                                                            {renderHistoricalRow('Revenue', 'revenue', false, true)}
+                                                                            {renderHistoricalRow('NPAT', 'npat', false, true)}
+                                                                            {renderHistoricalRow('EPS', 'eps_vnd', false, true)}
+                                                                            {renderHistoricalRow('BVPS', 'bvps_vnd', false, true)}
+                                                                            {renderHistoricalRow('PE', 'pe', false, true)}
+                                                                            {renderHistoricalRow('PB', 'pb', false, true)}
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            );
+                                                        } catch (error) {
+                                                            console.error('Error rendering comparison section:', error);
+                                                            return (
+                                                                <div style={{ padding: '20px', textAlign: 'center', color: '#ff6666' }}>
+                                                                    <p>Unable to load comparison data for this report.</p>
+                                                                    <p style={{ fontSize: '12px', color: '#888' }}>Check console for details.</p>
+                                                                </div>
+                                                            );
+                                                        }
+                                                    })()}
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className={`detail-tab-content ${activeTab === 'inv' ? 'active' : ''}`}>
