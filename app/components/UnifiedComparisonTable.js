@@ -372,25 +372,7 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
         { key: 'pb', label: 'PB', isFinancial: true }
     ];
 
-    // Helper to match ReportList.js logic
-    const getDerivedRec = (report) => {
-        const upside = report.recommendation?.upside_at_call || 0; // Use upside_at_call for consistency
-        const targetPrice = report.recommendation?.target_price;
 
-        // If no target price, return "No Rating"
-        if (!targetPrice || targetPrice === 0) {
-            return 'No Rating';
-        }
-
-        // Standardize based on upside at call
-        if (upside >= 15) {
-            return 'Buy';
-        } else if (upside <= -5) {
-            return 'Sell';
-        } else {
-            return 'Neutral';
-        }
-    };
 
     // Get value for a metric from a report
     const getValue = (report, metricKey, isFinancial) => {
