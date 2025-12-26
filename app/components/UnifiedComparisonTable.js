@@ -404,7 +404,14 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                             backgroundColor: '#1E1E1E',
                             borderBottom: '1px solid #333'
                         }}>
-                            <th style={{ textAlign: 'left' }}>Metric</th>
+                            <th style={{
+                                textAlign: 'left',
+                                position: 'sticky',
+                                left: 0,
+                                zIndex: 20,
+                                backgroundColor: '#1E1E1E',
+                                borderBottom: '1px solid #333'
+                            }}>Metric</th>
                             {tableData.columns.map((col, idx) => (
                                 <th key={idx} style={{ textAlign: 'center' }}>
                                     {tableData.getColumnHeader(col)}
@@ -477,12 +484,11 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                                         backgroundColor: style.bg,
                                                         color: style.color,
                                                         border: style.border,
-                                                        padding: '2px 8px',
+                                                        padding: '4px 12px',
                                                         borderRadius: '9999px',
                                                         fontWeight: 'bold',
-                                                        fontSize: '9px',
-                                                        display: 'inline-block',
-                                                        lineHeight: '1'
+                                                        fontSize: '10px',
+                                                        display: 'inline-block'
                                                     }}>
                                                         {value}
                                                     </span>
