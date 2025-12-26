@@ -387,7 +387,14 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                 overflowX: 'auto',
                 borderRadius: '8px'
             }}>
-                <table className="mini-table w-full relative border-collapse">
+                <table className="mini-table w-full relative border-collapse" style={{ tableLayout: 'fixed' }}>
+                    <colgroup>
+                        <col style={{ width: '150px' }} /> {/* Metric column */}
+                        {tableData.columns.map((_, idx) => (
+                            <col key={idx} style={{ width: 'auto' }} /> {/* Data columns - equal width */ }
+                        ))}
+                        <col style={{ width: '80px' }} /> {/* Delta column */}
+                    </colgroup>
                     <thead>
                         <tr style={{
                             position: 'sticky',
