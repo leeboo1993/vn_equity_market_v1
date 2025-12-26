@@ -478,10 +478,10 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                                         backgroundColor: style.bg,
                                                         color: style.color,
                                                         border: style.border,
-                                                        padding: '6px 16px',
+                                                        padding: '3px 10px',
                                                         borderRadius: '9999px',
                                                         fontWeight: 'bold',
-                                                        fontSize: '11px',
+                                                        fontSize: '9px',
                                                         display: 'inline-block'
                                                     }}>
                                                         {value}
