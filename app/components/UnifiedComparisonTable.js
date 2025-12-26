@@ -388,11 +388,11 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                 overflowX: 'auto',
                 borderRadius: '8px'
             }}>
-                <table className="table" style={{ tableLayout: 'fixed', width: '100%', borderCollapse: 'collapse' }}>
+                <table className="table" style={{ tableLayout: 'fixed', minWidth: '100%', borderCollapse: 'collapse' }}>
                     <colgroup>
                         <col style={{ width: '150px' }} />
                         {tableData.columns.map((_, idx) => (
-                            <col key={idx} style={{ width: 'auto' }} />
+                            <col key={idx} style={{ width: '120px' }} />
                         ))}
                         <col style={{ width: '80px' }} />
                     </colgroup>
