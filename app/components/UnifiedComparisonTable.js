@@ -388,7 +388,7 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                 overflowX: 'auto',
                 borderRadius: '8px'
             }}>
-                <table className="table" style={{ tableLayout: 'fixed', width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
+                <table className="table" style={{ tableLayout: 'fixed', width: '100%', borderCollapse: 'collapse' }}>
                     <colgroup>
                         <col style={{ width: '150px' }} /> {/* Metric column */}
                         {tableData.columns.map((_, idx) => (
@@ -477,11 +477,12 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                                         backgroundColor: style.bg,
                                                         color: style.color,
                                                         border: style.border,
-                                                        padding: '3px 10px',
+                                                        padding: '2px 8px',
                                                         borderRadius: '9999px',
                                                         fontWeight: 'bold',
                                                         fontSize: '9px',
-                                                        display: 'inline-block'
+                                                        display: 'inline-block',
+                                                        lineHeight: '1'
                                                     }}>
                                                         {value}
                                                     </span>
