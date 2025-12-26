@@ -58,11 +58,16 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                 }
             });
 
-            const brokers = Array.from(brokerMap.values()).sort((a, b) => {
-                const brokerA = a.info_of_report?.issued_company || '';
-                const brokerB = b.info_of_report?.issued_company || '';
-                return brokerA.localeCompare(brokerB);
-            });
+            const brokers = Array.from(brokerMap.values())
+                .filter(report => {
+                    const rec = report.recommendation?.call;
+                    return rec && rec.toLowerCase() !== 'no rating';
+                })
+                .sort((a, b) => {
+                    const brokerA = a.info_of_report?.issued_company || '';
+                    const brokerB = b.info_of_report?.issued_company || '';
+                    return brokerA.localeCompare(brokerB);
+                });
 
             return {
                 type: 'brokers',
@@ -101,11 +106,16 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                 }
             });
 
-            const peers = Array.from(tickerMap.values()).sort((a, b) => {
-                const tickerA = a.info_of_report?.ticker || '';
-                const tickerB = b.info_of_report?.ticker || '';
-                return tickerA.localeCompare(tickerB);
-            });
+            const peers = Array.from(tickerMap.values())
+                .filter(report => {
+                    const rec = report.recommendation?.call;
+                    return rec && rec.toLowerCase() !== 'no rating';
+                })
+                .sort((a, b) => {
+                    const tickerA = a.info_of_report?.ticker || '';
+                    const tickerB = b.info_of_report?.ticker || '';
+                    return tickerA.localeCompare(tickerB);
+                });
 
             return {
                 type: 'peers',
