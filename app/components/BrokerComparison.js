@@ -126,7 +126,7 @@ export default function BrokerComparison({ currentReport, allReports }) {
                         <tr className="border-b border-gray-700">
                             <th className="text-left p-3 text-gray-400 font-semibold sticky left-0 bg-gray-900">Metric</th>
                             {brokerData.brokers.map(broker => (
-                                <th key={broker.id} className="text-center p-3 text-green-400 font-semibold min-w-[120px]">
+                                <th key={broker.info_of_report.issued_company} className="text-center p-3 text-green-400 font-semibold min-w-[120px]">
                                     <div>{broker.info_of_report?.issued_company}</div>
                                     <div className="text-xs text-gray-500 font-normal">
                                         {(() => {
@@ -164,7 +164,7 @@ export default function BrokerComparison({ currentReport, allReports }) {
                                     }
 
                                     return (
-                                        <td key={broker.id} className={cellClass}>
+                                        <td key={broker.info_of_report.issued_company} className={cellClass}>
                                             {value}
                                         </td>
                                     );
