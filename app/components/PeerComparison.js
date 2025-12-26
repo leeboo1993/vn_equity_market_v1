@@ -2,6 +2,28 @@
 
 import { useMemo } from 'react';
 
+// Helper to format dates
+const formatDate = (dateStr) => {
+    if (!dateStr || dateStr.length !== 6) return dateStr;
+    return `${dateStr.substring(4, 6)}/${dateStr.substring(2, 4)}/20${dateStr.substring(0, 2)}`;
+};
+
+// Helper to format numbers
+const formatNumber = (value) => {
+    if (value === null || value === undefined || value === '') return '-';
+    const num = typeof value === 'number' ? value : parseFloat(value);
+    if (isNaN(num)) return '-';
+    return num.toLocaleString();
+};
+
+// Helper to format percentages
+const formatPercentage = (value) => {
+    if (value === null || value === undefined) return '-';
+    const num = parseFloat(value);
+    if (isNaN(num)) return '-';
+    return `${num >= 0 ? '+' : ''}${num.toFixed(1)}%`;
+};
+
 export default function PeerComparison({ currentReport, allReports }) {
     // Find peer companies in the same sector from the same broker
     const peerData = useMemo(() => {
@@ -55,200 +77,202 @@ export default function PeerComparison({ currentReport, allReports }) {
 
     if (!peerData || peerData.peers.length === 0) {
         return (
-            <div className="text-center text-gray-500 py-8">
+            <div style={{
+                padding: '40px',
+                textAlign: 'center',
+                color: '#888',
+                fontStyle: 'italic'
+            }}>
                 No peer companies found in {peerData?.sector} sector from {peerData?.broker}
             </div>
         );
     }
 
-    // Helper functions for safe formatting
-    const safeToFixed = (val, digits = 1) => {
-        if (val === null || val === undefined || val === '') return '-';
-        const num = typeof val === 'number' ? val : parseFloat(val);
-        if (isNaN(num)) return '-';
-        return num.toFixed(digits);
-    };
-
-    const safeLocaleString = (val) => {
-        if (val === null || val === undefined || val === '') return '-';
-        const num = typeof val === 'number' ? val : parseFloat(val);
-        if (isNaN(num)) return '-';
-        return num.toLocaleString();
-    };
-
+    // Helper to get recommendation style (matching ForecastTable.js style)
     const getRecommendationStyle = (rec) => {
         const r = (rec || '').toLowerCase();
-        if (['buy', 'outperform', 'add', 'accumulate', 'overweight'].some(k => r.includes(k))) return { bg: '#00ff7f', color: 'black' };
-        if (['sell', 'underperform', 'reduce', 'underweight'].some(k => r.includes(k))) return { bg: '#ff4444', color: 'white' };
-        if (['neutral', 'hold', 'market perform'].some(k => r.includes(k))) return { bg: '#4A5568', color: 'white' };
+        if (['buy', 'outperform', 'add', 'accumulate', 'overweight'].some(k => r.includes(k)))
+            return { bg: '#00ff7f', color: 'black' };
+        if (['sell', 'underperform', 'reduce', 'underweight'].some(k => r.includes(k)))
+            return { bg: '#ff4444', color: 'white' };
+        if (['neutral', 'hold', 'market perform'].some(k => r.includes(k)))
+            return { bg: '#4A5568', color: 'white' };
         return { bg: 'transparent', color: 'gray', border: '1px solid #3A3A3C' };
     };
 
-    const formatDate = (dateStr) => {
-        if (!dateStr || dateStr.length !== 6) return dateStr;
-        return `${dateStr.substring(4, 6)}/${dateStr.substring(2, 4)}/20${dateStr.substring(0, 2)}`;
-    };
-
-    // Define metrics to display - Date is now first
+    // Define metrics to display
     const metrics = [
-        { key: 'date', label: 'Date', accessor: r => formatDate(r.info_of_report?.date_of_issue) },
-        { key: 'recommendation', label: 'Recommendation', accessor: r => r.recommendation?.recommendation || 'No Rating' },
-        { key: 'target_price', label: 'Target Price', accessor: r => safeLocaleString(r.recommendation?.target_price) },
-        {
-            key: 'upside_at_call', label: 'Upside at call', accessor: r => {
-                const val = r.recommendation?.upside_at_call;
-                if (val === null || val === undefined) return '-';
-                const num = parseFloat(val);
-                if (isNaN(num)) return '-';
-                return `${num >= 0 ? '+' : ''}${num.toFixed(1)}%`;
-            }
-        },
-        {
-            key: 'perf_since_call', label: 'Perf since call', accessor: r => {
-                const val = r.recommendation?.performance_since_call;
-                if (val === null || val === undefined) return '-';
-                const num = parseFloat(val);
-                if (isNaN(num)) return '-';
-                return num.toFixed(1) + '%';
-            }
-        },
-        {
-            key: 'revenue', label: 'Revenue', accessor: r => {
-                const forecast = r.forecast_summary;
-                return safeLocaleString(forecast?.revenue ?? forecast?.['Revenue (bn VND)']);
-            }
-        },
-        {
-            key: 'npat', label: 'NPAT', accessor: r => {
-                const forecast = r.forecast_summary;
-                return safeLocaleString(forecast?.npat ?? forecast?.['NPAT (bn VND)']);
-            }
-        },
-        {
-            key: 'eps', label: 'EPS', accessor: r => {
-                const forecast = r.forecast_summary;
-                return safeLocaleString(forecast?.eps ?? forecast?.['EPS (VND)']);
-            }
-        },
-        {
-            key: 'bvps', label: 'BVPS', accessor: r => {
-                const forecast = r.forecast_summary;
-                return safeLocaleString(forecast?.bvps ?? forecast?.['BVPS (VND)']);
-            }
-        },
-        {
-            key: 'pe', label: 'PE', accessor: r => {
-                const forecast = r.forecast_summary;
-                return safeToFixed(forecast?.pe ?? forecast?.['P/E'], 1);
-            }
-        },
-        {
-            key: 'pb', label: 'PB', accessor: r => {
-                const forecast = r.forecast_summary;
-                return safeToFixed(forecast?.pb ?? forecast?.['P/B'], 2);
-            }
-        }
+        { key: 'date', label: 'Date' },
+        { key: 'recommendation', label: 'Recommendation' },
+        { key: 'target_price', label: 'Target price' },
+        { key: 'upside_at_call', label: 'Upside at call' },
+        { key: 'perf_since_call', label: 'Perf since call' },
+        { key: 'revenue', label: 'Revenue' },
+        { key: 'npat', label: 'NPAT' },
+        { key: 'eps', label: 'EPS' },
+        { key: 'bvps', label: 'BVPS' },
+        { key: 'pe', label: 'PE' },
+        { key: 'pb', label: 'PB' }
     ];
 
+    // Get value for a metric from a peer report
+    const getValue = (peer, metricKey) => {
+        switch (metricKey) {
+            case 'date':
+                return formatDate(peer.info_of_report?.date_of_issue);
+            case 'recommendation':
+                return peer.recommendation?.recommendation || 'No Rating';
+            case 'target_price':
+                return formatNumber(peer.recommendation?.target_price);
+            case 'upside_at_call':
+                return formatPercentage(peer.recommendation?.upside_at_call);
+            case 'perf_since_call':
+                return formatPercentage(peer.recommendation?.performance_since_call);
+            case 'revenue':
+                const forecast = peer.forecast_summary;
+                return formatNumber(forecast?.revenue ?? forecast?.['Revenue (bn VND)']);
+            case 'npat':
+                return formatNumber(peer.forecast_summary?.npat ?? peer.forecast_summary?.['NPAT (bn VND)']);
+            case 'eps':
+                return formatNumber(peer.forecast_summary?.eps ?? peer.forecast_summary?.['EPS (VND)']);
+            case 'bvps':
+                return formatNumber(peer.forecast_summary?.bvps ?? peer.forecast_summary?.['BVPS (VND)']);
+            case 'pe':
+                const peVal = peer.forecast_summary?.pe ?? peer.forecast_summary?.['P/E'];
+                return peVal != null ? peVal.toFixed(1) : '-';
+            case 'pb':
+                const pbVal = peer.forecast_summary?.pb ?? peer.forecast_summary?.['P/B'];
+                return pbVal != null ? pbVal.toFixed(2) : '-';
+            default:
+                return '-';
+        }
+    };
+
     return (
-        <div style={{ marginTop: '20px', overflowX: 'auto', border: '1px solid #333', borderRadius: '8px' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
-                <thead>
-                    <tr style={{ backgroundColor: '#1a1a1a', position: 'sticky', top: '104px', zIndex: 20 }}>
-                        <th style={{
-                            padding: '8px 10px',
-                            textAlign: 'left',
-                            borderBottom: '2px solid #333',
-                            borderRight: '1px solid #333',
-                            fontWeight: 'bold',
-                            color: '#fff',
-                            position: 'sticky',
-                            left: 0,
-                            top: '104px',
+        <div style={{ marginTop: '20px' }}>
+            {/* Table container with horizontal scroll */}
+            <div style={{
+                overflowX: 'auto',
+                border: '1px solid #333',
+                borderRadius: '8px'
+            }}>
+                <table style={{
+                    width: 'auto',
+                    borderCollapse: 'collapse',
+                    fontSize: '10px'
+                }}>
+                    {/* Header row */}
+                    <thead>
+                        <tr style={{
                             backgroundColor: '#1a1a1a',
-                            zIndex: 30
+                            position: 'sticky',
+                            top: 0,
+                            zIndex: 10
                         }}>
-                            Metric
-                        </th>
-                        {peerData.peers.map(peer => (
-                            <th key={peer.info_of_report.ticker} style={{
+                            <th style={{
                                 padding: '8px 10px',
-                                textAlign: 'center',
-                                borderLeft: '1px solid #333',
+                                textAlign: 'left',
                                 borderBottom: '2px solid #333',
                                 fontWeight: 'bold',
-                                color: '#00ff7f',
-                                minWidth: '120px',
-                                backgroundColor: '#1a1a1a'
-                            }}>
-                                {peer.info_of_report?.ticker}
-                            </th>
-                        ))}
-                    </tr>
-                </thead>
-                <tbody>
-                    {metrics.map((metric, idx) => (
-                        <tr key={metric.key} style={{ backgroundColor: idx % 2 === 0 ? '#0a0a0a' : '#121212' }}>
-                            <td style={{
-                                padding: '6px 10px',
-                                fontWeight: '500',
-                                color: '#ddd',
-                                borderBottom: '1px solid #1a1a1a',
+                                color: '#fff',
+                                width: 'auto',
+                                whiteSpace: 'nowrap',
                                 position: 'sticky',
                                 left: 0,
-                                backgroundColor: idx % 2 === 0 ? '#0a0a0a' : '#121212',
-                                zIndex: 10
+                                backgroundColor: '#1a1a1a',
+                                zIndex: 20
                             }}>
-                                {metric.label}
-                            </td>
-                            {peerData.peers.map(peer => {
-                                const value = metric.accessor(peer);
-                                const isRec = metric.key === 'recommendation';
-                                const style = isRec ? getRecommendationStyle(value) : {};
-
-                                if (isRec) {
-                                    return (
-                                        <td key={peer.info_of_report.ticker} style={{
-                                            padding: '8px 10px',
-                                            textAlign: 'center',
-                                            borderBottom: '1px solid #1a1a1a',
-                                            borderLeft: '1px solid #1a1a1a',
-                                        }}>
-                                            <span style={{
-                                                backgroundColor: style.bg,
-                                                color: style.color,
-                                                border: style.border,
-                                                padding: '4px 12px',
-                                                borderRadius: '6px',
-                                                fontWeight: 'bold',
-                                                fontSize: '11px',
-                                                display: 'inline-block',
-                                                minWidth: '80px'
-                                            }}>
-                                                {value}
-                                            </span>
-                                        </td>
-                                    );
-                                }
-
+                                Metric
+                            </th>
+                            {peerData.peers.map((peer, idx) => {
+                                const ticker = peer.info_of_report?.ticker;
                                 return (
-                                    <td key={peer.info_of_report.ticker} style={{
+                                    <th key={idx} style={{
                                         padding: '8px 10px',
-                                        textAlign: 'center',
-                                        borderLeft: '1px solid #1a1a1a',
-                                        borderBottom: '1px solid #1a1a1a',
-                                        color: metric.key === 'date' ? '#00ff7f' : '#ccc',
-                                        fontFamily: 'monospace',
-                                        fontSize: '11px'
+                                        textAlign: 'right',
+                                        borderBottom: '2px solid #333',
+                                        borderLeft: '1px solid #333',
+                                        fontWeight: 'bold',
+                                        color: '#00ff7f',
+                                        minWidth: '90px'
                                     }}>
-                                        {value}
-                                    </td>
+                                        {ticker}
+                                    </th>
                                 );
                             })}
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+
+                    <tbody>
+                        {metrics.map((metric, metricIdx) => {
+                            const isRec = metric.key === 'recommendation';
+
+                            return (
+                                <tr key={metric.key} style={{
+                                    backgroundColor: metricIdx % 2 === 0 ? '#0a0a0a' : '#121212'
+                                }}>
+                                    <td style={{
+                                        padding: '6px 10px',
+                                        color: '#ddd',
+                                        borderBottom: '1px solid #1a1a1a',
+                                        whiteSpace: 'nowrap',
+                                        position: 'sticky',
+                                        left: 0,
+                                        backgroundColor: metricIdx % 2 === 0 ? '#0a0a0a' : '#121212',
+                                        zIndex: 10
+                                    }}>
+                                        {metric.label}
+                                    </td>
+                                    {peerData.peers.map((peer, peerIdx) => {
+                                        const value = getValue(peer, metric.key);
+
+                                        if (isRec) {
+                                            const style = getRecommendationStyle(value);
+                                            return (
+                                                <td key={peerIdx} style={{
+                                                    padding: '6px 10px',
+                                                    textAlign: 'right',
+                                                    color: '#ccc',
+                                                    borderLeft: '1px solid #1a1a1a',
+                                                    borderBottom: '1px solid #1a1a1a',
+                                                    fontFamily: 'monospace'
+                                                }}>
+                                                    <span style={{
+                                                        backgroundColor: style.bg,
+                                                        color: style.color,
+                                                        border: style.border,
+                                                        padding: '4px 12px',
+                                                        borderRadius: '6px',
+                                                        fontWeight: 'bold',
+                                                        fontSize: '11px',
+                                                        display: 'inline-block',
+                                                        fontFamily: 'inherit'
+                                                    }}>
+                                                        {value}
+                                                    </span>
+                                                </td>
+                                            );
+                                        }
+
+                                        return (
+                                            <td key={peerIdx} style={{
+                                                padding: '6px 10px',
+                                                textAlign: 'right',
+                                                color: '#ccc',
+                                                borderLeft: '1px solid #1a1a1a',
+                                                borderBottom: '1px solid #1a1a1a',
+                                                fontFamily: 'monospace'
+                                            }}>
+                                                {value}
+                                            </td>
+                                        );
+                                    })}
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }
