@@ -257,6 +257,12 @@ body {
   border-left: 3px solid var(--accent);
 }
 
+.table td,
+.table th {
+  padding: 0.45rem 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
 .badge {
   padding: 0.3rem 0.8rem;
   border-radius: 99px;
