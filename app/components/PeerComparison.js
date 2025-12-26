@@ -154,25 +154,73 @@ export default function PeerComparison({ currentReport, allReports }) {
     ];
 
     return (
-        <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
+        <div style={{ marginTop: '20px', overflowX: 'auto', border: '1px solid #333', borderRadius: '8px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
                 <thead>
-                    <tr className="border-b border-gray-800">
-                        <th className="text-left p-3 text-gray-400 font-semibold sticky left-0 bg-[#000000]">Metric</th>
+                    <tr style={{ backgroundColor: '#1a1a1a', position: 'sticky', top: 0, zIndex: 20 }}>
+                        <th rowSpan={2} style={{
+                            padding: '8px 10px',
+                            textAlign: 'left',
+                            borderBottom: '2px solid #333',
+                            borderRight: '1px solid #333',
+                            fontWeight: 'bold',
+                            color: '#00ff7f',
+                            position: 'sticky',
+                            left: 0,
+                            top: 0,
+                            backgroundColor: '#1a1a1a',
+                            zIndex: 30
+                        }}>
+                            Metric
+                        </th>
                         {peerData.peers.map(peer => (
-                            <th key={peer.info_of_report.ticker} className="text-center p-3 font-semibold min-w-[120px]">
-                                <div className="text-[#00ff7f]">{peer.info_of_report?.ticker}</div>
-                                <div className="text-xs text-gray-500 font-normal">
-                                    {peer.info_of_report?.stock_name || peer.info_of_report?.ticker}
-                                </div>
+                            <th key={peer.info_of_report.ticker} style={{
+                                padding: '8px 10px',
+                                textAlign: 'center',
+                                borderLeft: '1px solid #333',
+                                fontWeight: 'bold',
+                                color: '#00ff7f',
+                                minWidth: '120px',
+                                backgroundColor: '#1a1a1a'
+                            }}>
+                                <div>{peer.info_of_report?.ticker}</div>
+                            </th>
+                        ))}
+                    </tr>
+                    <tr style={{ backgroundColor: '#1a1a1a', position: 'sticky', top: '37px', zIndex: 15 }}>
+                        {peerData.peers.map(peer => (
+                            <th key={`${peer.info_of_report.ticker}-date`} style={{
+                                padding: '4px 10px 8px',
+                                textAlign: 'center',
+                                borderBottom: '2px solid #333',
+                                borderLeft: '1px solid #333',
+                                fontSize: '9px',
+                                fontWeight: 'normal',
+                                color: '#888',
+                                backgroundColor: '#1a1a1a'
+                            }}>
+                                {(() => {
+                                    const d = peer.info_of_report?.date_of_issue;
+                                    if (!d || d.length !== 6) return d;
+                                    return `${d.substring(4, 6)}/${d.substring(2, 4)}/20${d.substring(0, 2)}`;
+                                })()}
                             </th>
                         ))}
                     </tr>
                 </thead>
                 <tbody>
                     {metrics.map((metric, idx) => (
-                        <tr key={metric.key} className="border-b border-gray-800 h-[45px]">
-                            <td className="p-3 font-medium text-gray-300 sticky left-0 bg-[#000000]">
+                        <tr key={metric.key} style={{ backgroundColor: idx % 2 === 0 ? '#0a0a0a' : '#121212' }}>
+                            <td style={{
+                                padding: '6px 10px',
+                                fontWeight: '500',
+                                color: '#ddd',
+                                borderBottom: '1px solid #1a1a1a',
+                                position: 'sticky',
+                                left: 0,
+                                backgroundColor: idx % 2 === 0 ? '#0a0a0a' : '#121212',
+                                zIndex: 10
+                            }}>
                                 {metric.label}
                             </td>
                             {peerData.peers.map(peer => {
@@ -180,22 +228,25 @@ export default function PeerComparison({ currentReport, allReports }) {
                                 const isRec = metric.key === 'recommendation';
                                 const style = isRec ? getRecommendationStyle(value) : {};
 
-                                let cellContent = value;
-                                let cellClass = "p-3 text-center";
-
                                 if (isRec) {
                                     return (
-                                        <td key={peer.info_of_report.ticker} className={cellClass}>
+                                        <td key={peer.info_of_report.ticker} style={{
+                                            padding: '8px 10px',
+                                            textAlign: 'center',
+                                            borderBottom: '1px solid #1a1a1a',
+                                            borderLeft: '1px solid #1a1a1a',
+                                        }}>
                                             <span style={{
                                                 backgroundColor: style.bg,
                                                 color: style.color,
                                                 border: style.border,
                                                 padding: '4px 12px',
-                                                borderRadius: '16px',
-                                                fontWeight: '600',
-                                                fontSize: '0.75rem',
-                                                display: 'inline-block',
-                                                minWidth: '80px'
+                                                borderRadius: '6px',
+                                                fontWeight: 'bold',
+                                                fontSize: '11px',
+                                                display: 'block',
+                                                width: '100%',
+                                                textAlign: 'center'
                                             }}>
                                                 {value}
                                             </span>
@@ -203,17 +254,16 @@ export default function PeerComparison({ currentReport, allReports }) {
                                     );
                                 }
 
-                                const isPerf = metric.key === 'upside_at_call' || metric.key === 'perf_since_call';
-                                if (isPerf) {
-                                    const numVal = parseFloat(value);
-                                    const colorClass = getPerfColorClass(numVal);
-                                    cellClass += ` ${colorClass}`;
-                                } else {
-                                    cellClass += " text-white";
-                                }
-
                                 return (
-                                    <td key={peer.info_of_report.ticker} className={cellClass}>
+                                    <td key={peer.info_of_report.ticker} style={{
+                                        padding: '8px 10px',
+                                        textAlign: 'center',
+                                        borderLeft: '1px solid #1a1a1a',
+                                        borderBottom: '1px solid #1a1a1a',
+                                        color: '#ccc',
+                                        fontFamily: 'monospace',
+                                        fontSize: '11px'
+                                    }}>
                                         {value}
                                     </td>
                                 );
