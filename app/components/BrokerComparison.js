@@ -91,6 +91,13 @@ export default function BrokerComparison({ currentReport, allReports }) {
 
     // Define metrics to display
     const metrics = [
+        {
+            key: 'date', label: 'Date', accessor: r => {
+                const d = r.info_of_report?.date_of_issue;
+                if (!d || d.length !== 6) return d || '-';
+                return `${d.substring(4, 6)}/${d.substring(2, 4)}/20${d.substring(0, 2)}`;
+            }
+        },
         { key: 'recommendation', label: 'Recommendation', accessor: r => r.recommendation?.recommendation || '-' },
         { key: 'target_price', label: 'Target Price', accessor: r => safeLocaleString(r.recommendation?.target_price) },
         {
@@ -153,8 +160,8 @@ export default function BrokerComparison({ currentReport, allReports }) {
         <div style={{ marginTop: '20px', overflowX: 'auto', border: '1px solid #333', borderRadius: '8px' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
                 <thead>
-                    <tr style={{ backgroundColor: '#1a1a1a', position: 'sticky', top: 0, zIndex: 20 }}>
-                        <th rowSpan={2} style={{
+                    <tr style={{ backgroundColor: '#1a1a1a', position: 'sticky', top: '60px', zIndex: 20 }}>
+                        <th style={{
                             padding: '8px 10px',
                             textAlign: 'left',
                             borderBottom: '2px solid #333',
@@ -163,7 +170,7 @@ export default function BrokerComparison({ currentReport, allReports }) {
                             color: '#00ff7f',
                             position: 'sticky',
                             left: 0,
-                            top: 0,
+                            top: '60px',
                             backgroundColor: '#1a1a1a',
                             zIndex: 30
                         }}>
@@ -174,32 +181,13 @@ export default function BrokerComparison({ currentReport, allReports }) {
                                 padding: '8px 10px',
                                 textAlign: 'center',
                                 borderLeft: '1px solid #333',
+                                borderBottom: '2px solid #333',
                                 fontWeight: 'bold',
                                 color: '#00ff7f',
                                 minWidth: '120px',
                                 backgroundColor: '#1a1a1a'
                             }}>
                                 <div>{broker.info_of_report?.issued_company}</div>
-                            </th>
-                        ))}
-                    </tr>
-                    <tr style={{ backgroundColor: '#1a1a1a', position: 'sticky', top: '37px', zIndex: 15 }}>
-                        {brokerData.brokers.map(broker => (
-                            <th key={`${broker.info_of_report.issued_company}-date`} style={{
-                                padding: '4px 10px 8px',
-                                textAlign: 'center',
-                                borderBottom: '2px solid #333',
-                                borderLeft: '1px solid #333',
-                                fontSize: '9px',
-                                fontWeight: 'normal',
-                                color: '#888',
-                                backgroundColor: '#1a1a1a'
-                            }}>
-                                {(() => {
-                                    const d = broker.info_of_report?.date_of_issue;
-                                    if (!d || d.length !== 6) return d;
-                                    return `${d.substring(4, 6)}/${d.substring(2, 4)}/20${d.substring(0, 2)}`;
-                                })()}
                             </th>
                         ))}
                     </tr>

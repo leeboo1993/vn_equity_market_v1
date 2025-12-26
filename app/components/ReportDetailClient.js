@@ -101,156 +101,163 @@ export default function ReportDetailClient({ report, allReports }) {
                     </div>
                 </div>
 
-                {/* Tab Navigation */}
-                <div className="mt-6 pt-6 border-t border-gray-700 flex gap-4">
-                    <button
-                        onClick={() => setActiveTab('details')}
-                        className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeTab === 'details'
-                            ? 'bg-[#00ff7f] text-black shadow-[0_0_10px_rgba(0,255,127,0.3)]'
-                            : 'bg-[#1a1a1a] text-gray-400 hover:bg-[#333] border border-gray-800'
-                            }`}
-                    >
-                        Historicals
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('broker')}
-                        className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeTab === 'broker'
-                            ? 'bg-[#00ff7f] text-black shadow-[0_0_10px_rgba(0,255,127,0.3)]'
-                            : 'bg-[#1a1a1a] text-gray-400 hover:bg-[#333] border border-gray-800'
-                            }`}
-                    >
-                        Brokers
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('peers')}
-                        className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeTab === 'peers'
-                            ? 'bg-[#00ff7f] text-black shadow-[0_0_10px_rgba(0,255,127,0.3)]'
-                            : 'bg-[#1a1a1a] text-gray-400 hover:bg-[#333] border border-gray-800'
-                            }`}
-                    >
-                        Peers
-                    </button>
-                </div>
+            </div>
+
+            {/* Sticky Tab Navigation */}
+            <div className="sticky top-0 z-50 bg-[#0c0c0c] border-b border-gray-800 py-3 mb-6 flex gap-4 pl-4 items-center shadow-lg">
+                <button
+                    onClick={() => setActiveTab('details')}
+                    className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${activeTab === 'details'
+                        ? 'bg-[#00ff7f] text-black shadow-[0_0_10px_rgba(0,255,127,0.3)]'
+                        : 'bg-[#1a1a1a] text-gray-400 hover:bg-[#333] border border-gray-800'
+                        }`}
+                >
+                    Historicals
+                </button>
+                <button
+                    onClick={() => setActiveTab('broker')}
+                    className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${activeTab === 'broker'
+                        ? 'bg-[#00ff7f] text-black shadow-[0_0_10px_rgba(0,255,127,0.3)]'
+                        : 'bg-[#1a1a1a] text-gray-400 hover:bg-[#333] border border-gray-800'
+                        }`}
+                >
+                    Brokers
+                </button>
+                <button
+                    onClick={() => setActiveTab('peers')}
+                    className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${activeTab === 'peers'
+                        ? 'bg-[#00ff7f] text-black shadow-[0_0_10px_rgba(0,255,127,0.3)]'
+                        : 'bg-[#1a1a1a] text-gray-400 hover:bg-[#333] border border-gray-800'
+                        }`}
+                >
+                    Peers
+                </button>
             </div>
 
             {/* Tab Content */}
-            {activeTab === 'details' && (
-                <>
-                    <div className="card mb-8">
-                        <h3 className="text-lg font-semibold mb-2">Recommendation Logic</h3>
-                        <p className="text-gray-400 leading-relaxed">{report.recommendation?.justification}</p>
-                    </div>
-
-                    <div className="grid" style={{ gridTemplateColumns: '2fr 1fr' }}>
-                        <div className="flex flex-col gap-8">
-                            {/* Investment Thesis */}
-                            <section className="card">
-                                <h3 className="text-xl font-semibold mb-4 text-blue-400">Investment Thesis</h3>
-                                <ul className="list-disc pl-5 space-y-3 text-gray-300">
-                                    {report.investment_thesis && report.investment_thesis.slice(0, 7).map((point, i) => renderListItem(point, i))}
-                                </ul>
-                            </section>
-
-                            {/* Company Update */}
-                            <section className="card">
-                                <h3 className="text-xl font-semibold mb-4 text-purple-400">Company Update</h3>
-                                <ul className="list-disc pl-5 space-y-3 text-gray-300">
-                                    {report.company_update && report.company_update.slice(0, 15).map((point, i) => renderListItem(point, i))}
-                                </ul>
-                            </section>
-
-                            {/* Risks */}
-                            {report.risk_assessment && (
-                                <section className="card">
-                                    <h3 className="text-xl font-semibold mb-4 text-red-400">Risk Assessment</h3>
-                                    <div className="space-y-4">
-                                        {report.risk_assessment.map((risk, i) => (
-                                            <div key={i} className="bg-gray-800/50 p-4 rounded-lg">
-                                                <div className="font-semibold text-red-300 mb-1">{risk.risk || risk.title || 'Risk'}</div>
-                                                {risk.impact && <div className="text-sm text-gray-400 mb-2">{risk.impact}</div>}
-                                                {risk.mitigation && <div className="text-sm text-green-400"><span className="font-semibold">Mitigation:</span> {risk.mitigation}</div>}
-                                                {risk.details && <div className="text-sm text-gray-400">{risk.details}</div>}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </section>
-                            )}
+            {
+                activeTab === 'details' && (
+                    <>
+                        <div className="card mb-8">
+                            <h3 className="text-lg font-semibold mb-2">Recommendation Logic</h3>
+                            <p className="text-gray-400 leading-relaxed">{report.recommendation?.justification}</p>
                         </div>
 
-                        <div className="flex flex-col gap-8">
-                            {/* Forecast Summary */}
-                            <section className="card">
-                                <h3 className="text-xl font-semibold mb-4 text-green-400">Forecast Summary</h3>
-                                <div className="space-y-3">
-                                    {report.forecast_summary && Object.entries(report.forecast_summary).map(([key, value]) => (
-                                        <div key={key} className="flex justify-between items-center py-2 border-b border-gray-700 last:border-0">
-                                            <span className="text-gray-400 capitalize">{key.replace(/_/g, ' ')}</span>
-                                            <span className="font-mono font-semibold">
-                                                {typeof value === 'number' ? value.toLocaleString() : (typeof value === 'object' && value !== null ? JSON.stringify(value) : value || '-')}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </section>
-
-                            {/* Performance Tracking */}
-                            <section className="card">
-                                <h3 className="text-xl font-semibold mb-4 text-pink-400">Performance Tracking</h3>
-                                <div className="space-y-3">
-                                    <div className="flex justify-between items-center py-2 border-b border-gray-700">
-                                        <span className="text-gray-400">Upside at Call</span>
-                                        <span className={`font-mono font-semibold ${(report.recommendation?.upside_at_call || 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                            {report.recommendation?.upside_at_call ? `${report.recommendation.upside_at_call}%` : '-'}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between items-center py-2 border-b border-gray-700">
-                                        <span className="text-gray-400">Target Price Change</span>
-                                        <span className={`font-mono font-semibold ${(report.recommendation?.target_price_change || 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                            {report.recommendation?.target_price_change ? `${report.recommendation.target_price_change}%` : '-'}
-                                        </span>
-                                    </div>
-                                    <div className="grid grid-cols-4 gap-2 pt-2">
-                                        {['1m', '3m', '6m', '1y'].map(p => (
-                                            <div key={p} className="text-center bg-gray-800 p-2 rounded">
-                                                <div className="text-xs text-gray-500 uppercase">{p}</div>
-                                                <div className={`text-sm font-mono font-bold ${(report.recommendation?.[`return_${p}`] || 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                                    {report.recommendation?.[`return_${p}`] ? `${report.recommendation[`return_${p}`] > 0 ? '+' : ''}${report.recommendation[`return_${p}`]}%` : '-'}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </section>
-
-                            {/* Analyst Viewpoints */}
-                            {report.analyst_viewpoints && (
+                        <div className="grid" style={{ gridTemplateColumns: '2fr 1fr' }}>
+                            <div className="flex flex-col gap-8">
+                                {/* Investment Thesis */}
                                 <section className="card">
-                                    <h3 className="text-xl font-semibold mb-4 text-yellow-400">Analyst Viewpoints</h3>
-                                    <ul className="space-y-3 text-sm text-gray-300">
-                                        {report.analyst_viewpoints.map((point, i) => {
-                                            if (typeof point === 'string') return <li key={i} className="bg-gray-800/30 p-3 rounded border-l-2 border-yellow-500">{point}</li>;
-                                            return (
-                                                <li key={i} className="bg-gray-800/30 p-3 rounded border-l-2 border-yellow-500">
-                                                    {point.title && <strong>{point.title}: </strong>}
-                                                    {point.details || point.content || '-'}
-                                                </li>
-                                            );
-                                        })}
+                                    <h3 className="text-xl font-semibold mb-4 text-blue-400">Investment Thesis</h3>
+                                    <ul className="list-disc pl-5 space-y-3 text-gray-300">
+                                        {report.investment_thesis && report.investment_thesis.slice(0, 7).map((point, i) => renderListItem(point, i))}
                                     </ul>
                                 </section>
-                            )}
+
+                                {/* Company Update */}
+                                <section className="card">
+                                    <h3 className="text-xl font-semibold mb-4 text-purple-400">Company Update</h3>
+                                    <ul className="list-disc pl-5 space-y-3 text-gray-300">
+                                        {report.company_update && report.company_update.slice(0, 15).map((point, i) => renderListItem(point, i))}
+                                    </ul>
+                                </section>
+
+                                {/* Risks */}
+                                {report.risk_assessment && (
+                                    <section className="card">
+                                        <h3 className="text-xl font-semibold mb-4 text-red-400">Risk Assessment</h3>
+                                        <div className="space-y-4">
+                                            {report.risk_assessment.map((risk, i) => (
+                                                <div key={i} className="bg-gray-800/50 p-4 rounded-lg">
+                                                    <div className="font-semibold text-red-300 mb-1">{risk.risk || risk.title || 'Risk'}</div>
+                                                    {risk.impact && <div className="text-sm text-gray-400 mb-2">{risk.impact}</div>}
+                                                    {risk.mitigation && <div className="text-sm text-green-400"><span className="font-semibold">Mitigation:</span> {risk.mitigation}</div>}
+                                                    {risk.details && <div className="text-sm text-gray-400">{risk.details}</div>}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </section>
+                                )}
+                            </div>
+
+                            <div className="flex flex-col gap-8">
+                                {/* Forecast Summary */}
+                                <section className="card">
+                                    <h3 className="text-xl font-semibold mb-4 text-green-400">Forecast Summary</h3>
+                                    <div className="space-y-3">
+                                        {report.forecast_summary && Object.entries(report.forecast_summary).map(([key, value]) => (
+                                            <div key={key} className="flex justify-between items-center py-2 border-b border-gray-700 last:border-0">
+                                                <span className="text-gray-400 capitalize">{key.replace(/_/g, ' ')}</span>
+                                                <span className="font-mono font-semibold">
+                                                    {typeof value === 'number' ? value.toLocaleString() : (typeof value === 'object' && value !== null ? JSON.stringify(value) : value || '-')}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+
+                                {/* Performance Tracking */}
+                                <section className="card">
+                                    <h3 className="text-xl font-semibold mb-4 text-pink-400">Performance Tracking</h3>
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-center py-2 border-b border-gray-700">
+                                            <span className="text-gray-400">Upside at Call</span>
+                                            <span className={`font-mono font-semibold ${(report.recommendation?.upside_at_call || 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                {report.recommendation?.upside_at_call ? `${report.recommendation.upside_at_call}%` : '-'}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center py-2 border-b border-gray-700">
+                                            <span className="text-gray-400">Target Price Change</span>
+                                            <span className={`font-mono font-semibold ${(report.recommendation?.target_price_change || 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                {report.recommendation?.target_price_change ? `${report.recommendation.target_price_change}%` : '-'}
+                                            </span>
+                                        </div>
+                                        <div className="grid grid-cols-4 gap-2 pt-2">
+                                            {['1m', '3m', '6m', '1y'].map(p => (
+                                                <div key={p} className="text-center bg-gray-800 p-2 rounded">
+                                                    <div className="text-xs text-gray-500 uppercase">{p}</div>
+                                                    <div className={`text-sm font-mono font-bold ${(report.recommendation?.[`return_${p}`] || 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                        {report.recommendation?.[`return_${p}`] ? `${report.recommendation[`return_${p}`] > 0 ? '+' : ''}${report.recommendation[`return_${p}`]}%` : '-'}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </section>
+
+                                {/* Analyst Viewpoints */}
+                                {report.analyst_viewpoints && (
+                                    <section className="card">
+                                        <h3 className="text-xl font-semibold mb-4 text-yellow-400">Analyst Viewpoints</h3>
+                                        <ul className="space-y-3 text-sm text-gray-300">
+                                            {report.analyst_viewpoints.map((point, i) => {
+                                                if (typeof point === 'string') return <li key={i} className="bg-gray-800/30 p-3 rounded border-l-2 border-yellow-500">{point}</li>;
+                                                return (
+                                                    <li key={i} className="bg-gray-800/30 p-3 rounded border-l-2 border-yellow-500">
+                                                        {point.title && <strong>{point.title}: </strong>}
+                                                        {point.details || point.content || '-'}
+                                                    </li>
+                                                );
+                                            })}
+                                        </ul>
+                                    </section>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                </>
-            )}
+                    </>
+                )
+            }
 
-            {activeTab === 'peers' && (
-                <PeerComparison currentReport={report} allReports={allReports} />
-            )}
+            {
+                activeTab === 'peers' && (
+                    <PeerComparison currentReport={report} allReports={allReports} />
+                )
+            }
 
-            {activeTab === 'broker' && (
-                <BrokerComparison currentReport={report} allReports={allReports} />
-            )}
-        </div>
+            {
+                activeTab === 'broker' && (
+                    <BrokerComparison currentReport={report} allReports={allReports} />
+                )
+            }
+        </div >
     );
 }
