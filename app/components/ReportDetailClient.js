@@ -4,8 +4,7 @@ import { useState, useMemo } from 'react';
 // import PeerComparison from './PeerComparison'; // Defined below to prevent import errors
 // import BrokerComparison from './BrokerComparison'; // Defined below to prevent import errors
 
-// --- Embedded Components (to fix ReferenceError) ---
-
+// Embedded components to resolve ReferenceError in Next.js build
 function BrokerComparison({ currentReport, allReports }) {
     // Find different brokers' reports for the same ticker
     const brokerData = useMemo(() => {
@@ -76,6 +75,23 @@ function BrokerComparison({ currentReport, allReports }) {
         return num.toLocaleString();
     };
 
+    const getPerfColorClass = (value) => {
+        if (value == null || value === '-' || value === '') return 'text-white';
+        const num = parseFloat(value);
+        if (isNaN(num)) return 'text-white';
+        if (num > 0.5) return 'text-[#00ff7f]'; // Green
+        if (num < -0.5) return 'text-[#ff6666]'; // Red
+        return 'text-gray-500';
+    };
+
+    const getRecommendationStyle = (rec) => {
+        const r = (rec || '').toLowerCase();
+        if (['buy', 'outperform', 'add', 'accumulate', 'overweight'].some(k => r.includes(k))) return { bg: '#00ff7f', color: 'black' };
+        if (['sell', 'underperform', 'reduce', 'underweight'].some(k => r.includes(k))) return { bg: '#ff4444', color: 'white' };
+        if (['neutral', 'hold', 'market perform'].some(k => r.includes(k))) return { bg: '#4A5568', color: 'white' };
+        return { bg: 'transparent', color: 'gray', border: '1px solid #3A3A3C' };
+    };
+
     // Define metrics to display
     const metrics = [
         { key: 'recommendation', label: 'Recommendation', accessor: r => r.recommendation?.recommendation || '-' },
@@ -95,7 +111,7 @@ function BrokerComparison({ currentReport, allReports }) {
                 if (val === null || val === undefined) return '-';
                 const num = parseFloat(val);
                 if (isNaN(num)) return '-';
-                return `${num >= 0 ? '+' : ''}${num.toFixed(1)}%`;
+                return num.toFixed(1) + '%';
             }
         },
         {
@@ -137,68 +153,78 @@ function BrokerComparison({ currentReport, allReports }) {
     ];
 
     return (
-        <div className="card">
-            <h3 className="text-xl font-semibold mb-4 text-purple-400">
-                Broker Forecasts: {brokerData.stockName}
-            </h3>
-            <p className="text-sm text-gray-500 mb-4">
-                Comparing forecasts from {brokerData.brokers.length} broker{brokerData.brokers.length > 1 ? 's' : ''}
-            </p>
+        <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+                <thead>
+                    <tr className="border-b border-gray-800">
+                        <th className="text-left p-3 text-gray-400 font-semibold sticky left-0 bg-[#000000]">Metric</th>
+                        {brokerData.brokers.map(broker => (
+                            <th key={broker.info_of_report.issued_company} className="text-center p-3 font-semibold min-w-[120px]">
+                                <div className="text-[#00ff7f]">{broker.info_of_report?.issued_company}</div>
+                                <div className="text-xs text-gray-500 font-normal">
+                                    {(() => {
+                                        const d = broker.info_of_report?.date_of_issue;
+                                        if (!d || d.length !== 6) return d;
+                                        return `${d.substring(4, 6)}/${d.substring(2, 4)}/20${d.substring(0, 2)}`;
+                                    })()}
+                                </div>
+                            </th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody>
+                    {metrics.map((metric, idx) => (
+                        <tr key={metric.key} className="border-b border-gray-800 h-[45px]">
+                            <td className="p-3 font-medium text-gray-300 sticky left-0 bg-[#000000]">
+                                {metric.label}
+                            </td>
+                            {brokerData.brokers.map(broker => {
+                                const value = metric.accessor(broker);
+                                const isRec = metric.key === 'recommendation';
+                                const style = isRec ? getRecommendationStyle(value) : {};
 
-            <div className="overflow-x-auto">
-                <table className="w-full text-sm border-collapse">
-                    <thead>
-                        <tr className="border-b border-gray-700">
-                            <th className="text-left p-3 text-gray-400 font-semibold sticky left-0 bg-gray-900">Metric</th>
-                            {brokerData.brokers.map(broker => (
-                                <th key={broker.info_of_report.issued_company} className="text-center p-3 text-green-400 font-semibold min-w-[120px]">
-                                    <div>{broker.info_of_report?.issued_company}</div>
-                                    <div className="text-xs text-gray-500 font-normal">
-                                        {(() => {
-                                            const d = broker.info_of_report?.date_of_issue;
-                                            if (!d || d.length !== 6) return d;
-                                            return `${d.substring(4, 6)}/${d.substring(2, 4)}/20${d.substring(0, 2)}`;
-                                        })()}
-                                    </div>
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {metrics.map((metric, idx) => (
-                            <tr key={metric.key} className={`border-b border-gray-800 ${idx % 2 === 0 ? 'bg-gray-900/30' : ''}`}>
-                                <td className="p-3 font-medium text-gray-300 sticky left-0 bg-gray-900">
-                                    {metric.label}
-                                </td>
-                                {brokerData.brokers.map(broker => {
-                                    const value = metric.accessor(broker);
-                                    const isRecommendation = metric.key === 'recommendation';
-                                    const isPositive = typeof value === 'string' && value.includes('+');
-                                    const isNegative = typeof value === 'string' && value.includes('-') && !value.includes('+-');
+                                let cellContent = value;
+                                let cellClass = "p-3 text-center";
 
-                                    let cellClass = 'p-3 text-center';
-                                    if (isRecommendation) {
-                                        if (value === 'Buy') cellClass += ' text-green-400 font-bold';
-                                        else if (value === 'Sell') cellClass += ' text-red-400 font-bold';
-                                        else if (value === 'Neutral') cellClass += ' text-yellow-400 font-bold';
-                                        else cellClass += ' text-gray-500';
-                                    } else if (isPositive) {
-                                        cellClass += ' text-green-400';
-                                    } else if (isNegative) {
-                                        cellClass += ' text-red-400';
-                                    }
-
+                                if (isRec) {
                                     return (
                                         <td key={broker.info_of_report.issued_company} className={cellClass}>
-                                            {value}
+                                            <span style={{
+                                                backgroundColor: style.bg,
+                                                color: style.color,
+                                                border: style.border,
+                                                padding: '4px 12px',
+                                                borderRadius: '16px',
+                                                fontWeight: '600',
+                                                fontSize: '0.75rem',
+                                                display: 'inline-block',
+                                                minWidth: '80px'
+                                            }}>
+                                                {value}
+                                            </span>
                                         </td>
                                     );
-                                })}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                                }
+
+                                const isPerf = metric.key === 'upside_at_call' || metric.key === 'perf_since_call';
+                                if (isPerf) {
+                                    const numVal = parseFloat(value);
+                                    const colorClass = getPerfColorClass(numVal);
+                                    cellClass += ` ${colorClass}`;
+                                } else {
+                                    cellClass += " text-white";
+                                }
+
+                                return (
+                                    <td key={broker.info_of_report.issued_company} className={cellClass}>
+                                        {value}
+                                    </td>
+                                );
+                            })}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 }
@@ -210,7 +236,6 @@ function PeerComparison({ currentReport, allReports }) {
 
         const currentSector = currentReport.info_of_report?.sector;
         const currentBroker = currentReport.info_of_report?.issued_company;
-        const currentTicker = currentReport.info_of_report?.ticker;
 
         if (!currentSector || !currentBroker) return null;
 
@@ -262,7 +287,7 @@ function PeerComparison({ currentReport, allReports }) {
         );
     }
 
-    // Helper functions for safe formatting (copied from BrokerComparison for consistency)
+    // Helper functions for safe formatting
     const safeToFixed = (val, digits = 1) => {
         if (val === null || val === undefined || val === '') return '-';
         const num = typeof val === 'number' ? val : parseFloat(val);
@@ -275,6 +300,23 @@ function PeerComparison({ currentReport, allReports }) {
         const num = typeof val === 'number' ? val : parseFloat(val);
         if (isNaN(num)) return '-';
         return num.toLocaleString();
+    };
+
+    const getPerfColorClass = (value) => {
+        if (value == null || value === '-' || value === '') return 'text-white';
+        const num = parseFloat(value);
+        if (isNaN(num)) return 'text-white';
+        if (num > 0.5) return 'text-[#00ff7f]'; // Green
+        if (num < -0.5) return 'text-[#ff6666]'; // Red
+        return 'text-gray-500';
+    };
+
+    const getRecommendationStyle = (rec) => {
+        const r = (rec || '').toLowerCase();
+        if (['buy', 'outperform', 'add', 'accumulate', 'overweight'].some(k => r.includes(k))) return { bg: '#00ff7f', color: 'black' };
+        if (['sell', 'underperform', 'reduce', 'underweight'].some(k => r.includes(k))) return { bg: '#ff4444', color: 'white' };
+        if (['neutral', 'hold', 'market perform'].some(k => r.includes(k))) return { bg: '#4A5568', color: 'white' };
+        return { bg: 'transparent', color: 'gray', border: '1px solid #3A3A3C' };
     };
 
     // Define metrics to display
@@ -296,7 +338,7 @@ function PeerComparison({ currentReport, allReports }) {
                 if (val === null || val === undefined) return '-';
                 const num = parseFloat(val);
                 if (isNaN(num)) return '-';
-                return `${num >= 0 ? '+' : ''}${num.toFixed(1)}%`;
+                return num.toFixed(1) + '%';
             }
         },
         {
@@ -338,64 +380,74 @@ function PeerComparison({ currentReport, allReports }) {
     ];
 
     return (
-        <div className="card">
-            <h3 className="text-xl font-semibold mb-4 text-purple-400">
-                Peers: {peerData.sector} ({peerData.broker})
-            </h3>
-            <p className="text-sm text-gray-500 mb-4">
-                Comparing {peerData.peers.length} companies in the same sector from the same broker
-            </p>
+        <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+                <thead>
+                    <tr className="border-b border-gray-800">
+                        <th className="text-left p-3 text-gray-400 font-semibold sticky left-0 bg-[#000000]">Metric</th>
+                        {peerData.peers.map(peer => (
+                            <th key={peer.info_of_report.ticker} className="text-center p-3 font-semibold min-w-[120px]">
+                                <div className="text-[#00ff7f]">{peer.info_of_report?.ticker}</div>
+                                <div className="text-xs text-gray-500 font-normal">
+                                    {peer.info_of_report?.stock_name || peer.info_of_report?.ticker}
+                                </div>
+                            </th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody>
+                    {metrics.map((metric, idx) => (
+                        <tr key={metric.key} className="border-b border-gray-800 h-[45px]">
+                            <td className="p-3 font-medium text-gray-300 sticky left-0 bg-[#000000]">
+                                {metric.label}
+                            </td>
+                            {peerData.peers.map(peer => {
+                                const value = metric.accessor(peer);
+                                const isRec = metric.key === 'recommendation';
+                                const style = isRec ? getRecommendationStyle(value) : {};
 
-            <div className="overflow-x-auto">
-                <table className="w-full text-sm border-collapse">
-                    <thead>
-                        <tr className="border-b border-gray-700">
-                            <th className="text-left p-3 text-gray-400 font-semibold sticky left-0 bg-gray-900">Metric</th>
-                            {peerData.peers.map(peer => (
-                                <th key={peer.info_of_report.ticker} className="text-center p-3 text-green-400 font-semibold min-w-[120px]">
-                                    <div>{peer.info_of_report?.stock_name || peer.info_of_report?.ticker}</div>
-                                    <div className="text-xs text-gray-500 font-normal">
-                                        {peer.info_of_report?.ticker}
-                                    </div>
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {metrics.map((metric, idx) => (
-                            <tr key={metric.key} className={`border-b border-gray-800 ${idx % 2 === 0 ? 'bg-gray-900/30' : ''}`}>
-                                <td className="p-3 font-medium text-gray-300 sticky left-0 bg-gray-900">
-                                    {metric.label}
-                                </td>
-                                {peerData.peers.map(peer => {
-                                    const value = metric.accessor(peer);
-                                    const isRecommendation = metric.key === 'recommendation';
-                                    const isPositive = typeof value === 'string' && value.includes('+');
-                                    const isNegative = typeof value === 'string' && value.includes('-') && !value.includes('+-');
+                                let cellContent = value;
+                                let cellClass = "p-3 text-center";
 
-                                    let cellClass = 'p-3 text-center';
-                                    if (isRecommendation) {
-                                        if (value === 'Buy') cellClass += ' text-green-400 font-bold';
-                                        else if (value === 'Sell') cellClass += ' text-red-400 font-bold';
-                                        else if (value === 'Neutral') cellClass += ' text-yellow-400 font-bold';
-                                        else cellClass += ' text-gray-500';
-                                    } else if (isPositive) {
-                                        cellClass += ' text-green-400';
-                                    } else if (isNegative) {
-                                        cellClass += ' text-red-400';
-                                    }
-
+                                if (isRec) {
                                     return (
                                         <td key={peer.info_of_report.ticker} className={cellClass}>
-                                            {value}
+                                            <span style={{
+                                                backgroundColor: style.bg,
+                                                color: style.color,
+                                                border: style.border,
+                                                padding: '4px 12px',
+                                                borderRadius: '16px',
+                                                fontWeight: '600',
+                                                fontSize: '0.75rem',
+                                                display: 'inline-block',
+                                                minWidth: '80px'
+                                            }}>
+                                                {value}
+                                            </span>
                                         </td>
                                     );
-                                })}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                                }
+
+                                const isPerf = metric.key === 'upside_at_call' || metric.key === 'perf_since_call';
+                                if (isPerf) {
+                                    const numVal = parseFloat(value);
+                                    const colorClass = getPerfColorClass(numVal);
+                                    cellClass += ` ${colorClass}`;
+                                } else {
+                                    cellClass += " text-white";
+                                }
+
+                                return (
+                                    <td key={peer.info_of_report.ticker} className={cellClass}>
+                                        {value}
+                                    </td>
+                                );
+                            })}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 }
