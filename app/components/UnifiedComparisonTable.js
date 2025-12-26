@@ -265,15 +265,16 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
     }, [mode, currentReport, allReports]);
 
     // Helper to get recommendation style
+    // Helper to get recommendation style
     const getRecommendationStyle = (rec) => {
         const r = (rec || '').toLowerCase();
         if (['buy', 'outperform', 'add', 'accumulate', 'overweight'].some(k => r.includes(k)))
-            return { bg: '#00ff7f', color: 'black' };
+            return { backgroundColor: '#00ff7f', color: 'black' };
         if (['sell', 'underperform', 'reduce', 'underweight'].some(k => r.includes(k)))
-            return { bg: '#ff4444', color: 'white' };
+            return { backgroundColor: '#ff4444', color: 'white' };
         if (['neutral', 'hold', 'market perform'].some(k => r.includes(k)))
-            return { bg: '#4A5568', color: 'white' };
-        return { bg: 'transparent', color: 'gray', border: '1px solid #3A3A3C' };
+            return { backgroundColor: '#4A5568', color: 'white' };
+        return { backgroundColor: 'transparent', color: 'gray', border: '1px solid #3A3A3C' };
     };
 
     // Helper to get financial data for a specific year
