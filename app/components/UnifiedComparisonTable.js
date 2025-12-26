@@ -174,12 +174,18 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
         return { bg: 'transparent', color: 'gray', border: '1px solid #3A3A3C' };
     };
 
-    // Define metrics to display (only 4 key recommendation metrics)
+    // Define metrics to display (all 11 metrics)
     const metrics = [
         { key: 'recommendation', label: 'Recommendation' },
         { key: 'target_price', label: 'Target price' },
         { key: 'upside_at_call', label: 'Upside at call' },
-        { key: 'perf_since_call', label: 'Perf since call' }
+        { key: 'perf_since_call', label: 'Perf since call' },
+        { key: 'revenue', label: 'Revenue' },
+        { key: 'npat', label: 'NPAT' },
+        { key: 'eps', label: 'EPS' },
+        { key: 'bvps', label: 'BVPS' },
+        { key: 'pe', label: 'PE' },
+        { key: 'pb', label: 'PB' }
     ];
 
     // Get value for a metric from a report
@@ -195,6 +201,21 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                 return formatPercentage(report.recommendation?.upside_at_call);
             case 'perf_since_call':
                 return formatPercentage(report.recommendation?.performance_since_call);
+            case 'revenue':
+                const forecast = report.forecast_summary;
+                return formatNumber(forecast?.revenue ?? forecast?.['Revenue (bn VND)']);
+            case 'npat':
+                return formatNumber(report.forecast_summary?.npat ?? report.forecast_summary?.['NPAT (bn VND)']);
+            case 'eps':
+                return formatNumber(report.forecast_summary?.eps ?? report.forecast_summary?.['EPS (VND)']);
+            case 'bvps':
+                return formatNumber(report.forecast_summary?.bvps ?? report.forecast_summary?.['BVPS (VND)']);
+            case 'pe':
+                const peVal = report.forecast_summary?.pe ?? report.forecast_summary?.['P/E'];
+                return peVal != null ? peVal.toFixed(1) : '-';
+            case 'pb':
+                const pbVal = report.forecast_summary?.pb ?? report.forecast_summary?.['P/B'];
+                return pbVal != null ? pbVal.toFixed(2) : '-';
             default:
                 return '-';
         }
