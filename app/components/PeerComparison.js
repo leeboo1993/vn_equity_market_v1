@@ -166,7 +166,7 @@ export default function PeerComparison({ currentReport, allReports }) {
                         <tr style={{
                             backgroundColor: '#1a1a1a',
                             position: 'sticky',
-                            top: '104px',
+                            top: 0,
                             zIndex: 10
                         }}>
                             <th style={{
