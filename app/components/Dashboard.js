@@ -1717,19 +1717,20 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                 </div>
                                             </div>
 
-                                            {/* Unified Comparison Table */}
-                                            <div className="mt-4">
-                                                <UnifiedComparisonTable
-                                                    mode={comparisonMode}
-                                                    currentReport={selectedReport}
-                                                    allReports={reports}
-                                                />
-                                            </div>
+                                            {/* Use UnifiedComparisonTable only for Brokers and Peers */}
+                                            {(comparisonMode === 'brokers' || comparisonMode === 'peers') && (
+                                                <div className="mt-4">
+                                                    <UnifiedComparisonTable
+                                                        mode={comparisonMode}
+                                                        currentReport={selectedReport}
+                                                        allReports={reports}
+                                                    />
+                                                </div>
+                                            )}
 
+                                            {/* Keep original Historicals rendering */}
                                             {comparisonMode === 'historical' && (
-                                                <div className="overflow-x-auto mt-4" style={{ display: 'none' }}>
-                                                    {/* Old historical rendering kept for reference but hidden */}
-
+                                                <div className="overflow-x-auto mt-4">
                                                     {(() => {
                                                         try {
                                                             // 1. Get Comparisons
