@@ -1783,7 +1783,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                     const availableYears = getAvailableForecastYears(selectedReport);
                                                     if (availableYears.length === 0) return null;
 
-                                                    // Helper to display year without F suffix
+                                                    // Helper to display year without any suffix (E, A, F, etc.)
                                                     const displayYear = (year) => {
                                                         const str = year.toString();
                                                         // Extract just the numeric year
@@ -1793,7 +1793,8 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                         const twoDigit = str.match(/(\d{2})[\/\-]?(\d{2})/);
                                                         if (twoDigit) return `20${twoDigit[2]}`;
 
-                                                        return str.replace(/F/gi, '');
+                                                        // Remove all alphabetic characters
+                                                        return str.replace(/[A-Za-z]/g, '');
                                                     };
 
                                                     return (
