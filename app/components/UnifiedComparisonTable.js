@@ -44,7 +44,7 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
     // Helper to derive recommendation from upside/target (matches ReportList.js logic)
     // Defined inside component to ensure safe access
     const getDerivedRec = (report) => {
-        const upside = report.recommendation?.upside || 0;
+        const upside = report.recommendation?.upside_at_call ?? report.recommendation?.upside ?? 0;
         const targetPrice = report.recommendation?.target_price;
 
         // If no target price, return "No Rating"
