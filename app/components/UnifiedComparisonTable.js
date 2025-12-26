@@ -413,7 +413,7 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                         </tr>
                     </thead>
 
-                    <tbody>
+                    <tbody style={{ fontSize: '9px' }}>
                         {/* Date row - only for brokers/peers modes */}
                         {mode !== 'historical' && (
                             <tr style={{ borderBottom: '1px solid #2A2A2A' }}>
