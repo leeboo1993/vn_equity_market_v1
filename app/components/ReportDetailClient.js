@@ -162,17 +162,19 @@ function BrokerComparison({ currentReport, allReports }) {
         <div style={{ marginTop: '20px', overflowX: 'auto', border: '1px solid #333', borderRadius: '8px' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
                 <thead>
-                    <tr style={{ backgroundColor: '#1a1a1a', position: 'sticky', top: 0, zIndex: 10 }}>
-                        <th style={{
+                    <tr style={{ backgroundColor: '#1a1a1a', position: 'sticky', top: 0, zIndex: 20 }}>
+                        <th rowSpan={2} style={{
                             padding: '8px 10px',
                             textAlign: 'left',
                             borderBottom: '2px solid #333',
+                            borderRight: '1px solid #333',
                             fontWeight: 'bold',
                             color: '#00ff7f',
                             position: 'sticky',
                             left: 0,
+                            top: 0,
                             backgroundColor: '#1a1a1a',
-                            zIndex: 20
+                            zIndex: 30
                         }}>
                             Metric
                         </th>
@@ -180,20 +182,33 @@ function BrokerComparison({ currentReport, allReports }) {
                             <th key={broker.info_of_report.issued_company} style={{
                                 padding: '8px 10px',
                                 textAlign: 'center',
-                                borderBottom: '2px solid #333',
                                 borderLeft: '1px solid #333',
                                 fontWeight: 'bold',
                                 color: '#00ff7f',
-                                minWidth: '120px'
+                                minWidth: '120px',
+                                backgroundColor: '#1a1a1a'
                             }}>
                                 <div>{broker.info_of_report?.issued_company}</div>
-                                <div style={{ fontSize: '9px', fontWeight: 'normal', color: '#888', marginTop: '2px' }}>
-                                    {(() => {
-                                        const d = broker.info_of_report?.date_of_issue;
-                                        if (!d || d.length !== 6) return d;
-                                        return `${d.substring(4, 6)}/${d.substring(2, 4)}/20${d.substring(0, 2)}`;
-                                    })()}
-                                </div>
+                            </th>
+                        ))}
+                    </tr>
+                    <tr style={{ backgroundColor: '#1a1a1a', position: 'sticky', top: '37px', zIndex: 15 }}>
+                        {brokerData.brokers.map(broker => (
+                            <th key={`${broker.info_of_report.issued_company}-date`} style={{
+                                padding: '4px 10px 8px',
+                                textAlign: 'center',
+                                borderBottom: '2px solid #333',
+                                borderLeft: '1px solid #333',
+                                fontSize: '9px',
+                                fontWeight: 'normal',
+                                color: '#888',
+                                backgroundColor: '#1a1a1a'
+                            }}>
+                                {(() => {
+                                    const d = broker.info_of_report?.date_of_issue;
+                                    if (!d || d.length !== 6) return d;
+                                    return `${d.substring(4, 6)}/${d.substring(2, 4)}/20${d.substring(0, 2)}`;
+                                })()}
                             </th>
                         ))}
                     </tr>
@@ -221,37 +236,27 @@ function BrokerComparison({ currentReport, allReports }) {
                                 if (isRec) {
                                     return (
                                         <td key={broker.info_of_report.issued_company} style={{
-                                            padding: '6px 10px',
+                                            padding: '8px 10px',
                                             textAlign: 'center',
-                                            borderLeft: '1px solid #1a1a1a',
-                                            borderBottom: '1px solid #1a1a1a'
+                                            borderBottom: '1px solid #1a1a1a',
+                                            color: '#ccc',
+                                            fontFamily: 'monospace',
+                                            fontSize: '11px'
                                         }}>
-                                            <span style={{
-                                                backgroundColor: style.bg,
-                                                color: style.color,
-                                                border: style.border,
-                                                padding: '2px 8px',
-                                                borderRadius: '12px',
-                                                fontWeight: '600',
-                                                fontSize: '0.7rem',
-                                                display: 'inline-block',
-                                                minWidth: '70px',
-                                                lineHeight: '1.2'
-                                            }}>
-                                                {value}
-                                            </span>
+                                            {value}
                                         </td>
                                     );
                                 }
 
                                 return (
                                     <td key={broker.info_of_report.issued_company} style={{
-                                        padding: '6px 10px',
+                                        padding: '8px 10px',
                                         textAlign: 'center',
                                         borderLeft: '1px solid #1a1a1a',
                                         borderBottom: '1px solid #1a1a1a',
                                         color: '#ccc',
-                                        fontFamily: 'monospace'
+                                        fontFamily: 'monospace',
+                                        fontSize: '11px'
                                     }}>
                                         {value}
                                     </td>
@@ -433,17 +438,19 @@ function PeerComparison({ currentReport, allReports }) {
             <div style={{ marginTop: '20px', overflowX: 'auto', border: '1px solid #333', borderRadius: '8px' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
                     <thead>
-                        <tr style={{ backgroundColor: '#1a1a1a', position: 'sticky', top: 0, zIndex: 10 }}>
-                            <th style={{
+                        <tr style={{ backgroundColor: '#1a1a1a', position: 'sticky', top: 0, zIndex: 20 }}>
+                            <th rowSpan={2} style={{
                                 padding: '8px 10px',
                                 textAlign: 'left',
                                 borderBottom: '2px solid #333',
+                                borderRight: '1px solid #333',
                                 fontWeight: 'bold',
                                 color: '#00ff7f',
                                 position: 'sticky',
                                 left: 0,
+                                top: 0,
                                 backgroundColor: '#1a1a1a',
-                                zIndex: 20
+                                zIndex: 30
                             }}>
                                 Metric
                             </th>
@@ -451,16 +458,33 @@ function PeerComparison({ currentReport, allReports }) {
                                 <th key={peer.info_of_report.ticker} style={{
                                     padding: '8px 10px',
                                     textAlign: 'center',
-                                    borderBottom: '2px solid #333',
                                     borderLeft: '1px solid #333',
                                     fontWeight: 'bold',
                                     color: '#00ff7f',
-                                    minWidth: '120px'
+                                    minWidth: '120px',
+                                    backgroundColor: '#1a1a1a'
                                 }}>
                                     <div>{peer.info_of_report?.ticker}</div>
-                                    <div style={{ fontSize: '9px', fontWeight: 'normal', color: '#888', marginTop: '2px' }}>
-                                        {peer.info_of_report?.stock_name || peer.info_of_report?.ticker}
-                                    </div>
+                                </th>
+                            ))}
+                        </tr>
+                        <tr style={{ backgroundColor: '#1a1a1a', position: 'sticky', top: '37px', zIndex: 15 }}>
+                            {peerData.peers.map(peer => (
+                                <th key={`${peer.info_of_report.ticker}-date`} style={{
+                                    padding: '4px 10px 8px',
+                                    textAlign: 'center',
+                                    borderBottom: '2px solid #333',
+                                    borderLeft: '1px solid #333',
+                                    fontSize: '9px',
+                                    fontWeight: 'normal',
+                                    color: '#888',
+                                    backgroundColor: '#1a1a1a'
+                                }}>
+                                    {(() => {
+                                        const d = peer.info_of_report?.date_of_issue;
+                                        if (!d || d.length !== 6) return d;
+                                        return `${d.substring(4, 6)}/${d.substring(2, 4)}/20${d.substring(0, 2)}`;
+                                    })()}
                                 </th>
                             ))}
                         </tr>
@@ -488,22 +512,21 @@ function PeerComparison({ currentReport, allReports }) {
                                     if (isRec) {
                                         return (
                                             <td key={peer.info_of_report.ticker} style={{
-                                                padding: '6px 10px',
+                                                padding: '8px 10px',
                                                 textAlign: 'center',
-                                                borderLeft: '1px solid #1a1a1a',
                                                 borderBottom: '1px solid #1a1a1a'
                                             }}>
                                                 <span style={{
                                                     backgroundColor: style.bg,
                                                     color: style.color,
                                                     border: style.border,
-                                                    padding: '2px 8px',
-                                                    borderRadius: '12px',
-                                                    fontWeight: '600',
-                                                    fontSize: '0.7rem',
-                                                    display: 'inline-block',
-                                                    minWidth: '70px',
-                                                    lineHeight: '1.2'
+                                                    padding: '4px 12px',
+                                                    borderRadius: '6px',
+                                                    fontWeight: 'bold',
+                                                    fontSize: '11px',
+                                                    display: 'block',
+                                                    width: '100%',
+                                                    textAlign: 'center'
                                                 }}>
                                                     {value}
                                                 </span>
@@ -513,12 +536,12 @@ function PeerComparison({ currentReport, allReports }) {
 
                                     return (
                                         <td key={peer.info_of_report.ticker} style={{
-                                            padding: '6px 10px',
+                                            padding: '8px 10px',
                                             textAlign: 'center',
-                                            borderLeft: '1px solid #1a1a1a',
                                             borderBottom: '1px solid #1a1a1a',
                                             color: '#ccc',
-                                            fontFamily: 'monospace'
+                                            fontFamily: 'monospace',
+                                            fontSize: '11px'
                                         }}>
                                             {value}
                                         </td>
