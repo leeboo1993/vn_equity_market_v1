@@ -1305,7 +1305,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                     <div className="card">
                         <div className="mb-4" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
                             <h2 className="card-title mb-0" style={{ fontSize: '12px', lineHeight: '1' }}>Company reports</h2>
-                            <label className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity">
+                            <label className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity" style={{ display: 'flex', alignItems: 'center' }}>
                                 <input
                                     type="checkbox"
                                     checked={shouldFilterTargets}
@@ -1313,7 +1313,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                     // Native checkbox for debugging state
                                     style={{ width: '16px', height: '16px', accentColor: '#666' }}
                                 />
-                                <span className="text-[#666] text-xs font-medium">Has Target Price</span>
+                                <span className="text-[#666] text-xs font-medium" style={{ lineHeight: '16px' }}>Has Target Price</span>
                             </label>
                         </div>
                         <div className="table-wrapper overflow-y-auto relative custom-scrollbar" style={{ maxHeight: '485px' }}>
