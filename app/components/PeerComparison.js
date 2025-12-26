@@ -61,56 +61,77 @@ export default function PeerComparison({ currentReport, allReports }) {
         );
     }
 
+    // Helper functions for safe formatting (copied from BrokerComparison for consistency)
+    const safeToFixed = (val, digits = 1) => {
+        if (val === null || val === undefined || val === '') return '-';
+        const num = typeof val === 'number' ? val : parseFloat(val);
+        if (isNaN(num)) return '-';
+        return num.toFixed(digits);
+    };
+
+    const safeLocaleString = (val) => {
+        if (val === null || val === undefined || val === '') return '-';
+        const num = typeof val === 'number' ? val : parseFloat(val);
+        if (isNaN(num)) return '-';
+        return num.toLocaleString();
+    };
+
     // Define metrics to display
     const metrics = [
         { key: 'recommendation', label: 'Recommendation', accessor: r => r.recommendation?.recommendation || '-' },
-        { key: 'target_price', label: 'Target Price', accessor: r => r.recommendation?.target_price?.toLocaleString() || '-' },
+        { key: 'target_price', label: 'Target Price', accessor: r => safeLocaleString(r.recommendation?.target_price) },
         {
             key: 'upside_at_call', label: 'Upside at call', accessor: r => {
                 const val = r.recommendation?.upside_at_call;
-                return val != null ? `${val >= 0 ? '+' : ''}${val.toFixed(1)}%` : '-';
+                if (val === null || val === undefined) return '-';
+                const num = parseFloat(val);
+                if (isNaN(num)) return '-';
+                return `${num >= 0 ? '+' : ''}${num.toFixed(1)}%`;
             }
         },
         {
             key: 'perf_since_call', label: 'Perf since call', accessor: r => {
                 const val = r.recommendation?.performance_since_call;
-                return val != null ? `${val >= 0 ? '+' : ''}${val.toFixed(1)}%` : '-';
+                if (val === null || val === undefined) return '-';
+                const num = parseFloat(val);
+                if (isNaN(num)) return '-';
+                return `${num >= 0 ? '+' : ''}${num.toFixed(1)}%`;
             }
         },
         {
             key: 'revenue', label: 'Revenue', accessor: r => {
                 const forecast = r.forecast_summary;
-                return forecast?.revenue?.toLocaleString() || forecast?.['Revenue (bn VND)']?.toLocaleString() || '-';
+                return safeLocaleString(forecast?.revenue ?? forecast?.['Revenue (bn VND)']);
             }
         },
         {
             key: 'npat', label: 'NPAT', accessor: r => {
                 const forecast = r.forecast_summary;
-                return forecast?.npat?.toLocaleString() || forecast?.['NPAT (bn VND)']?.toLocaleString() || '-';
+                return safeLocaleString(forecast?.npat ?? forecast?.['NPAT (bn VND)']);
             }
         },
         {
             key: 'eps', label: 'EPS', accessor: r => {
                 const forecast = r.forecast_summary;
-                return forecast?.eps?.toLocaleString() || forecast?.['EPS (VND)']?.toLocaleString() || '-';
+                return safeLocaleString(forecast?.eps ?? forecast?.['EPS (VND)']);
             }
         },
         {
             key: 'bvps', label: 'BVPS', accessor: r => {
                 const forecast = r.forecast_summary;
-                return forecast?.bvps?.toLocaleString() || forecast?.['BVPS (VND)']?.toLocaleString() || '-';
+                return safeLocaleString(forecast?.bvps ?? forecast?.['BVPS (VND)']);
             }
         },
         {
             key: 'pe', label: 'PE', accessor: r => {
                 const forecast = r.forecast_summary;
-                return forecast?.pe?.toFixed(1) || forecast?.['P/E']?.toFixed(1) || '-';
+                return safeToFixed(forecast?.pe ?? forecast?.['P/E'], 1);
             }
         },
         {
             key: 'pb', label: 'PB', accessor: r => {
                 const forecast = r.forecast_summary;
-                return forecast?.pb?.toFixed(2) || forecast?.['P/B']?.toFixed(2) || '-';
+                return safeToFixed(forecast?.pb ?? forecast?.['P/B'], 2);
             }
         }
     ];

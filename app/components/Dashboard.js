@@ -1811,46 +1811,55 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                                 if (!rep.forecast_table) return null;
                                                                 if (!rep.forecast_table.columns || !Array.isArray(rep.forecast_table.columns)) return null;
                                                                 if (!rep.forecast_table.rows || !Array.isArray(rep.forecast_table.rows)) return null;
+
                                                                 if (tYear && rep.forecast_table) {
                                                                     try {
                                                                         const cols = rep.forecast_table.columns || [];
-                                                                        const tYearClean = tYear.replace(/[A-Za-z]/g, '');
-                                                                        const colIndex = cols.findIndex(c => c.toString().includes(tYearClean));
+                                                                        const tYearClean = tYear.replace(/[A-Za-z]/g, ''); // e.g. "2025" or "12-25"
+
+                                                                        // Normalize Year finding (match 2025 or 25)
+                                                                        let colIndex = cols.findIndex(c => c.toString().includes(tYearClean));
+                                                                        if (colIndex === -1 && tYearClean.length === 4) {
+                                                                            const shortYear = tYearClean.substring(2);
+                                                                            colIndex = cols.findIndex(c => c.toString().includes(shortYear));
+                                                                        }
 
                                                                         if (colIndex !== -1 && colIndex < cols.length) {
                                                                             const colName = cols[colIndex];
-
                                                                             // Additional safety: ensure column name exists
                                                                             if (!colName) {
                                                                                 console.warn(`Column at index ${colIndex} is undefined for report ${rep.id}`);
                                                                                 return null;
                                                                             }
-                                                                            // Find row: Support "metric" OR "item", case-insensitive
-                                                                            const row = (rep.forecast_table.rows || []).find(r => {
-                                                                                const rKey = r.metric || r.item;
+                                                                            const isMatch = (r) => {
+                                                                                const rKey = r.metric || r.item || r.name;
                                                                                 return rKey && (rKey === key || rKey.toLowerCase() === key.toLowerCase());
-                                                                            });
+                                                                            };
 
+                                                                            // 1. Top-level row match
+                                                                            const row = rep.forecast_table.rows.find(r => isMatch(r));
                                                                             if (row) {
-                                                                                // 1. Array format (Newer reports)
                                                                                 if (row.values && Array.isArray(row.values)) {
-                                                                                    // Bounds check to prevent crash
-                                                                                    if (colIndex >= 0 && colIndex < row.values.length) {
-                                                                                        return row.values[colIndex];
-                                                                                    }
-                                                                                    return null;
+                                                                                    if (colIndex >= 0 && colIndex < row.values.length) return row.values[colIndex];
                                                                                 }
-                                                                                // 2. Flat Object format (Older reports)
-                                                                                // Access by column name (e.g. "2026F")
-                                                                                if (row[colName] !== undefined) {
-                                                                                    return row[colName];
+                                                                                if (row[colName] !== undefined) return row[colName];
+                                                                            }
+
+                                                                            // 2. Row-per-Year Match (HSC style)
+                                                                            // Loop through rows to find one that matches the Year Column Name
+                                                                            const yearRow = rep.forecast_table.rows.find(r => r.Year && r.Year.toString() === colName.toString());
+                                                                            if (yearRow) {
+                                                                                if (yearRow[key] !== undefined) return yearRow[key];
+                                                                                const categories = ['balance_sheet', 'income_statement', 'cash_flow', 'key_ratios'];
+                                                                                for (const cat of categories) {
+                                                                                    if (yearRow[cat] && yearRow[cat][key] !== undefined) return yearRow[cat][key];
                                                                                 }
                                                                             }
                                                                         }
-                                                                    } catch (e) { console.error(e); }
+                                                                    } catch (e) {
+                                                                        console.error("Error parsing financials:", e);
+                                                                    }
                                                                 }
-                                                                // DISABLE Fallback to summary if year lookup fails.
-                                                                // This prevents showing 2025 data when 2026 was requested.
                                                                 return null;
                                                             };
 
@@ -1896,10 +1905,12 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                                     valPrev = prevToLatestReport?.recommendation?.target_price;
                                                                 } else if (key === 'upside_at_call') {
                                                                     valLatest = latestReport?.recommendation?.upside_at_call;
-                                                                    valPrev = null;
+                                                                    valPrev = null; // Don't calc delta for Upside? Actually user requested it enabled.
+                                                                    // Let's enable it if we have Prev
+                                                                    valPrev = prevToLatestReport?.recommendation?.upside_at_call;
                                                                 } else if (key === 'performance_since_call') {
                                                                     valLatest = latestReport?.recommendation?.performance_since_call;
-                                                                    valPrev = null;
+                                                                    valPrev = prevToLatestReport?.recommendation?.performance_since_call;
                                                                 }
 
                                                                 // For financial metrics, check if latest value is an outlier
@@ -1922,15 +1933,28 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
 
                                                                 // Calculate Delta (skip if latest is outlier)
                                                                 let change = null;
+                                                                // Ensure calculateChange is available. If not, define it locally.
+                                                                const calcChangeLocal = (a, b) => {
+                                                                    if (b === 0) return null;
+                                                                    return ((a - b) / Math.abs(b)) * 100; // Use Abs(b) for correct sign? Standard formula: (New-Old)/|Old| unless Old is negative, then it's tricky. 
+                                                                    // Let's assume standard formula.
+                                                                };
+
                                                                 if (latestIsOutlier) {
                                                                     change = null;
-                                                                } else if (!isText && !isFinancial && key === 'target_price' && valLatest && valPrev) {
+                                                                } else if (!isText && !isFinancial && (key === 'target_price' || key === 'upside_at_call' || key === 'performance_since_call') && valLatest && valPrev) {
+                                                                    // For Upside/Perf (%), the change is just simple difference or % change?
+                                                                    // Ideally simple difference (pp) for % metrics, but user asked for "Deltas enabled".
+                                                                    // Existing code used `calculateChange` which is % change.
+                                                                    // Let's stick to % change for now to be consistent, or if valPrev is %, % change of % is weird.
+                                                                    // But for Target Price it's % change.
                                                                     change = ((valLatest - valPrev) / valPrev) * 100;
                                                                 } else if (isFinancial && valLatest != null && valPrev != null) {
-                                                                    change = calculateChange(valLatest, valPrev);
+                                                                    change = calcChangeLocal(valLatest, valPrev);
                                                                 }
 
-                                                                if (key === 'upside_at_call' || key === 'performance_since_call') change = null;
+                                                                // No longer disabled!
+                                                                // if (key === 'upside_at_call' ...
 
                                                                 return (
                                                                     <tr key={key}>
