@@ -450,34 +450,57 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
         }
     };
 
-    // Calculate delta (change) for the last column
+    // Calculate delta (change) for the last column (Historical only)
     const calculateDelta = (reports, metricKey) => {
         if (reports.length < 2) return null;
-
         const latest = reports[reports.length - 1];
         const previous = reports[reports.length - 2];
 
-        if (metricKey === 'target_price') {
-            const latestVal = latest.recommendation?.target_price;
-            const prevVal = previous.recommendation?.target_price;
-            if (latestVal != null && prevVal != null && prevVal !== 0) {
-                const change = ((latestVal - prevVal) / prevVal) * 100;
-                return formatPercentage(change);
-            }
-        } else if (metricKey === 'upside_at_call' || metricKey === 'perf_since_call') {
-            const latestVal = metricKey === 'upside_at_call'
-                ? latest.recommendation?.upside_at_call
-                : latest.recommendation?.performance_since_call;
-            const prevVal = metricKey === 'upside_at_call'
-                ? previous.recommendation?.upside_at_call
-                : previous.recommendation?.performance_since_call;
-            if (latestVal != null && prevVal != null) {
-                const change = latestVal - prevVal;
-                return formatPercentage(change);
-            }
-        }
-        return null;
+        // Only calculate delta for Financials in Historical mode
+        // User said: "upside at call + perf since call -> no need to calculate change" for Historical
+        // User implied filtering logic in request
+        // Assuming we rely on rendering logic to call this or not.
+
+        // Actually, let's keep the helper generic but control usage in render.
+        // Replicating existing logic but handling nulls
+        // ...
+        return null; // Logic is handled inside render loop differently now
     };
+
+    // New Helper: Calculate Average for Brokers mode
+    const calculateAverage = (reports, metricKey, isFinancial) => {
+        if (!reports || reports.length === 0) return '-';
+
+        let sum = 0;
+        let count = 0;
+
+        // Only calculate average for Financials (as per user request "change here should be change to Average")
+        // User explicitly excluded Upside/Perf from change/average loop for Brokers too?
+        // "upside at call + perf since call -> no need to calculate change"
+        // So Average is only for Financials + Target Price?
+        // User listed "date + recommendation", "upside + perf".
+        // Financials are "change here should be change to Average".
+
+        if (isFinancial) {
+            for (const r of reports) {
+                const val = getFinancialsForYear(r, metricKey, targetYear);
+                if (val != null && !isNaN(val)) {
+                    sum += parseFloat(val);
+                    count++;
+                }
+            }
+            if (count === 0) return '-';
+            const avg = sum / count;
+
+            if (metricKey === 'pe' || metricKey === 'pb') return avg.toFixed(1);
+            return formatNumber(avg); // Use standard formatting
+        }
+
+        return '-';
+    };
+
+    const showLastCol = mode !== 'peers';
+    const lastColLabel = mode === 'brokers' ? 'Avg' : 'Δ';
 
     if (!tableData || tableData.columns.length === 0) {
         return (
@@ -505,7 +528,7 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                         {tableData.columns.map((_, idx) => (
                             <col key={idx} style={{ width: '120px' }} />
                         ))}
-                        <col style={{ width: '80px' }} />
+                        {showLastCol && <col style={{ width: '80px' }} />}
                     </colgroup>
                     <thead>
                         <tr style={{
@@ -529,7 +552,7 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                     {tableData.getColumnHeader(col)}
                                 </th>
                             ))}
-                            <th style={{ textAlign: 'center' }}>Δ</th>
+                            {showLastCol && <th style={{ textAlign: 'center' }}>{lastColLabel}</th>}
                         </tr>
                     </thead>
 
@@ -551,14 +574,42 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                         {formatDate(col.info_of_report?.date_of_issue)}
                                     </td>
                                 ))}
-                                <td style={{ textAlign: 'center' }}>-</td>
+                                {showLastCol && <td style={{ textAlign: 'center' }}></td>}
                             </tr>
                         )}
 
                         {/* Metric rows */}
                         {metrics.map((metric, metricIdx) => {
                             const isRec = metric.key === 'recommendation';
-                            const delta = calculateDelta(tableData.columns, metric.key);
+
+                            // Calculate Last Column Value
+                            let lastColVal = '-';
+                            if (mode === 'brokers') {
+                                if (metric.isFinancial) { // calculate average only for financial
+                                    lastColVal = calculateAverage(tableData.columns, metric.key, true);
+                                } else {
+                                    lastColVal = ''; // No average for upsides/rec/target price
+                                }
+                            } else if (mode === 'historical') {
+                                if (metric.isFinancial) { // calculate delta for financial
+                                    // Re-implement simplified delta for financials here or use helper if needed
+                                    // User didn't specify exact delta logic for financials in historical, but standard is Growth %
+                                    // Assuming we keep existing behavior OR default to - if unsure.
+                                    // Existing helper was targeted at TP/Upside.
+                                    // Let's perform simple growth from Previous to Latest column for Financials
+                                    const cols = tableData.columns;
+                                    if (cols.length >= 2) {
+                                        const curr = getFinancialsForYear(cols[cols.length - 1], metric.key, targetYear);
+                                        const prev = getFinancialsForYear(cols[cols.length - 2], metric.key, targetYear);
+                                        if (curr != null && prev != null && prev !== 0) {
+                                            const change = ((curr - prev) / Math.abs(prev)) * 100;
+                                            lastColVal = formatPercentage(change);
+                                        }
+                                    }
+                                } else {
+                                    lastColVal = ''; // No delta for Rec/Upside/Perf in Historical
+                                }
+                            }
 
                             // Check if this row has any data - skip if all columns are empty
                             let filledCount = 0;
@@ -589,10 +640,10 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                         const value = getValue(col, metric.key, metric.isFinancial);
 
                                         if (isRec) {
-                                            // Don't show "No Rating" as a pill - just show standard dash
-                                            if (value === 'No Rating' || value === 'no rating') {
+                                            // Show empty if "No Rating" (user request: "no need to show -")
+                                            if (value === 'No Rating' || value === 'no rating' || value === '-') {
                                                 return (
-                                                    <td key={colIdx} style={{ textAlign: 'center' }}>-</td>
+                                                    <td key={colIdx} style={{ textAlign: 'center' }}></td>
                                                 );
                                             }
 
@@ -600,9 +651,7 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                             return (
                                                 <td key={colIdx} style={{ textAlign: 'center' }}>
                                                     <span style={{
-                                                        backgroundColor: style.bg,
-                                                        color: style.color,
-                                                        border: style.border,
+                                                        ...style,
                                                         padding: '4px 12px',
                                                         borderRadius: '9999px',
                                                         fontWeight: 'bold',
@@ -617,11 +666,15 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
 
                                         return (
                                             <td key={colIdx} style={{ textAlign: 'center' }}>
-                                                {value || '-'}
+                                                {value}
                                             </td>
                                         );
                                     })}
-                                    <td style={{ textAlign: 'center' }}>{delta || '-'}</td>
+                                    {showLastCol && (
+                                        <td style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                                            {lastColVal === '-' ? '' : lastColVal}
+                                        </td>
+                                    )}
                                 </tr>
                             );
                         })}
