@@ -1649,6 +1649,73 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
 
                                             </div>
 
+                                            {/* Mode Selector - Always Visible */}
+                                            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '12px', marginBottom: '12px', marginTop: '12px', width: '100%' }}>
+                                                <div style={{
+                                                    backgroundColor: '#2C2C2E',
+                                                    borderRadius: '10px',
+                                                    padding: '4px',
+                                                    display: 'inline-flex',
+                                                    gap: '0',
+                                                    border: '1px solid #3A3A3C'
+                                                }}>
+                                                    <button
+                                                        onClick={() => setComparisonMode('historical')}
+                                                        className="transition-all"
+                                                        style={{
+                                                            backgroundColor: comparisonMode === 'historical' ? '#00ff7f' : 'transparent',
+                                                            color: comparisonMode === 'historical' ? 'black' : 'white',
+                                                            padding: '6px 16px',
+                                                            borderRadius: '8px',
+                                                            border: 'none',
+                                                            cursor: 'pointer',
+                                                            outline: 'none',
+                                                            fontSize: '10px',
+                                                            fontWeight: '400',
+                                                            whiteSpace: 'nowrap'
+                                                        }}
+                                                    >
+                                                        Historicals
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setComparisonMode('brokers')}
+                                                        className="transition-all"
+                                                        style={{
+                                                            backgroundColor: comparisonMode === 'brokers' ? '#00ff7f' : 'transparent',
+                                                            color: comparisonMode === 'brokers' ? 'black' : 'white',
+                                                            padding: '6px 16px',
+                                                            borderRadius: '8px',
+                                                            border: 'none',
+                                                            cursor: 'pointer',
+                                                            outline: 'none',
+                                                            fontSize: '10px',
+                                                            fontWeight: '400',
+                                                            whiteSpace: 'nowrap'
+                                                        }}
+                                                    >
+                                                        Brokers
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setComparisonMode('peers')}
+                                                        className="transition-all"
+                                                        style={{
+                                                            backgroundColor: comparisonMode === 'peers' ? '#00ff7f' : 'transparent',
+                                                            color: comparisonMode === 'peers' ? 'black' : 'white',
+                                                            padding: '6px 16px',
+                                                            borderRadius: '8px',
+                                                            border: 'none',
+                                                            cursor: 'pointer',
+                                                            outline: 'none',
+                                                            fontSize: '10px',
+                                                            fontWeight: '400',
+                                                            whiteSpace: 'nowrap'
+                                                        }}
+                                                    >
+                                                        Peers
+                                                    </button>
+                                                </div>
+                                            </div>
+
                                             {comparisonMode === 'peers' && (
                                                 <div className="mt-4">
                                                     <PeerComparison currentReport={selectedReport} allReports={reports} />
