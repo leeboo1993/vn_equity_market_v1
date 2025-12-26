@@ -104,7 +104,7 @@ export default function ReportDetailClient({ report, allReports }) {
             </div>
 
             {/* Sticky Tab Navigation */}
-            <div className="sticky top-0 z-50 bg-[#0c0c0c] border-b border-gray-800 py-3 mb-6 pl-4 shadow-lg">
+            <div className="sticky top-[52px] z-50 bg-[#0c0c0c] border-b border-gray-800 py-3 mb-0 pl-4 shadow-lg">
                 <div className="inline-flex bg-[#1a1a1a] p-1 rounded-lg border border-gray-800">
                     <button
                         onClick={() => setActiveTab('details')}
