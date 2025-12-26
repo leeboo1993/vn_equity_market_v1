@@ -130,7 +130,7 @@ export default function PeerComparison({ currentReport, allReports }) {
                         <tr className="border-b border-gray-700">
                             <th className="text-left p-3 text-gray-400 font-semibold sticky left-0 bg-gray-900">Metric</th>
                             {peerData.peers.map(peer => (
-                                <th key={peer.id} className="text-center p-3 text-green-400 font-semibold min-w-[120px]">
+                                <th key={peer.info_of_report.ticker} className="text-center p-3 text-green-400 font-semibold min-w-[120px]">
                                     <div>{peer.info_of_report?.stock_name || peer.info_of_report?.ticker}</div>
                                     <div className="text-xs text-gray-500 font-normal">
                                         {peer.info_of_report?.ticker}
@@ -164,7 +164,7 @@ export default function PeerComparison({ currentReport, allReports }) {
                                     }
 
                                     return (
-                                        <td key={peer.id} className={cellClass}>
+                                        <td key={peer.info_of_report.ticker} className={cellClass}>
                                             {value}
                                         </td>
                                     );
