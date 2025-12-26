@@ -384,10 +384,11 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
     return (
         <div style={{ marginTop: '20px' }}>
             <div style={{
+                width: '100%',
                 overflowX: 'auto',
                 borderRadius: '8px'
             }}>
-                <table className="mini-table w-full relative border-collapse" style={{ tableLayout: 'fixed' }}>
+                <table className="table" style={{ tableLayout: 'fixed', width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
                     <colgroup>
                         <col style={{ width: '150px' }} /> {/* Metric column */}
                         {tableData.columns.map((_, idx) => (
