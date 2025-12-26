@@ -67,7 +67,18 @@ export default async function ReportPage(props) {
                 <div className="flex justify-between items-start">
                     <div>
                         <div className="flex items-center gap-4 mb-2">
-                            <h1 className="title">{report.info_of_report.ticker}</h1>
+                            <h1 className="title">
+                                {report.info_of_report.stock_name || report.info_of_report.covered_stock || report.info_of_report.ticker}
+                                {report.info_of_report.exchange && ` (${report.info_of_report.exchange}: ${report.info_of_report.ticker})`}
+                            </h1>
+                        </div>
+                        <div className="text-base mt-2 text-gray-300">
+                            {report.info_of_report.sector && (
+                                <>
+                                    <span className="text-gray-400">{report.info_of_report.sector}</span>
+                                    <span className="text-gray-600 mx-2">|</span>
+                                </>
+                            )}
                             <span className={`badge ${['Outperform', 'Buy'].includes(report.recommendation?.recommendation) ? 'badge-outperform' :
                                 ['Underperform', 'Sell'].includes(report.recommendation?.recommendation) ? 'badge-underperform' :
                                     ['Neutral', 'Hold'].includes(report.recommendation?.recommendation) ? 'badge-neutral' :
@@ -75,11 +86,19 @@ export default async function ReportPage(props) {
                                 }`}>
                                 {report.recommendation?.recommendation || 'No Rating'}
                             </span>
+                            {report.recommendation?.target_price && (
+                                <>
+                                    <span className="mx-2 font-mono text-green-400">{report.recommendation.target_price.toLocaleString()}</span>
+                                    {report.recommendation?.upside && (
+                                        <span className={`font-mono ${report.recommendation.upside > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                            ({report.recommendation.upside > 0 ? '+' : ''}{report.recommendation.upside}%)
+                                        </span>
+                                    )}
+                                </>
+                            )}
                         </div>
-                        <h2 className="text-2xl font-semibold text-gray-300">{report.info_of_report.covered_stock}</h2>
-                        <div className="text-sm mt-2">
-                            <span className="text-gray-500">Sector:</span> {report.info_of_report.sector} •
-                            <span className="text-gray-500 ml-2">Date:</span> {(() => {
+                        <div className="text-xs mt-2 text-gray-500">
+                            <span className="text-gray-500">Date:</span> {(() => {
                                 const d = report.info_of_report.date_of_issue;
                                 if (!d || d.length !== 6) return d;
                                 return `${d.substring(4, 6)}/${d.substring(2, 4)}/20${d.substring(0, 2)}`;
