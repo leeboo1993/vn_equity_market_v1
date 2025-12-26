@@ -478,6 +478,13 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                         const value = getValue(col, metric.key, metric.isFinancial);
 
                                         if (isRec) {
+                                            // Don't show "No Rating" as a pill - just show standard dash
+                                            if (value === 'No Rating' || value === 'no rating') {
+                                                return (
+                                                    <td key={colIdx} style={{ textAlign: 'center' }}>-</td>
+                                                );
+                                            }
+
                                             const style = getRecommendationStyle(value);
                                             return (
                                                 <td key={colIdx} style={{ textAlign: 'center' }}>
