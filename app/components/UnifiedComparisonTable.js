@@ -27,6 +27,26 @@ const formatPercentage = (value) => {
     return `${num >= 0 ? '+' : ''}${num.toFixed(1)}%`;
 };
 
+// Helper to derive recommendation from upside/target (matches ReportList.js logic)
+const getDerivedRec = (report) => {
+    const upside = report.recommendation?.upside || 0;
+    const targetPrice = report.recommendation?.target_price;
+
+    // If no target price, return "No Rating"
+    if (!targetPrice || targetPrice === 0) {
+        return 'No Rating';
+    }
+
+    // Standardize based on upside at call
+    if (upside >= 15) {
+        return 'Buy';
+    } else if (upside <= -5) {
+        return 'Sell';
+    } else {
+        return 'Neutral';
+    }
+};
+
 export default function UnifiedComparisonTable({ mode, currentReport, allReports, selectedYear }) {
     // Process data based on mode
     const tableData = useMemo(() => {
@@ -53,9 +73,8 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                     const existingDate = existing.info_of_report?.date_of_issue || '000000';
                     const currentDate = report.info_of_report?.date_of_issue || '000000';
 
-                    const getRec = (r) => r.recommendation?.call;
                     const isValid = (r) => {
-                        const rec = getRec(r);
+                        const rec = getDerivedRec(r);
                         return rec && rec.toLowerCase() !== 'no rating';
                     };
 
@@ -77,7 +96,7 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
 
             const brokers = Array.from(brokerMap.values())
                 .filter(report => {
-                    const rec = report.recommendation?.call;
+                    const rec = getDerivedRec(report);
                     return rec && rec.toLowerCase() !== 'no rating';
                 })
                 .sort((a, b) => {
@@ -118,9 +137,8 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                     const existingDate = existing.info_of_report?.date_of_issue || '000000';
                     const currentDate = report.info_of_report?.date_of_issue || '000000';
 
-                    const getRec = (r) => r.recommendation?.call;
                     const isValid = (r) => {
-                        const rec = getRec(r);
+                        const rec = getDerivedRec(r);
                         return rec && rec.toLowerCase() !== 'no rating';
                     };
 
@@ -142,7 +160,7 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
 
             const peers = Array.from(tickerMap.values())
                 .filter(report => {
-                    const rec = report.recommendation?.call;
+                    const rec = getDerivedRec(report);
                     return rec && rec.toLowerCase() !== 'no rating';
                 })
                 .sort((a, b) => {
@@ -352,8 +370,38 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
         { key: 'pb', label: 'PB', isFinancial: true }
     ];
 
+    // Helper to match ReportList.js logic
+    const getDerivedRec = (report) => {
+        const upside = report.recommendation?.upside_at_call || 0; // Use upside_at_call for consistency
+        const targetPrice = report.recommendation?.target_price;
+
+        // If no target price, return "No Rating"
+        if (!targetPrice || targetPrice === 0) {
+            return 'No Rating';
+        }
+
+        // Standardize based on upside at call
+        if (upside >= 15) {
+            return 'Buy';
+        } else if (upside <= -5) {
+            return 'Sell';
+        } else {
+            return 'Neutral';
+        }
+    };
+
     // Get value for a metric from a report
     const getValue = (report, metricKey, isFinancial) => {
+        if (!report) return '-';
+
+        if (metricKey === 'recommendation') {
+            const derived = getDerivedRec(report);
+            // Prefer derived to match ReportList, but fallback to API if needed (though ReportList ignores API)
+            // The original recommendation from API is `report.recommendation?.recommendation`
+            // We prioritize the derived recommendation.
+            return derived !== 'No Rating' ? derived : (report.recommendation?.recommendation || 'No Rating');
+        }
+
         if (isFinancial) {
             const val = getFinancialsForYear(report, metricKey, targetYear);
             if (val == null) return null;
