@@ -27,27 +27,29 @@ const formatPercentage = (value) => {
     return `${num >= 0 ? '+' : ''}${num.toFixed(1)}%`;
 };
 
-// Helper to derive recommendation from upside/target (matches ReportList.js logic)
-const getDerivedRec = (report) => {
-    const upside = report.recommendation?.upside || 0;
-    const targetPrice = report.recommendation?.target_price;
-
-    // If no target price, return "No Rating"
-    if (!targetPrice || targetPrice === 0) {
-        return 'No Rating';
-    }
-
-    // Standardize based on upside at call
-    if (upside >= 15) {
-        return 'Buy';
-    } else if (upside <= -5) {
-        return 'Sell';
-    } else {
-        return 'Neutral';
-    }
-};
 
 export default function UnifiedComparisonTable({ mode, currentReport, allReports, selectedYear }) {
+    // Helper to derive recommendation from upside/target (matches ReportList.js logic)
+    // Defined inside component to ensure safe access
+    const getDerivedRec = (report) => {
+        const upside = report.recommendation?.upside || 0;
+        const targetPrice = report.recommendation?.target_price;
+
+        // If no target price, return "No Rating"
+        if (!targetPrice || targetPrice === 0) {
+            return 'No Rating';
+        }
+
+        // Standardize based on upside at call
+        if (upside >= 15) {
+            return 'Buy';
+        } else if (upside <= -5) {
+            return 'Sell';
+        } else {
+            return 'Neutral';
+        }
+    };
+
     // Process data based on mode
     const tableData = useMemo(() => {
         if (!currentReport || !allReports) return null;
