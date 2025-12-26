@@ -1452,7 +1452,8 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                             <ReportDetailErrorBoundary key={selectedReport.id} reportData={selectedReport}>
                                 <>
                                     <h2 className="card-title text-xl" style={{ marginBottom: '12px' }}>
-                                        {selectedReport.info_of_report.organ_short_name || selectedReport.info_of_report.organ_name_en || selectedReport.info_of_report.covered_stock || selectedReport.info_of_report.ticker} ({selectedReport.info_of_report.exchange || 'HSX'}: {selectedReport.info_of_report.ticker})
+                                        {selectedReport.info_of_report.stock_name || selectedReport.info_of_report.covered_stock || selectedReport.info_of_report.ticker}
+                                        {selectedReport.info_of_report.exchange && ` (${selectedReport.info_of_report.exchange}: ${selectedReport.info_of_report.ticker})`}
                                     </h2>
                                     <div className="text-sm text-gray-400" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '5px', marginBottom: '12px' }}>
                                         {(() => {
@@ -1465,6 +1466,12 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
 
                                             return (
                                                 <>
+                                                    {selectedReport.info_of_report.sector && (
+                                                        <>
+                                                            <span className="text-gray-400">{selectedReport.info_of_report.sector}</span>
+                                                            <span className="text-gray-600">|</span>
+                                                        </>
+                                                    )}
                                                     <span style={{
                                                         ...recStyle,
                                                         padding: '3px 10px',
