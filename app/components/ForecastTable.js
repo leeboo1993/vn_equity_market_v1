@@ -196,7 +196,15 @@ export default function ForecastTable({ forecastData, reportDate }) {
                     } else if (isMetricBased) {
                         const metricRow = rows.find(row => row.metric === metricKey);
                         const originalIndex = columnMapping[colIndex];
-                        value = (metricRow && originalIndex !== undefined) ? metricRow.values[originalIndex] : null;
+
+                        // Try array format first
+                        if (metricRow && metricRow.values && Array.isArray(metricRow.values)) {
+                            value = (originalIndex !== undefined) ? metricRow.values[originalIndex] : null;
+                        } else if (metricRow && originalIndex !== undefined && columns[originalIndex + 1]) {
+                            // Flat object format - add 1 to originalIndex to skip header column
+                            const colName = columns[originalIndex + 1];
+                            value = metricRow[colName];
+                        }
                     }
 
                     if (value !== null && value !== undefined && value !== '') {
@@ -262,9 +270,11 @@ export default function ForecastTable({ forecastData, reportDate }) {
                 }
 
                 // Fallback to flat object format (row["2024F"] = value)
-                // Get the column name from original columns array
-                if (originalIndex !== undefined && columns[originalIndex]) {
-                    const colName = columns[originalIndex];
+                // Get the column name from originalcolumns array
+                // originalIndex is relative to data columns (excludes first header column)
+                // So we need to add 1 to get the actual column from the columns array
+                if (originalIndex !== undefined && columns[originalIndex + 1]) {
+                    const colName = columns[originalIndex + 1];
                     return metricRow[colName] !== undefined ? metricRow[colName] : null;
                 }
 
