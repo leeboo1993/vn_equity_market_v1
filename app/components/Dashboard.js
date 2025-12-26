@@ -388,7 +388,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
     const uniqueBrokers = useMemo(() => [...new Set(reports.map(r => r.info_of_report.issued_company))]
         .filter(b => b && b.length < 15) // Filter out messy data (long company names mistakenly in issuer field)
         .sort(), [reports]);
-    const uniqueSectors = useMemo(() => [...new Set(reports.map(r => r.info_of_report.sector))].sort(), [reports]);
+    const uniqueSectors = useMemo(() => [...new Set(reports.map(r => r.info_of_report.sector).filter(s => s && s.trim()))].sort(), [reports]);
 
     const uniqueQuarters = useMemo(() => {
         const set = new Set(reports.map(r => {
@@ -746,7 +746,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                     options={uniqueBrokers} value={filterBroker} onChange={setFilterBroker} placeholder="All brokers"
                 />
                 <CustomSelect
-                    options={uniqueSectors} value={filterSector} onChange={setFilterSector} placeholder="All sectors"
+                    options={uniqueSectors} value={filterSector} onChange={setFilterSector} placeholder="Peers"
                 />
                 <CustomSelect
                     options={uniqueQuarters} value={filterPeriod} onChange={setFilterPeriod} placeholder="All Periods"
