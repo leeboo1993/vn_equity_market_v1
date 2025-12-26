@@ -112,6 +112,15 @@ export default function ReportDetailClient({ report, allReports }) {
                         Details
                     </button>
                     <button
+                        onClick={() => setActiveTab('broker')}
+                        className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeTab === 'broker'
+                            ? 'bg-primary text-gray-900'
+                            : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                            }`}
+                    >
+                        Brokers
+                    </button>
+                    <button
                         onClick={() => setActiveTab('peers')}
                         className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeTab === 'peers'
                             ? 'bg-primary text-gray-900'
@@ -119,15 +128,6 @@ export default function ReportDetailClient({ report, allReports }) {
                             }`}
                     >
                         Peers
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('broker')}
-                        className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeTab === 'broker'
-                            ? 'bg-primary text-gray-900'
-                            : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                            }`}
-                    >
-                        Broker
                     </button>
                 </div>
             </div>
