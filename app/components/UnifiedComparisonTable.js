@@ -390,11 +390,11 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
             }}>
                 <table className="table" style={{ tableLayout: 'fixed', width: '100%', borderCollapse: 'collapse' }}>
                     <colgroup>
-                        <col style={{ width: '150px' }} /> {/* Metric column */}
+                        <col style={{ width: '150px' }} />
                         {tableData.columns.map((_, idx) => (
-                            <col key={idx} style={{ width: 'auto' }} /> {/* Data columns - equal width */ }
+                            <col key={idx} style={{ width: 'auto' }} />
                         ))}
-                        <col style={{ width: '80px' }} /> {/* Delta column */}
+                        <col style={{ width: '80px' }} />
                     </colgroup>
                     <thead>
                         <tr style={{
