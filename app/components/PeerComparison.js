@@ -118,7 +118,7 @@ export default function PeerComparison({ currentReport, allReports }) {
     return (
         <div className="card">
             <h3 className="text-xl font-semibold mb-4 text-purple-400">
-                Sector Peers: {peerData.sector} ({peerData.broker})
+                Peers: {peerData.sector} ({peerData.broker})
             </h3>
             <p className="text-sm text-gray-500 mb-4">
                 Comparing {peerData.peers.length} companies in the same sector from the same broker
