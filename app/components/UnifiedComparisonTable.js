@@ -231,19 +231,63 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
     // Determine target year for financial data
     const getAvailableForecastYears = (rep) => {
         if (!rep || !rep.forecast_table || !rep.forecast_table.columns) return [];
-        const allYears = rep.forecast_table.columns.filter(c => c.toString().match(/\d{4}/));
-        const parsedYears = allYears.map(y => ({
-            original: y,
-            numeric: parseInt(y.toString().replace(/\D/g, ''))
-        })).sort((a, b) => a.numeric - b.numeric);
-        const forecastYears = parsedYears.filter(y => y.numeric >= 2025);
-        if (forecastYears.length >= 4) {
-            return forecastYears.map(y => y.original);
+
+        // Get report date to determine which years are forecasts
+        const reportDate = rep.info_of_report?.date_of_issue || '250101'; // Default to 2025
+        const reportYear = 2000 + parseInt(reportDate.substring(0, 2));
+
+        // Helper to normalize year formats
+        const normalizeYear = (yearStr) => {
+            const str = yearStr.toString();
+
+            // Match patterns like "2025F", "2025", "12/25", "12-25"
+            const fourDigit = str.match(/(\d{4})/);
+            if (fourDigit) return fourDigit[1];
+
+            const twoDigit = str.match(/(\d{2})[\/-]?(\d{2})/);
+            if (twoDigit) return `20${twoDigit[2]}`;
+
+            return null;
+        };
+
+        // Get all years from columns and normalize them
+        const allYears = rep.forecast_table.columns
+            .map(c => {
+                const normalized = normalizeYear(c);
+                if (!normalized) return null;
+                return {
+                    original: c,
+                    normalized: normalized,
+                    numeric: parseInt(normalized)
+                };
+            })
+            .filter(y => y !== null && !isNaN(y.numeric))
+            .sort((a, b) => a.numeric - b.numeric);
+
+        // Get unique years (in case of duplicates)
+        const uniqueYears = [];
+        const seen = new Set();
+        for (const y of allYears) {
+            if (!seen.has(y.numeric)) {
+                seen.add(y.numeric);
+                uniqueYears.push(y);
+            }
         }
-        const historicalYears = parsedYears.filter(y => y.numeric < 2025).reverse();
+
+        // Filter forecast years (>= report year)
+        const forecastYears = uniqueYears.filter(y => y.numeric >= reportYear);
+
+        // If we have at least 4 forecast years, return them
+        if (forecastYears.length >= 4) {
+            return forecastYears.slice(0, 4).map(y => y.original);
+        }
+
+        // Otherwise, backfill with historical years
+        const historicalYears = uniqueYears.filter(y => y.numeric < reportYear).reverse();
         const neededHistorical = 4 - forecastYears.length;
         const backfillYears = historicalYears.slice(0, neededHistorical).reverse();
         const combined = [...backfillYears, ...forecastYears];
+
         return combined.map(y => y.original);
     };
 
