@@ -338,7 +338,6 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
         <div style={{ marginTop: '20px' }}>
             <div style={{
                 overflowX: 'auto',
-                border: '1px solid #333',
                 borderRadius: '8px'
             }}>
                 <table className="mini-table w-full relative border-collapse">
