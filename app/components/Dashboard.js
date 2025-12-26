@@ -1651,7 +1651,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                             </div>
 
                                             {/* Mode Selector - Always Visible */}
-                                            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '12px', marginBottom: '12px', marginTop: '12px', width: '100%' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', marginTop: '12px', width: '100%' }}>
                                                 <div style={{
                                                     backgroundColor: '#2C2C2E',
                                                     borderRadius: '10px',
@@ -1716,7 +1716,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                     </button>
                                                 </div>
 
-                                                {/* Forecast Year Selector */}
+                                                {/* Forecast Year Selector - Far Right */}
                                                 {(() => {
                                                     const getAvailableForecastYears = (rep) => {
                                                         if (!rep || !rep.forecast_table || !rep.forecast_table.columns) return [];
