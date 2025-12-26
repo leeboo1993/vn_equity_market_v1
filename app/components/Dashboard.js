@@ -1729,7 +1729,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                             )}
 
                                             {comparisonMode === 'historical' && (
-                                                <div className="overflow-x-auto">
+                                                <div className="overflow-x-auto mt-4">
                                                     {(() => {
                                                         try {
                                                             // 1. Get Comparisons
