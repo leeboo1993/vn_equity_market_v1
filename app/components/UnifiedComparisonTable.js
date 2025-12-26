@@ -548,11 +548,11 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                 color: '#4ade80'
                             }}>Metric</th>
                             {tableData.columns.map((col, idx) => (
-                                <th key={idx} style={{ textAlign: 'center' }}>
+                                <th key={idx} style={{ textAlign: 'center', color: '#4ade80' }}>
                                     {tableData.getColumnHeader(col)}
                                 </th>
                             ))}
-                            {showLastCol && <th style={{ textAlign: 'center' }}>{lastColLabel}</th>}
+                            {showLastCol && <th style={{ textAlign: 'center', color: '#4ade80' }}>{lastColLabel}</th>}
                         </tr>
                     </thead>
 
