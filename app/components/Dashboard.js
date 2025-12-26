@@ -1303,7 +1303,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                 {/* COLUMN 2 */}
                 <section className="column">
                     <div className="card">
-                        <div className="flex items-center justify-between gap-4 mb-4" style={{ display: 'flex' }}>
+                        <div className="mb-4" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
                             <h2 className="card-title mb-0" style={{ fontSize: '12px' }}>Company reports</h2>
                             <label className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity">
                                 <input
