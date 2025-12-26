@@ -154,7 +154,7 @@ export default function BrokerComparison({ currentReport, allReports }) {
         <div style={{ marginTop: '20px', overflowX: 'auto', border: '1px solid #333', borderRadius: '8px' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
                 <thead>
-                    <tr style={{ backgroundColor: '#1a1a1a', position: 'sticky', top: 0, zIndex: 20 }}>
+                    <tr style={{ backgroundColor: '#1a1a1a', position: 'sticky', top: '104px', zIndex: 20 }}>
                         <th style={{
                             padding: '8px 10px',
                             textAlign: 'left',
@@ -164,7 +164,7 @@ export default function BrokerComparison({ currentReport, allReports }) {
                             color: '#00ff7f',
                             position: 'sticky',
                             left: 0,
-                            top: 0,
+                            top: '104px',
                             backgroundColor: '#1a1a1a',
                             zIndex: 30
                         }}>
