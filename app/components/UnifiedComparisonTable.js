@@ -52,8 +52,25 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                 } else {
                     const existingDate = existing.info_of_report?.date_of_issue || '000000';
                     const currentDate = report.info_of_report?.date_of_issue || '000000';
-                    if (currentDate > existingDate) {
+
+                    const getRec = (r) => r.recommendation?.call;
+                    const isValid = (r) => {
+                        const rec = getRec(r);
+                        return rec && rec.toLowerCase() !== 'no rating';
+                    };
+
+                    const existingValid = isValid(existing);
+                    const currentValid = isValid(report);
+
+                    if (currentValid && !existingValid) {
                         brokerMap.set(broker, report);
+                    } else if (existingValid && !currentValid) {
+                        // Keep existing
+                    } else {
+                        // Both valid or both invalid - sort by date
+                        if (currentDate > existingDate) {
+                            brokerMap.set(broker, report);
+                        }
                     }
                 }
             });
@@ -100,8 +117,25 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                 } else {
                     const existingDate = existing.info_of_report?.date_of_issue || '000000';
                     const currentDate = report.info_of_report?.date_of_issue || '000000';
-                    if (currentDate > existingDate) {
+
+                    const getRec = (r) => r.recommendation?.call;
+                    const isValid = (r) => {
+                        const rec = getRec(r);
+                        return rec && rec.toLowerCase() !== 'no rating';
+                    };
+
+                    const existingValid = isValid(existing);
+                    const currentValid = isValid(report);
+
+                    if (currentValid && !existingValid) {
                         tickerMap.set(ticker, report);
+                    } else if (existingValid && !currentValid) {
+                        // Keep existing
+                    } else {
+                        // Both valid or both invalid - sort by date
+                        if (currentDate > existingDate) {
+                            tickerMap.set(ticker, report);
+                        }
                     }
                 }
             });
