@@ -4,6 +4,8 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import ForecastTable from './ForecastTable';
+import BrokerComparison from './BrokerComparison';
+import PeerComparison from './PeerComparison';
 import ReportDetailErrorBoundary from './ReportDetailErrorBoundary';
 import Header from './Header';
 
