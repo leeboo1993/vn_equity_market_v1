@@ -746,7 +746,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                     options={uniqueBrokers} value={filterBroker} onChange={setFilterBroker} placeholder="All brokers"
                 />
                 <CustomSelect
-                    options={uniqueSectors} value={filterSector} onChange={setFilterSector} placeholder="Peers"
+                    options={uniqueSectors} value={filterSector} onChange={setFilterSector} placeholder="All sectors"
                 />
                 <CustomSelect
                     options={uniqueQuarters} value={filterPeriod} onChange={setFilterPeriod} placeholder="All Periods"
