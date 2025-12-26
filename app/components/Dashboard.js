@@ -4,6 +4,7 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import ForecastTable from './ForecastTable';
+import UnifiedComparisonTable from './UnifiedComparisonTable';
 import BrokerComparison from './BrokerComparison';
 import PeerComparison from './PeerComparison';
 import ReportDetailErrorBoundary from './ReportDetailErrorBoundary';
@@ -1716,20 +1717,19 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                 </div>
                                             </div>
 
-                                            {comparisonMode === 'peers' && (
-                                                <div className="mt-4">
-                                                    <PeerComparison currentReport={selectedReport} allReports={reports} />
-                                                </div>
-                                            )}
-
-                                            {comparisonMode === 'brokers' && (
-                                                <div className="mt-4">
-                                                    <BrokerComparison currentReport={selectedReport} allReports={reports} />
-                                                </div>
-                                            )}
+                                            {/* Unified Comparison Table */}
+                                            <div className="mt-4">
+                                                <UnifiedComparisonTable
+                                                    mode={comparisonMode}
+                                                    currentReport={selectedReport}
+                                                    allReports={reports}
+                                                />
+                                            </div>
 
                                             {comparisonMode === 'historical' && (
-                                                <div className="overflow-x-auto mt-4">
+                                                <div className="overflow-x-auto mt-4" style={{ display: 'none' }}>
+                                                    {/* Old historical rendering kept for reference but hidden */}
+
                                                     {(() => {
                                                         try {
                                                             // 1. Get Comparisons
