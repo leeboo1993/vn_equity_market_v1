@@ -404,13 +404,13 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                             backgroundColor: '#1E1E1E',
                             borderBottom: '1px solid #333'
                         }}>
-                            <th style={{ padding: '2px 8px', textAlign: 'left' }}>Metric</th>
+                            <th style={{ textAlign: 'left' }}>Metric</th>
                             {tableData.columns.map((col, idx) => (
-                                <th key={idx} style={{ padding: '2px 8px', textAlign: 'center' }}>
+                                <th key={idx} style={{ textAlign: 'center' }}>
                                     {tableData.getColumnHeader(col)}
                                 </th>
                             ))}
-                            <th style={{ padding: '2px 8px', textAlign: 'center' }}>Δ</th>
+                            <th style={{ textAlign: 'center' }}>Δ</th>
                         </tr>
                     </thead>
 
@@ -423,17 +423,16 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                     left: 0,
                                     backgroundColor: '#1E1E1E',
                                     zIndex: 10,
-                                    padding: '2px 8px',
                                     textAlign: 'left'
                                 }}>
                                     Date
                                 </td>
                                 {tableData.columns.map((col, colIdx) => (
-                                    <td key={colIdx} style={{ padding: '2px 8px', textAlign: 'center' }}>
+                                    <td key={colIdx} style={{ textAlign: 'center' }}>
                                         {formatDate(col.info_of_report?.date_of_issue)}
                                     </td>
                                 ))}
-                                <td style={{ padding: '2px 8px', textAlign: 'center' }}>-</td>
+                                <td style={{ textAlign: 'center' }}>-</td>
                             </tr>
                         )}
 
@@ -463,7 +462,6 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                         left: 0,
                                         backgroundColor: '#1E1E1E',
                                         zIndex: 10,
-                                        padding: '2px 8px',
                                         textAlign: 'left'
                                     }}>
                                         {metric.label}
@@ -474,7 +472,7 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                         if (isRec) {
                                             const style = getRecommendationStyle(value);
                                             return (
-                                                <td key={colIdx} style={{ padding: '2px 8px', textAlign: 'center' }}>
+                                                <td key={colIdx} style={{ textAlign: 'center' }}>
                                                     <span style={{
                                                         backgroundColor: style.bg,
                                                         color: style.color,
@@ -492,12 +490,12 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                         }
 
                                         return (
-                                            <td key={colIdx} style={{ padding: '2px 8px', textAlign: 'center' }}>
+                                            <td key={colIdx} style={{ textAlign: 'center' }}>
                                                 {value || '-'}
                                             </td>
                                         );
                                     })}
-                                    <td style={{ padding: '2px 8px', textAlign: 'center' }}>{delta || '-'}</td>
+                                    <td style={{ textAlign: 'center' }}>{delta || '-'}</td>
                                 </tr>
                             );
                         })}
