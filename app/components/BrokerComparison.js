@@ -151,42 +151,20 @@ export default function BrokerComparison({ currentReport, allReports }) {
                 border: '1px solid #333',
                 borderRadius: '8px'
             }}>
-                <table style={{
-                    width: 'auto',
-                    borderCollapse: 'collapse',
-                    fontSize: '10px'
-                }}>
+                <table className="mini-table w-full relative border-collapse">
                     {/* Header row */}
                     <thead>
                         <tr style={{
-                            backgroundColor: '#1a1a1a',
                             position: 'sticky',
                             top: 0,
-                            zIndex: 10
+                            zIndex: 10,
+                            backgroundColor: '#1E1E1E'
                         }}>
-                            <th style={{
-                                padding: '8px 10px',
-                                textAlign: 'left',
-                                borderBottom: '2px solid #333',
-                                fontWeight: 'bold',
-                                color: '#fff',
-                                width: 'auto',
-                                whiteSpace: 'nowrap'
-                            }}>
-                                Metric
-                            </th>
+                            <th>Metric</th>
                             {brokerData.brokers.map((broker, idx) => {
                                 const brokerName = broker.info_of_report?.issued_company;
                                 return (
-                                    <th key={idx} style={{
-                                        padding: '8px 10px',
-                                        textAlign: 'right',
-                                        borderBottom: '2px solid #333',
-                                        borderLeft: '1px solid #333',
-                                        fontWeight: 'bold',
-                                        color: '#00ff7f',
-                                        minWidth: '90px'
-                                    }}>
+                                    <th key={idx}>
                                         {brokerName}
                                     </th>
                                 );
@@ -199,17 +177,11 @@ export default function BrokerComparison({ currentReport, allReports }) {
                             const isRec = metric.key === 'recommendation';
 
                             return (
-                                <tr key={metric.key} style={{
-                                    backgroundColor: metricIdx % 2 === 0 ? '#0a0a0a' : '#121212'
-                                }}>
+                                <tr key={metric.key}>
                                     <td style={{
-                                        padding: '6px 10px',
-                                        color: '#ddd',
-                                        borderBottom: '1px solid #1a1a1a',
-                                        whiteSpace: 'nowrap',
                                         position: 'sticky',
                                         left: 0,
-                                        backgroundColor: metricIdx % 2 === 0 ? '#0a0a0a' : '#121212',
+                                        backgroundColor: '#1E1E1E',
                                         zIndex: 10
                                     }}>
                                         {metric.label}
@@ -235,9 +207,8 @@ export default function BrokerComparison({ currentReport, allReports }) {
                                                         padding: '4px 12px',
                                                         borderRadius: '6px',
                                                         fontWeight: 'bold',
-                                                        fontSize: '11px',
-                                                        display: 'inline-block',
-                                                        fontFamily: 'inherit'
+                                                        fontSize: '10px',
+                                                        display: 'inline-block'
                                                     }}>
                                                         {value}
                                                     </span>
@@ -246,14 +217,7 @@ export default function BrokerComparison({ currentReport, allReports }) {
                                         }
 
                                         return (
-                                            <td key={brokerIdx} style={{
-                                                padding: '6px 10px',
-                                                textAlign: 'right',
-                                                color: '#ccc',
-                                                borderLeft: '1px solid #1a1a1a',
-                                                borderBottom: '1px solid #1a1a1a',
-                                                fontFamily: 'monospace'
-                                            }}>
+                                            <td key={brokerIdx}>
                                                 {value}
                                             </td>
                                         );
