@@ -76,15 +76,6 @@ export default function PeerComparison({ currentReport, allReports }) {
         return num.toLocaleString();
     };
 
-    const getPerfColorClass = (value) => {
-        if (value == null || value === '-' || value === '') return 'text-white';
-        const num = parseFloat(value);
-        if (isNaN(num)) return 'text-white';
-        if (num > 0.5) return 'text-[#00ff7f]'; // Green
-        if (num < -0.5) return 'text-[#ff6666]'; // Red
-        return 'text-gray-500';
-    };
-
     const getRecommendationStyle = (rec) => {
         const r = (rec || '').toLowerCase();
         if (['buy', 'outperform', 'add', 'accumulate', 'overweight'].some(k => r.includes(k))) return { bg: '#00ff7f', color: 'black' };
@@ -93,10 +84,15 @@ export default function PeerComparison({ currentReport, allReports }) {
         return { bg: 'transparent', color: 'gray', border: '1px solid #3A3A3C' };
     };
 
-    // Define metrics to display
+    const formatDate = (dateStr) => {
+        if (!dateStr || dateStr.length !== 6) return dateStr;
+        return `${dateStr.substring(4, 6)}/${dateStr.substring(2, 4)}/20${dateStr.substring(0, 2)}`;
+    };
+
+    // Define metrics to display - Date is now first
     const metrics = [
-        { key: 'ticker', label: 'Company', accessor: r => r.info_of_report?.ticker || '-' },
-        { key: 'recommendation', label: 'Recommendation', accessor: r => r.recommendation?.recommendation || '-' },
+        { key: 'date', label: 'Date', accessor: r => formatDate(r.info_of_report?.date_of_issue) },
+        { key: 'recommendation', label: 'Recommendation', accessor: r => r.recommendation?.recommendation || 'No Rating' },
         { key: 'target_price', label: 'Target Price', accessor: r => safeLocaleString(r.recommendation?.target_price) },
         {
             key: 'upside_at_call', label: 'Upside at call', accessor: r => {
@@ -165,7 +161,7 @@ export default function PeerComparison({ currentReport, allReports }) {
                             borderBottom: '2px solid #333',
                             borderRight: '1px solid #333',
                             fontWeight: 'bold',
-                            color: '#00ff7f',
+                            color: '#fff',
                             position: 'sticky',
                             left: 0,
                             top: '104px',
@@ -185,13 +181,7 @@ export default function PeerComparison({ currentReport, allReports }) {
                                 minWidth: '120px',
                                 backgroundColor: '#1a1a1a'
                             }}>
-                                <div>
-                                    {(() => {
-                                        const d = peer.info_of_report?.date_of_issue;
-                                        if (!d || d.length !== 6) return d;
-                                        return `${d.substring(4, 6)}/${d.substring(2, 4)}/20${d.substring(0, 2)}`;
-                                    })()}
-                                </div>
+                                {peer.info_of_report?.ticker}
                             </th>
                         ))}
                     </tr>
@@ -232,9 +222,8 @@ export default function PeerComparison({ currentReport, allReports }) {
                                                 borderRadius: '6px',
                                                 fontWeight: 'bold',
                                                 fontSize: '11px',
-                                                display: 'block',
-                                                width: '100%',
-                                                textAlign: 'center'
+                                                display: 'inline-block',
+                                                minWidth: '80px'
                                             }}>
                                                 {value}
                                             </span>
@@ -248,7 +237,7 @@ export default function PeerComparison({ currentReport, allReports }) {
                                         textAlign: 'center',
                                         borderLeft: '1px solid #1a1a1a',
                                         borderBottom: '1px solid #1a1a1a',
-                                        color: '#ccc',
+                                        color: metric.key === 'date' ? '#00ff7f' : '#ccc',
                                         fontFamily: 'monospace',
                                         fontSize: '11px'
                                     }}>
