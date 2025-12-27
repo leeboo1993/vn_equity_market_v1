@@ -431,15 +431,23 @@ export default function DailyTrackingPage() {
                         }
                     }
 
-                    // Filter out generic "The stock is expected to provide a total return of X% within Y months" pattern
+                    // Filter out generic "The stock is expected to provide a total return of X% within Y months" sentence
+                    // But keep the row if there's other meaningful content
                     let meaningfulSummary = investmentSummary;
                     if (meaningfulSummary) {
-                        // Check if the ENTIRE summary is just the generic phrase (with minor variations)
-                        const normalized = meaningfulSummary.toLowerCase().trim();
-                        // If it contains this phrase, it's likely just a generic statement
-                        if (normalized.includes('the stock is expected to provide a total return of')) {
-                            meaningfulSummary = ''; // Clear it completely
-                        }
+                        // Split by sentences and filter out the generic one
+                        meaningfulSummary = meaningfulSummary
+                            .split('.')
+                            .filter(sentence => {
+                                const normalized = sentence.toLowerCase().trim();
+                                // Skip empty sentences or the generic "expected to provide a total return" sentence
+                                if (!normalized) return false;
+                                return !normalized.includes('the stock is expected to provide a total return of');
+                            })
+                            .join('. ')
+                            .trim();
+                        // Clean up any leading/trailing periods
+                        meaningfulSummary = meaningfulSummary.replace(/^\.+|\.+$/g, '').trim();
                     }
 
                     // Check if summary has enough words (>10 words to be useful) AFTER filtering
