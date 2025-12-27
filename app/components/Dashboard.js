@@ -178,7 +178,7 @@ const getTickerCallsSummary = (ticker, reports) => {
 
     // Return JSX for colored display - no separators, more compact
     const element = (
-        <span style={{ fontSize: '0.75rem' }}>
+        <span style={{ fontSize: '10px', fontWeight: 'bold' }}>
             <span style={{ color: '#00ff7f' }}>{buy}▲</span>
             <span style={{ color: '#666' }}> {hold}○ </span>
             <span style={{ color: '#ff6666' }}>{sell}▼</span>
