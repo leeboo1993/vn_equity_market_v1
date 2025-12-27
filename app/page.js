@@ -192,7 +192,7 @@ const filterGenericRecommendations = (text) => {
     // Array of generic patterns to remove (case-insensitive)
     const genericPatterns = [
         // Pattern 1: "The stock is expected to provide a total return of X% within Y months/year"
-        /The stock is expected to provide a total return of[^.]*?(months?|years?)\\.?/gi,
+        /The stock is expected to provide a total return of.+?within.+?(month|year)/gi,
 
         // Pattern 2: "We maintain our [RATING] recommendation for [TICKER] with a target price of [PRICE]"
         /We maintain our \w+ recommendation for \w+ (?:stock )?with a (?:target price of|target price at)[^.]*?\\.?/gi,
