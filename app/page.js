@@ -465,7 +465,7 @@ export default function DailyTrackingPage() {
                             ...rec,
                             broker: brokerName,
                             date: reportDate,
-                            investmentSummary,
+                            investmentSummary: meaningfulSummary, // Use filtered version
                             forecast
                         });
                     }
