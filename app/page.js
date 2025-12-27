@@ -431,12 +431,17 @@ export default function DailyTrackingPage() {
                         }
                     }
 
-                    // Filter out generic "The stock is expected to provide a total return of" text
+                    // Filter out generic "The stock is expected to provide a total return of X% within Y months" pattern
                     let meaningfulSummary = investmentSummary;
                     if (meaningfulSummary) {
                         meaningfulSummary = meaningfulSummary
                             .split('.')
-                            .filter(sentence => !sentence.toLowerCase().includes('the stock is expected to provide a total return of'))
+                            .filter(sentence => {
+                                const normalized = sentence.toLowerCase().trim();
+                                // Match pattern: "the stock is expected to provide a total return of X% within Y months"
+                                const genericPattern = /the stock is expected to provide a total return of.*?%.*?within.*?months/i;
+                                return !genericPattern.test(normalized);
+                            })
                             .join('.')
                             .trim();
                         meaningfulSummary = meaningfulSummary.replace(/^\.+|\.+$/g, '').trim();
@@ -1066,13 +1071,18 @@ export default function DailyTrackingPage() {
                                                     </td>
                                                     <td className="thesis-cell" style={{ verticalAlign: 'top' }}>
                                                         {(() => {
-                                                            // Filter out generic "The stock is expected to provide a total return of" text
+                                                            // Filter out generic "The stock is expected to provide a total return of X% within Y months" pattern
                                                             let filteredSummary = rec.investmentSummary;
                                                             if (filteredSummary) {
                                                                 // Remove sentences containing the generic phrase
                                                                 filteredSummary = filteredSummary
                                                                     .split('.')
-                                                                    .filter(sentence => !sentence.toLowerCase().includes('the stock is expected to provide a total return of'))
+                                                                    .filter(sentence => {
+                                                                        const normalized = sentence.toLowerCase().trim();
+                                                                        // Match pattern: "the stock is expected to provide a total return of X% within Y months"
+                                                                        const genericPattern = /the stock is expected to provide a total return of.*?%.*?within.*?months/i;
+                                                                        return !genericPattern.test(normalized);
+                                                                    })
                                                                     .join('.')
                                                                     .trim();
                                                                 // Clean up any leading/trailing periods
