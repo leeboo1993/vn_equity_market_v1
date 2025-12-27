@@ -1053,19 +1053,38 @@ export default function DailyTrackingPage() {
                                                     <td style={{ textAlign: 'center' }}>
                                                         {rec.performance !== null && !isNaN(rec.performance) ? `${rec.performance.toFixed(1)}%` : '-'}
                                                     </td>
-                                                    <td className="thesis-cell">
-                                                        {rec.investmentSummary && (
-                                                            <div className="investment-summary">
-                                                                <div className="summary-title">Investment summary</div>
-                                                                <div className="summary-text">{rec.investmentSummary}</div>
-                                                            </div>
-                                                        )}
-                                                        {rec.forecast && (
-                                                            <div className="investment-summary" style={{ marginTop: rec.investmentSummary ? '8px' : '0' }}>
-                                                                <div className="summary-title">Forecast</div>
-                                                                <div className="summary-text">{typeof rec.forecast === 'object' ? JSON.stringify(rec.forecast) : rec.forecast}</div>
-                                                            </div>
-                                                        )}
+                                                    <td className="thesis-cell" style={{ verticalAlign: 'top' }}>
+                                                        {(() => {
+                                                            // Filter out generic "The stock is expected to provide a total return of" text
+                                                            let filteredSummary = rec.investmentSummary;
+                                                            if (filteredSummary) {
+                                                                // Remove sentences containing the generic phrase
+                                                                filteredSummary = filteredSummary
+                                                                    .split('.')
+                                                                    .filter(sentence => !sentence.toLowerCase().includes('the stock is expected to provide a total return of'))
+                                                                    .join('.')
+                                                                    .trim();
+                                                                // Clean up any leading/trailing periods
+                                                                filteredSummary = filteredSummary.replace(/^\.+|\.+$/g, '').trim();
+                                                            }
+
+                                                            return (
+                                                                <>
+                                                                    {filteredSummary && filteredSummary.length > 10 && (
+                                                                        <div className="investment-summary">
+                                                                            <div className="summary-title">Investment summary</div>
+                                                                            <div className="summary-text">{filteredSummary}</div>
+                                                                        </div>
+                                                                    )}
+                                                                    {rec.forecast && (
+                                                                        <div className="investment-summary" style={{ marginTop: filteredSummary ? '8px' : '0' }}>
+                                                                            <div className="summary-title">Forecast</div>
+                                                                            <div className="summary-text">{typeof rec.forecast === 'object' ? JSON.stringify(rec.forecast) : rec.forecast}</div>
+                                                                        </div>
+                                                                    )}
+                                                                </>
+                                                            );
+                                                        })()}
                                                     </td>
                                                 </tr>
                                             );
