@@ -621,23 +621,56 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                     lastColVal = ''; // No average for upsides/rec/target price
                                 }
                             } else if (mode === 'historical') {
-                                if (metric.isFinancial) { // calculate delta for financial
-                                    // Re-implement simplified delta for financials here or use helper if needed
-                                    // User didn't specify exact delta logic for financials in historical, but standard is Growth %
-                                    // Assuming we keep existing behavior OR default to - if unsure.
-                                    // Existing helper was targeted at TP/Upside.
-                                    // Let's perform simple growth from Previous to Latest column for Financials
+                                // Calculate delta (growth %) for Financials AND Target Price
+                                // Exclude Recommendation, Upside, Perf
+                                const deltaMetrics = ['target_price', 'revenue', 'npat', 'net_revenue', 'total_operating_income', 'profit_before_tax', 'net_profit', 'eps', 'bvps', 'pe', 'pb'];
+
+                                if (deltaMetrics.includes(metric.key) || metric.isFinancial) {
                                     const cols = tableData.columns;
                                     if (cols.length >= 2) {
-                                        const curr = getFinancialsForYear(cols[cols.length - 1], metric.key, targetYear);
-                                        const prev = getFinancialsForYear(cols[cols.length - 2], metric.key, targetYear);
-                                        if (curr != null && prev != null && prev !== 0) {
-                                            const change = ((curr - prev) / Math.abs(prev)) * 100;
-                                            lastColVal = formatPercentage(change);
+                                        // 1. Get Current Value (from very last column)
+                                        const lastCol = cols[cols.length - 1];
+                                        const currVal = getValue(lastCol, metric.key, metric.isFinancial);
+
+                                        // Parse current value (remove commas if formatted string, handle Numbers)
+                                        const parseVal = (v) => {
+                                            if (typeof v === 'number') return v;
+                                            if (typeof v === 'string') {
+                                                // Remove commas and try parse
+                                                const clean = v.replace(/,/g, '');
+                                                return parseFloat(clean);
+                                            }
+                                            return null;
+                                        };
+
+                                        const currNum = parseVal(currVal);
+
+                                        // 2. Find most recent previous valid value
+                                        let prevNum = null;
+                                        // Iterate backwards from 2nd to last column
+                                        for (let i = cols.length - 2; i >= 0; i--) {
+                                            const col = cols[i];
+                                            const val = getValue(col, metric.key, metric.isFinancial);
+                                            const num = parseVal(val);
+
+                                            // Check if valid number (not null, not NaN, and for our purposes usually not 0 unless comparing to 0 is valid, but mostly we want non-zero to divide)
+                                            if (num != null && !isNaN(num)) {
+                                                prevNum = num;
+                                                break; // Found the most recent!
+                                            }
+                                        }
+
+                                        // 3. Calculate % Change
+                                        if (currNum != null && !isNaN(currNum) && prevNum != null && !isNaN(prevNum) && prevNum !== 0) {
+                                            const change = ((currNum - prevNum) / Math.abs(prevNum)) * 100;
+                                            // Add + sign for positive, 1 decimal place
+                                            lastColVal = (change > 0 ? '+' : '') + change.toFixed(1) + '%';
+
+                                            // Color code the delta? usually handled in render, currently just text
                                         }
                                     }
                                 } else {
-                                    lastColVal = ''; // No delta for Rec/Upside/Perf in Historical
+                                    lastColVal = ''; // No delta for Rec/Upside/Perf
                                 }
                             }
 
