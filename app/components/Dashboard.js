@@ -445,7 +445,13 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
             if (shouldFilterTargets) {
                 const tp = r.recommendation?.target_price;
                 const numericTp = Number(tp);
-                mTarget = tp != null && !isNaN(numericTp) && numericTp > 0;
+                const hasTP = tp != null && !isNaN(numericTp) && numericTp > 0;
+
+                const cp = r.recommendation?.price_now;
+                const numericCp = Number(cp);
+                const hasCP = cp != null && !isNaN(numericCp) && numericCp > 0;
+
+                mTarget = hasTP && hasCP;
             }
 
             return mTicker && mBroker && mSector && mPeriod && mTarget;
