@@ -516,6 +516,13 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
             const avg = sum / count;
 
             if (metricKey === 'pe' || metricKey === 'pb') return avg.toFixed(1);
+
+            // Round large financial numbers to 0 decimal places
+            const largeMetrics = ['revenue', 'npat', 'net_revenue', 'total_operating_income', 'profit_before_tax', 'net_profit'];
+            if (largeMetrics.includes(metricKey)) {
+                return formatNumber(Math.round(avg));
+            }
+
             return formatNumber(avg); // Use standard formatting
         }
 
