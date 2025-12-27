@@ -431,8 +431,19 @@ export default function DailyTrackingPage() {
                         }
                     }
 
-                    // Check if summary has enough words (>10 words to be useful)
-                    const summaryWordCount = investmentSummary.trim().split(/\s+/).filter(w => w.length > 0).length;
+                    // Filter out generic "The stock is expected to provide a total return of" text
+                    let meaningfulSummary = investmentSummary;
+                    if (meaningfulSummary) {
+                        meaningfulSummary = meaningfulSummary
+                            .split('.')
+                            .filter(sentence => !sentence.toLowerCase().includes('the stock is expected to provide a total return of'))
+                            .join('.')
+                            .trim();
+                        meaningfulSummary = meaningfulSummary.replace(/^\.+|\.+$/g, '').trim();
+                    }
+
+                    // Check if summary has enough words (>10 words to be useful) AFTER filtering
+                    const summaryWordCount = meaningfulSummary.trim().split(/\s+/).filter(w => w.length > 0).length;
                     const hasValidSummary = summaryWordCount > 10;
 
                     // Must have ticker, target_price, and a valid summary (forecast alone not enough)
