@@ -180,6 +180,69 @@ const shouldExcludeNewsItem = (text, category) => {
     return false;
 };
 
+/**
+ * Filter out generic recommendation text patterns from investment summaries
+ * Returns: { filteredText: string, hasMeaningfulContent: boolean }
+ */
+const filterGenericRecommendations = (text) => {
+    if (!text) return { filteredText: '', hasMeaningfulContent: false };
+
+    let filtered = text;
+
+    // Array of generic patterns to remove (case-insensitive)
+    const genericPatterns = [
+        // Pattern 1: "The stock is expected to provide a total return of X% within Y months/year"
+        /The stock is expected to provide a total return of[^.]*?(months?|years?)\\.?/gi,
+
+        // Pattern 2: "We maintain our [RATING] recommendation for [TICKER] with a target price of [PRICE]"
+        /We maintain our \w+ recommendation for \w+ (?:stock )?with a (?:target price of|target price at)[^.]*?\\.?/gi,
+
+        // Pattern 3: "We currently have a [RATING] recommendation for [TICKER] stock with a target price of [PRICE]"
+        /We currently have a \w+ recommendation for \w+ (?:stock )?with a (?:target price of|target price at)[^.]*?\\.?/gi,
+
+        // Pattern 4: "Maintain [RATING] recommendation for [TICKER] shares with a [DATE] target price of [PRICE]"
+        /Maintain \w+ recommendation for \w+ (?:shares?|stock) with a[^.]*?target price[^.]*?\\.?/gi,
+
+        // Pattern 5: "[RATING] recommendation based on enterprise valuation"
+        /\w+ recommendation based on (?:enterprise )?valuation\\.?/gi,
+
+        // Pattern 6: "We recommend [RATING] for [TICKER] with target price [PRICE]"
+        /We recommend \w+ for \w+ (?:stock )?with (?:a )?target price[^.]*?\\.?/gi,
+
+        // Pattern 7: Vietnamese patterns - "Chúng tôi duy trì khuyến nghị [RATING]..."
+        /Chúng tôi duy trì khuyến nghị \w+ (?:cho cổ phiếu )?\w+ với giá mục tiêu[^.]*?\\.?/gi,
+
+        // Pattern 8: "Our [RATING] rating is based on..."
+        /Our \w+ rating is based on[^.]*?\\.?/gi,
+
+        // Pattern 9: Generic "Target price: [PRICE]" standalone sentences
+        /(?:^|\.\s+)Target price:\s*[^.]*?\\.?/gi,
+
+        // Pattern 10: "We initiate coverage with [RATING] recommendation"
+        /We initiate coverage (?:on \w+ )?with (?:a )?\w+ recommendation[^.]*?\\.?/gi
+    ];
+
+    // Apply all patterns
+    genericPatterns.forEach(pattern => {
+        filtered = filtered.replace(pattern, '');
+    });
+
+    // Clean up: remove extra spaces, leading/trailing punctuation
+    filtered = filtered
+        .replace(/\s+/g, ' ')  // Normalize whitespace
+        .replace(/^[\s.,;:]+|[\s.,;:]+$/g, '')  // Remove leading/trailing punctuation
+        .trim();
+
+    // Check if there's meaningful content left (more than 10 words)
+    const wordCount = filtered.split(/\s+/).filter(w => w.length > 0).length;
+    const hasMeaningfulContent = wordCount > 10;
+
+    return {
+        filteredText: filtered,
+        hasMeaningfulContent
+    };
+};
+
 export default function DailyTrackingPage() {
     const [dailyData, setDailyData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -431,24 +494,14 @@ export default function DailyTrackingPage() {
                         }
                     }
 
-                    // Filter out generic "The stock is expected to provide a total return of X% within Y months" sentence
-                    // But keep the row if there's other meaningful content
-                    let meaningfulSummary = investmentSummary || '';
-                    if (meaningfulSummary) {
-                        // Remove the generic sentence using regex (handles with/without periods)
-                        meaningfulSummary = meaningfulSummary
-                            .replace(/The stock is expected to provide a total return of[^.]*?(months|year)\.?/gi, '')
-                            .trim();
-                        // Clean up any leftover punctuation or whitespace
-                        meaningfulSummary = meaningfulSummary.replace(/^\s*[.,;:]\s*|\s*[.,;:]\s*$/g, '').trim();
-                    }
+                    // Use the new comprehensive filter function
+                    const filterResult = filterGenericRecommendations(investmentSummary);
+                    const meaningfulSummary = filterResult.filteredText;
+                    const hasMeaningfulContent = filterResult.hasMeaningfulContent;
 
-                    // Check if summary has enough words (>10 words to be useful) AFTER filtering
-                    const summaryWordCount = meaningfulSummary.trim().split(/\s+/).filter(w => w.length > 0).length;
-                    const hasValidSummary = summaryWordCount > 10;
-
-                    // Must have ticker, target_price, and a valid summary (forecast alone not enough)
-                    const hasContent = hasValidSummary;
+                    // Must have ticker, target_price, and EITHER meaningful summary OR forecast
+                    // If the summary only contained generic text (hasMeaningfulContent=false), we need forecast to keep it
+                    const hasContent = hasMeaningfulContent || (forecast && forecast.length > 0);
 
                     if (rec.ticker && rec.target_price && hasContent) {
                         const reportDate = r.info_of_report?.date_of_issue;
@@ -1067,16 +1120,10 @@ export default function DailyTrackingPage() {
                                                     </td>
                                                     <td className="thesis-cell" style={{ verticalAlign: 'top' }}>
                                                         {(() => {
-                                                            // Filter out generic stock return sentence using regex
-                                                            let filteredSummary = rec.investmentSummary || '';
-                                                            if (filteredSummary) {
-                                                                // Remove the generic sentence using regex
-                                                                filteredSummary = filteredSummary
-                                                                    .replace(/The stock is expected to provide a total return of[^.]*?(months|year)\.?/gi, '')
-                                                                    .trim();
-                                                                // Clean up any leftover punctuation or whitespace
-                                                                filteredSummary = filteredSummary.replace(/^\s*[.,;:]\s*|\s*[.,;:]\s*$/g, '').trim();
-                                                            }
+                                                            // The data is already filtered in processing, but we apply the filter again for consistency
+                                                            // This also handles any edge cases where data might bypass the processing filter
+                                                            const filterResult = filterGenericRecommendations(rec.investmentSummary || '');
+                                                            const filteredSummary = filterResult.filteredText;
 
                                                             return (
                                                                 <>
