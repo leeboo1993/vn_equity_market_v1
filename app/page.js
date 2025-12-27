@@ -1067,22 +1067,15 @@ export default function DailyTrackingPage() {
                                                     </td>
                                                     <td className="thesis-cell" style={{ verticalAlign: 'top' }}>
                                                         {(() => {
-                                                            // Filter out generic "The stock is expected to provide a total return of X% within Y months" pattern
-                                                            let filteredSummary = rec.investmentSummary;
+                                                            // Filter out generic stock return sentence using regex
+                                                            let filteredSummary = rec.investmentSummary || '';
                                                             if (filteredSummary) {
-                                                                // Remove sentences containing the generic phrase
+                                                                // Remove the generic sentence using regex
                                                                 filteredSummary = filteredSummary
-                                                                    .split('.')
-                                                                    .filter(sentence => {
-                                                                        const normalized = sentence.toLowerCase().trim();
-                                                                        // Match pattern: "the stock is expected to provide a total return of X% within Y months"
-                                                                        const genericPattern = /the stock is expected to provide a total return of.*?%.*?within.*?months/i;
-                                                                        return !genericPattern.test(normalized);
-                                                                    })
-                                                                    .join('.')
+                                                                    .replace(/The stock is expected to provide a total return of[^.]*?(months|year)\.?/gi, '')
                                                                     .trim();
-                                                                // Clean up any leading/trailing periods
-                                                                filteredSummary = filteredSummary.replace(/^\.+|\.+$/g, '').trim();
+                                                                // Clean up any leftover punctuation or whitespace
+                                                                filteredSummary = filteredSummary.replace(/^\s*[.,;:]\s*|\s*[.,;:]\s*$/g, '').trim();
                                                             }
 
                                                             return (
