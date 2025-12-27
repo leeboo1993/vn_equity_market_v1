@@ -451,12 +451,7 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                 let displayVal = val;
                 const largeMetrics = ['revenue', 'npat', 'net_revenue', 'total_operating_income', 'profit_before_tax', 'net_profit'];
 
-                if (largeMetrics.includes(metricKey) && displayVal != null && !isNaN(displayVal)) {
-                    // Check if value is >= 1 billion (likely raw VND) -> convert to Million VND (divide by 10^6)
-                    if (Math.abs(displayVal) >= 1000000000) {
-                        displayVal = displayVal / 1000000;
-                    }
-                }
+                // Heuristic removed as per user request
 
                 return formatNumber(displayVal);
             }
