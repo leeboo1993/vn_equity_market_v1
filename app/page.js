@@ -433,21 +433,14 @@ export default function DailyTrackingPage() {
 
                     // Filter out generic "The stock is expected to provide a total return of X% within Y months" sentence
                     // But keep the row if there's other meaningful content
-                    let meaningfulSummary = investmentSummary;
+                    let meaningfulSummary = investmentSummary || '';
                     if (meaningfulSummary) {
-                        // Split by sentences and filter out the generic one
+                        // Remove the generic sentence using regex (handles with/without periods)
                         meaningfulSummary = meaningfulSummary
-                            .split('.')
-                            .filter(sentence => {
-                                const normalized = sentence.toLowerCase().trim();
-                                // Skip empty sentences or the generic "expected to provide a total return" sentence
-                                if (!normalized) return false;
-                                return !normalized.includes('the stock is expected to provide a total return of');
-                            })
-                            .join('. ')
+                            .replace(/The stock is expected to provide a total return of[^.]*?(months|year)\.?/gi, '')
                             .trim();
-                        // Clean up any leading/trailing periods
-                        meaningfulSummary = meaningfulSummary.replace(/^\.+|\.+$/g, '').trim();
+                        // Clean up any leftover punctuation or whitespace
+                        meaningfulSummary = meaningfulSummary.replace(/^\s*[.,;:]\s*|\s*[.,;:]\s*$/g, '').trim();
                     }
 
                     // Check if summary has enough words (>10 words to be useful) AFTER filtering
