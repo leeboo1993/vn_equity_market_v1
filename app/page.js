@@ -434,17 +434,12 @@ export default function DailyTrackingPage() {
                     // Filter out generic "The stock is expected to provide a total return of X% within Y months" pattern
                     let meaningfulSummary = investmentSummary;
                     if (meaningfulSummary) {
-                        meaningfulSummary = meaningfulSummary
-                            .split('.')
-                            .filter(sentence => {
-                                const normalized = sentence.toLowerCase().trim();
-                                // Match pattern: "the stock is expected to provide a total return of X% within Y months"
-                                const genericPattern = /the stock is expected to provide a total return of.*?%.*?within.*?months/i;
-                                return !genericPattern.test(normalized);
-                            })
-                            .join('.')
-                            .trim();
-                        meaningfulSummary = meaningfulSummary.replace(/^\.+|\.+$/g, '').trim();
+                        // Check if the ENTIRE summary is just the generic phrase (with minor variations)
+                        const normalized = meaningfulSummary.toLowerCase().trim();
+                        // If it contains this phrase, it's likely just a generic statement
+                        if (normalized.includes('the stock is expected to provide a total return of')) {
+                            meaningfulSummary = ''; // Clear it completely
+                        }
                     }
 
                     // Check if summary has enough words (>10 words to be useful) AFTER filtering
