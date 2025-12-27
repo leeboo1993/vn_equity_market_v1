@@ -62,6 +62,23 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
         }
     };
 
+    // Standardize broker text for display
+    const normalizeRecLabel = (rec) => {
+        if (!rec || rec === '-' || rec === 'No Rating') return 'No Rating';
+        const r = String(rec).toLowerCase();
+
+        // BUY
+        if (['buy', 'outperform', 'add', 'accumulate', 'overweight', 'strong buy'].some(k => r.includes(k))) return 'Buy';
+
+        // SELL
+        if (['sell', 'underperform', 'reduce', 'underweight'].some(k => r.includes(k))) return 'Sell';
+
+        // NEUTRAL
+        if (['neutral', 'hold', 'market perform'].some(k => r.includes(k))) return 'Neutral';
+
+        return rec;
+    };
+
     // Process data based on mode
     const tableData = useMemo(() => {
         if (!currentReport || !allReports) return null;
@@ -415,11 +432,10 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
         if (!report) return '-';
 
         if (metricKey === 'recommendation') {
-            const derived = getDerivedRec(report);
-            // Prefer derived to match ReportList, but fallback to API if needed (though ReportList ignores API)
-            // The original recommendation from API is `report.recommendation?.recommendation`
-            // We prioritize the derived recommendation.
-            return derived !== 'No Rating' ? derived : (report.recommendation?.recommendation || 'No Rating');
+            const tp = report.recommendation?.target_price;
+            const hasTP = tp != null && tp !== '-' && tp !== 0 && tp !== '0';
+            const rawRec = report.recommendation?.recommendation;
+            return hasTP ? normalizeRecLabel(rawRec) : 'No Rating';
         }
 
         if (isFinancial) {
@@ -431,7 +447,18 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
             } else if (metricKey === 'pb') {
                 return val != null ? val.toFixed(2) : null;
             } else {
-                return formatNumber(val);
+                // Formatting for large numbers (Revenue, NPAT, etc.)
+                let displayVal = val;
+                const largeMetrics = ['revenue', 'npat', 'net_revenue', 'total_operating_income', 'profit_before_tax', 'net_profit'];
+
+                if (largeMetrics.includes(metricKey) && displayVal != null && !isNaN(displayVal)) {
+                    // Check if value is >= 1 billion (likely raw VND) -> convert to Million VND (divide by 10^6)
+                    if (Math.abs(displayVal) >= 1000000000) {
+                        displayVal = displayVal / 1000000;
+                    }
+                }
+
+                return formatNumber(displayVal);
             }
         }
 

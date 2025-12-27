@@ -91,19 +91,21 @@ const getCallType = (call) => {
     return 'Hold';
 };
 
-// Calculate Recommendation based on rules
-// Buy >= 15%, Sell <= -5%, Neutral between
-const getCalculatedRec = (recData) => {
-    const tp = recData?.target_price;
-    const hasTP = tp != null && tp !== '-' && tp !== 0 && tp !== '0';
-    if (!hasTP) return 'No Rating';
+// Normalize Recommendation Label for Display (Standardize Text)
+const normalizeRecLabel = (rec) => {
+    if (!rec || rec === '-' || rec === 'No Rating') return 'No Rating';
+    const r = String(rec).toLowerCase();
 
-    const upside = recData?.upside_at_call;
-    if (upside == null || isNaN(upside)) return 'No Rating';
+    // BUY
+    if (['buy', 'outperform', 'add', 'accumulate', 'overweight', 'strong buy'].some(k => r.includes(k))) return 'Buy';
 
-    if (upside >= 15) return 'Buy';
-    if (upside <= -5) return 'Sell';
-    return 'Neutral';
+    // SELL
+    if (['sell', 'underperform', 'reduce', 'underweight'].some(k => r.includes(k))) return 'Sell';
+
+    // NEUTRAL
+    if (['neutral', 'hold', 'market perform'].some(k => r.includes(k))) return 'Neutral';
+
+    return rec; // Fallback
 };
 
 // Get recommendation pill styling
@@ -160,14 +162,18 @@ const getTickerCallsSummary = (ticker, reports) => {
     });
 
     // Count recommendations from each broker's latest report only
-    // Skip "No Rating" as it's not a real recommendation
+    // Logic: Use UPSIDE_AT_CALL to categorize (Buy >= 15%, Sell <= -5%)
     let buy = 0, hold = 0, sell = 0;
     Object.values(brokerLatestMap).forEach(r => {
-        const type = getCallType(r.recommendation?.recommendation);
-        if (type === 'Buy') buy++;
-        else if (type === 'Sell') sell++;
-        else if (type === 'Hold') hold++;
-        // Skip 'No Rating' - don't count it
+        const upside = r.recommendation?.upside_at_call;
+        const tp = r.recommendation?.target_price;
+        const hasTP = tp != null && tp !== '-' && tp !== 0 && tp !== '0';
+
+        if (hasTP && upside != null && !isNaN(upside) && Number.isFinite(upside)) {
+            if (upside >= 15) buy++;
+            else if (upside <= -5) sell++;
+            else hold++; // Neutral
+        }
     });
 
     // Return JSX for colored display - no separators, more compact
@@ -272,7 +278,8 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                 if (yearColumns.length > 0 && !hasYearData && !row.metric && !row.item) {
                                     // Row has no metric identifier and no year data
                                     console.warn(`Invalid report ${report.id}: row missing data and identifiers`);
-                                    return false;
+                                    // Relaxed strictness: Don't fail the whole report, just warn
+                                    // return false; 
                                 }
                             }
                         }
@@ -861,40 +868,60 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                 r.recommendation?.target_price != null
                                             );
 
-                                            // Group by ticker
-                                            const tickerMap = {};
+                                            // Group by ticker for averages (only valid data)
+                                            const tickerStatsMap = {};
+                                            // 1. Calculate Averages (Upside, TP)
                                             reportsWithUpside.forEach(r => {
                                                 const ticker = r.info_of_report.ticker;
-                                                const broker = r.info_of_report.issued_company || 'Unknown';
-                                                if (!tickerMap[ticker]) {
-                                                    tickerMap[ticker] = {
-                                                        ticker,
-                                                        reports: [],
-                                                        brokers: new Set(),
+                                                const upside = r.recommendation.upside_at_call;
+                                                // Validate upside (e.g. not Infinity)
+                                                if (!Number.isFinite(upside)) return;
+
+                                                if (!tickerStatsMap[ticker]) {
+                                                    tickerStatsMap[ticker] = {
                                                         totalUpside: 0,
                                                         totalTargetPrice: 0,
-                                                        count: 0,
-                                                        latestReport: r // Keep track for click handling
+                                                        count: 0
                                                     };
                                                 }
-                                                tickerMap[ticker].reports.push(r);
-                                                tickerMap[ticker].brokers.add(broker);
-                                                tickerMap[ticker].totalUpside += r.recommendation.upside_at_call;
-                                                tickerMap[ticker].totalTargetPrice += r.recommendation.target_price;
-                                                tickerMap[ticker].count++;
-                                                // Update latestReport if this one is more recent
-                                                if (r.info_of_report.date_of_issue > tickerMap[ticker].latestReport.info_of_report.date_of_issue) {
-                                                    tickerMap[ticker].latestReport = r;
+                                                tickerStatsMap[ticker].totalUpside += upside;
+                                                tickerStatsMap[ticker].totalTargetPrice += r.recommendation.target_price;
+                                                tickerStatsMap[ticker].count++;
+                                            });
+
+                                            // 2. Calculate Coverage (Unique Brokers) - Use ALL reports
+                                            const coverageMap = {};
+                                            filteredReportsForRankings.forEach(r => {
+                                                const ticker = r.info_of_report.ticker;
+                                                const broker = r.info_of_report.issued_company || 'Unknown';
+
+                                                if (!coverageMap[ticker]) {
+                                                    coverageMap[ticker] = {
+                                                        brokers: new Set(),
+                                                        latestReport: r
+                                                    };
+                                                }
+                                                coverageMap[ticker].brokers.add(broker);
+                                                // Keep track of latest report for the ticker (for click and basic info)
+                                                if (r.info_of_report.date_of_issue > coverageMap[ticker].latestReport.info_of_report.date_of_issue) {
+                                                    coverageMap[ticker].latestReport = r;
                                                 }
                                             });
 
-                                            // Calculate averages and broker count
-                                            const tickerData = Object.values(tickerMap).map(t => ({
-                                                ...t,
-                                                avgUpside: t.totalUpside / t.count,
-                                                avgTargetPrice: Math.round(t.totalTargetPrice / t.count),
-                                                brokerCount: t.brokers.size
-                                            }));
+                                            // Combine Data
+                                            const tickerData = Object.keys(coverageMap).map(ticker => {
+                                                const stats = tickerStatsMap[ticker];
+                                                const cov = coverageMap[ticker];
+
+                                                return {
+                                                    ticker,
+                                                    latestReport: cov.latestReport, // Ensure we have a report to link to
+                                                    brokerCount: cov.brokers.size,
+                                                    avgUpside: stats ? (stats.totalUpside / stats.count) : null,
+                                                    avgTargetPrice: stats ? Math.round(stats.totalTargetPrice / stats.count) : null,
+                                                    count: stats ? stats.count : 0 // Valid upside count
+                                                };
+                                            });
 
                                             // Filter and sort based on ranking mode
                                             // Apply minimum recommendations filter
@@ -1386,7 +1413,11 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                 <tbody style={{ fontSize: '10px' }}>
                                     {sortedReports.map(r => {
                                         // key logic change: if no target price, treat as No Rating
-                                        const displayRec = getCalculatedRec(r.recommendation);
+                                        // key logic change: if no target price, treat as No Rating
+                                        const tp = r.recommendation?.target_price;
+                                        const hasTP = tp != null && tp !== '-' && tp !== 0 && tp !== '0';
+                                        const rawRec = r.recommendation?.recommendation || '-';
+                                        const displayRec = hasTP ? normalizeRecLabel(rawRec) : 'No Rating';
 
                                         // Get pill styling
                                         const recStyle = getRecommendationStyle(displayRec);
@@ -1473,7 +1504,10 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                     </h2>
                                     <div className="text-sm text-gray-400" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '5px', marginBottom: '12px' }}>
                                         {(() => {
-                                            const displayRec = getCalculatedRec(selectedReport.recommendation);
+                                            const tp = selectedReport.recommendation?.target_price;
+                                            const hasTP = tp != null && tp !== '-' && tp !== 0 && tp !== '0';
+                                            const rawRec = selectedReport.recommendation?.recommendation || '-';
+                                            const displayRec = hasTP ? normalizeRecLabel(rawRec) : 'No Rating';
                                             const recStyle = getRecommendationStyle(displayRec);
                                             const upside = selectedReport.recommendation?.upside_at_call;
                                             const upsideStr = upside != null ? `(${upside >= 0 ? '+' : ''}${upside.toFixed(1)}%)` : '';
@@ -2198,6 +2232,15 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                                                     let val = null;
                                                                                     if (isFinancial) {
                                                                                         val = getFinancialsForYear(rep, key, targetYear);
+                                                                                        // Heuristic: If value is >= 1 billion (likely raw VND), convert to Billion VND
+                                                                                        // Only for large aggregate metrics, NOT per-share metrics like EPS/BVPS
+                                                                                        const largeMetrics = ['revenue', 'npat', 'net_revenue', 'total_operating_income', 'profit_before_tax', 'net_profit'];
+                                                                                        if (largeMetrics.includes(key) && val != null && !isNaN(val) && Math.abs(val) >= 1000000000) {
+                                                                                            val = val / 1000000000;
+                                                                                        } else if (key === 'revenue' && val != null && !isNaN(val) && Math.abs(val) >= 1000000000) {
+                                                                                            // Double check specifically for revenue if missed above
+                                                                                            val = val / 1000000000;
+                                                                                        }
                                                                                     } else if (key === 'recommendation') {
                                                                                         // Use raw recommendation value to match Company Reports table
                                                                                         val = rep.recommendation?.recommendation || '-';
