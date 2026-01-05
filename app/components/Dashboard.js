@@ -2248,21 +2248,37 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                                                             val = val / 1000000000;
                                                                                         }
                                                                                     } else if (key === 'recommendation') {
-                                                                                        // Use raw recommendation value to match Company Reports table
-                                                                                        val = rep.recommendation?.recommendation || '-';
-                                                                                    } else {
-                                                                                        val = rep.recommendation?.[key];
-                                                                                    }
+                                                                                        const upsideAtCall = rep.recommendation?.upside_at_call;
+                                                                                        const upsideNow = rep.recommendation?.upside_now;
+                                                                                        const tpChange = rep.recommendation?.target_price_change;
 
-                                                                                    // Check for outlier in financial data
-                                                                                    if (isFinancial && isOutlier(val)) {
-                                                                                        return <td key={repKey} className="text-center">-</td>;
-                                                                                    }
+                                                                                        // Recommendation Logic Override
+                                                                                        let displayRec = rep.recommendation?.recommendation || '-';
+                                                                                        let recStyle = { backgroundColor: '#333', color: '#ccc' }; // Default Neutral
 
-                                                                                    // Formatting
-                                                                                    if (val == null || val === undefined) return <td key={repKey} className="text-center">-</td>;
-                                                                                    if (key === 'recommendation') {
-                                                                                        const recStyle = getRecommendationStyle(val);
+                                                                                        // 1. Normalize Text
+                                                                                        const recLower = displayRec.toLowerCase();
+                                                                                        if (recLower.includes('buy') || recLower.includes('mua') || recLower.includes('outperform') || recLower.includes('positive') || recLower.includes('accumulate')) {
+                                                                                            displayRec = 'BUY';
+                                                                                            recStyle = { backgroundColor: 'rgba(0, 255, 127, 0.2)', color: '#00ff7f' };
+                                                                                        } else if (recLower.includes('sell') || recLower.includes('bán') || recLower.includes('underperform') || recLower.includes('negative') || recLower.includes('reduce')) {
+                                                                                            displayRec = 'SELL';
+                                                                                            recStyle = { backgroundColor: 'rgba(255, 68, 68, 0.2)', color: '#ff4444' };
+                                                                                        } else {
+                                                                                            displayRec = 'NEUTRAL';
+                                                                                        }
+
+                                                                                        // 2. Override based on Upside (Call) if available
+                                                                                        // User Rule: If Upside At Call > 15% -> Buy. If < -10% -> Sell.
+                                                                                        if (upsideAtCall !== null && upsideAtCall !== undefined) {
+                                                                                            if (upsideAtCall >= 15) {
+                                                                                                displayRec = 'BUY';
+                                                                                                recStyle = { backgroundColor: 'rgba(0, 255, 127, 0.2)', color: '#00ff7f' };
+                                                                                            } else if (upsideAtCall <= -10) {
+                                                                                                displayRec = 'SELL';
+                                                                                                recStyle = { backgroundColor: 'rgba(255, 68, 68, 0.2)', color: '#ff4444' };
+                                                                                            }
+                                                                                        }
                                                                                         return (
                                                                                             <td key={repKey} className="text-center">
                                                                                                 <span style={{
