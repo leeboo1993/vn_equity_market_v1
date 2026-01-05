@@ -2265,7 +2265,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                                                             displayRec = 'SELL';
                                                                                             recStyle = { backgroundColor: 'rgba(255, 68, 68, 0.2)', color: '#ff4444' };
                                                                                         } else {
-                                                                                            displayRec = 'NEUTRAL';
+                                                                                            if (displayRec !== '-') displayRec = 'NEUTRAL';
                                                                                         }
 
                                                                                         // 2. Override based on Upside (Call) if available
