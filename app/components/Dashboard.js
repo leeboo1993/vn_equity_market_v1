@@ -2269,12 +2269,12 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                                                         }
 
                                                                                         // 2. Override based on Upside (Call) if available
-                                                                                        // User Rule: If Upside At Call > 15% -> Buy. If < -10% -> Sell.
+                                                                                        // User Rule: If Upside At Call > 15% -> Buy. If < -5% -> Sell.
                                                                                         if (upsideAtCall !== null && upsideAtCall !== undefined) {
                                                                                             if (upsideAtCall >= 15) {
                                                                                                 displayRec = 'BUY';
                                                                                                 recStyle = { backgroundColor: 'rgba(0, 255, 127, 0.2)', color: '#00ff7f' };
-                                                                                            } else if (upsideAtCall <= -10) {
+                                                                                            } else if (upsideAtCall <= -5) {
                                                                                                 displayRec = 'SELL';
                                                                                                 recStyle = { backgroundColor: 'rgba(255, 68, 68, 0.2)', color: '#ff4444' };
                                                                                             }
