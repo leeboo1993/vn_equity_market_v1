@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import 'dotenv/config'; // Load env vars
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
 
 // Ensure R2 credentials are available
 if (!process.env.R2_ACCESS_KEY_ID) {
