@@ -91,42 +91,87 @@ async function optimize() {
                 }
             }
 
+            // Filter by Date (3 Years ~ 2022+)
+            const dateStr = report.info_of_report?.date_of_issue;
+            let keep = false;
+
+            if (dateStr) {
+                // Try YYMMDD
+                let year = 0;
+                const s = String(dateStr).trim();
+                if (s.length === 6 && !isNaN(s)) {
+                    // 22xxxx -> 2022
+                    year = 2000 + parseInt(s.substring(0, 2));
+                    // If year > 2050 likely parsing error or old 1990s (unlikely for this data), 
+                    // but let's assume valid range.
+                } else if (!isNaN(new Date(dateStr).getFullYear())) {
+                    year = new Date(dateStr).getFullYear();
+                }
+
+                if (year >= 2022) keep = true;
+            } else {
+                // If no date, maybe keep? Or drop? 
+                // Let's drop to be safe for size.
+                keep = false;
+            }
+
+            if (!keep) continue;
+
             // Create Meta (Lightweight)
             const {
                 investment_thesis,
                 company_update,
                 risk_assessment,
-                analyst_viewpoints,
                 justification,
-                ...meta
+                forecast_table, // HEAVY
+                key_tracking,   // HEAVY
+                other_info,     // HEAVY
+                ...metaRest
             } = report;
+
+            // Deep clone to safely remove nested justification without affecting original if needed
+            // But we already extracted top-level heavy fields. 
+            // `justification` might be inside `recommendation`!
+
+            const meta = { ...metaRest };
+            if (meta.recommendation) {
+                const { justification, ...recRest } = meta.recommendation;
+                meta.recommendation = recRest;
+            }
+
+            // Remove any other potential heavy arrays that might be variable
+            // e.g. extracted_data, tables
+            delete meta.extracted_data;
+            delete meta.tables;
 
             metadataList.push(meta);
 
-            // Create Full (Heavy)
-            batches.push({
-                Key: `reports/${report.id}.json`,
-                Body: JSON.stringify(report),
-                ContentType: "application/json"
-            });
+            // SKIP Detail Upload (Assuming already done)
+            // batches.push({
+            //     Key: `reports/${report.id}.json`,
+            //     Body: JSON.stringify(report),
+            //     ContentType: "application/json"
+            // });
 
-            if (batches.length >= batchSize) {
-                await Promise.all(batches.map(b => r2Client.send(new PutObjectCommand({ Bucket: BUCKET, ...b }))));
-                uploadCount += batches.length;
-                console.log(`Uploaded ${uploadCount}/${total} individual reports...`);
-                batches = [];
-            }
+            // if (batches.length >= batchSize) {
+            //     await Promise.all(batches.map(b => r2Client.send(new PutObjectCommand({ Bucket: BUCKET, ...b }))));
+            //     uploadCount += batches.length;
+            //     console.log(`Uploaded ${uploadCount}/${total} individual reports...`);
+            //     batches = [];
+            // }
         }
 
         // Flush remaining
-        if (batches.length > 0) {
-            await Promise.all(batches.map(b => r2Client.send(new PutObjectCommand({ Bucket: BUCKET, ...b }))));
-            uploadCount += batches.length;
-            console.log(`Uploaded ${uploadCount}/${total} individual reports.`);
-        }
+        // if (batches.length > 0) {
+        //     await Promise.all(batches.map(b => r2Client.send(new PutObjectCommand({ Bucket: BUCKET, ...b }))));
+        //     uploadCount += batches.length;
+        //     console.log(`Uploaded ${uploadCount}/${total} individual reports.`);
+        // }
+
+        console.log(`Filtered to ${metadataList.length} recent reports (>= 2022).`);
 
         // 3. Upload Metadata
-        console.log("Uploading company_report_meta.json...");
+        console.log("Uploading filtered company_report_meta.json...");
         await r2Client.send(new PutObjectCommand({
             Bucket: BUCKET,
             Key: "company_report_meta.json",
