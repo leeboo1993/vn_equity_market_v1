@@ -4,52 +4,28 @@ import { useState, useMemo } from 'react';
 import PeerComparison from './PeerComparison';
 import BrokerComparison from './BrokerComparison';
 
-// Helper to safely render list items (string or object)
-const renderListItem = (item, i) => {
-    if (typeof item === 'string') return <li key={i}>{item}</li>;
-    if (typeof item === 'object' && item !== null) {
-        // Handle table data structure
-        if (item.data && Array.isArray(item.data)) {
-            return (
-                <li key={i} className="block mt-2">
-                    {item.title && <div className="font-bold mb-1 text-green-400">{item.title}</div>}
-                    <div className="overflow-x-auto">
-                        <table className="mini-table w-full text-xs border-collapse">
-                            <thead>
-                                <tr className="border-b border-gray-700">
-                                    {Object.keys(item.data[0]).map(k => <th key={k} className="p-1 text-left text-gray-400">{k.replace(/_/g, ' ')}</th>)}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {item.data.map((row, rI) => (
-                                    <tr key={rI} className="border-b border-gray-800 last:border-0 hover:bg-white/5">
-                                        {Object.values(row).map((val, cI) => <td key={cI} className="p-1">{val}</td>)}
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </li>
-            );
-        }
-        // Handle plain {title, details}
-        return (
-            <li key={i}>
-                {item.title && <strong className="text-gray-200">{item.title}: </strong>}
-                {item.details || item.content || JSON.stringify(item)}
-            </li>
-        );
-    }
-    return <li key={i}>-</li>;
-};
+import ForecastTable from './ForecastTable';
+
+// ... (existing imports)
 
 export default function ReportDetailClient({ report, allReports }) {
-    console.log("VERSION: UI Standardization Fix Applied (v3)");
+    console.log("VERSION: UI Standardization Fix Applied (v3) + Financials & Key Tracking");
+
+    // Helper to format date for ForecastTable
+    const formattedDate = useMemo(() => {
+        const d = report.info_of_report?.date_of_issue;
+        if (!d || String(d).length !== 6) return null;
+        const str = String(d);
+        return `${str.substring(4, 6)}/${str.substring(2, 4)}/20${str.substring(0, 2)}`;
+    }, [report.info_of_report?.date_of_issue]);
+
     const [activeTab, setActiveTab] = useState('details');
 
     return (
         <div className="pb-20">
-            {/* Header */}
+            {/* ... (Header stays same) ... */}
+
+            {/* Header copy for reference to make sure we don't break it */}
             <div className="card mb-8">
                 <div className="flex justify-between items-start">
                     <div>
@@ -85,11 +61,7 @@ export default function ReportDetailClient({ report, allReports }) {
                             )}
                         </div>
                         <div className="text-xs mt-2 text-gray-500">
-                            <span className="text-gray-500">Date:</span> {(() => {
-                                const d = report.info_of_report.date_of_issue;
-                                if (!d || d.length !== 6) return d;
-                                return `${d.substring(4, 6)}/${d.substring(2, 4)}/20${d.substring(0, 2)}`;
-                            })()}
+                            <span className="text-gray-500">Date:</span> {formattedDate || report.info_of_report.date_of_issue}
                         </div>
                     </div>
                     <div className="text-right">
@@ -113,7 +85,16 @@ export default function ReportDetailClient({ report, allReports }) {
                             : 'text-gray-400 hover:text-white hover:bg-white/5'
                             }`}
                     >
-                        Historicals
+                        Report Details
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('financials')}
+                        className={`px-6 py-1.5 rounded-md text-sm font-semibold transition-all ${activeTab === 'financials'
+                            ? 'bg-[#00ff7f] text-black shadow-sm'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                            }`}
+                    >
+                        Financials
                     </button>
                     <button
                         onClick={() => setActiveTab('broker')}
@@ -145,13 +126,39 @@ export default function ReportDetailClient({ report, allReports }) {
                             <p className="text-gray-400 leading-relaxed">{report.recommendation?.justification}</p>
                         </div>
 
+                        {/* Key To Watch (Key Tracking) */}
+                        {report.key_tracking && (
+                            <div className="card mb-8 border-l-4 border-yellow-500 bg-yellow-900/10">
+                                <h3 className="text-xl font-semibold mb-3 text-yellow-400">Key to Watch</h3>
+                                <div className="text-gray-200">
+                                    {/* Handle both string and array formats */}
+                                    {Array.isArray(report.key_tracking) ? (
+                                        <ul className="list-disc pl-5 space-y-2">
+                                            {report.key_tracking.map((k, i) => renderListItem(k, i))}
+                                        </ul>
+                                    ) : (typeof report.key_tracking === 'object' ? (
+                                        <div className="space-y-4">
+                                            {Object.entries(report.key_tracking).map(([k, v], i) => (
+                                                <div key={i}>
+                                                    <strong>{k.replace(/_/g, ' ')}: </strong>
+                                                    <span>{String(v)}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p>{report.key_tracking}</p>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         <div className="grid" style={{ gridTemplateColumns: '2fr 1fr' }}>
                             <div className="flex flex-col gap-8">
                                 {/* Investment Thesis */}
                                 <section className="card">
                                     <h3 className="text-xl font-semibold mb-4 text-blue-400">Investment Thesis</h3>
                                     <ul className="list-disc pl-5 space-y-3 text-gray-300">
-                                        {report.investment_thesis && report.investment_thesis.slice(0, 7).map((point, i) => renderListItem(point, i))}
+                                        {report.investment_thesis && report.investment_thesis.slice(0, 10).map((point, i) => renderListItem(point, i))}
                                     </ul>
                                 </section>
 
@@ -195,6 +202,12 @@ export default function ReportDetailClient({ report, allReports }) {
                                             </div>
                                         ))}
                                     </div>
+                                    <button
+                                        onClick={() => setActiveTab('financials')}
+                                        className="w-full mt-4 py-2 bg-green-900/20 text-green-400 text-sm font-semibold rounded hover:bg-green-900/30 transition-colors"
+                                    >
+                                        View Full Financials →
+                                    </button>
                                 </section>
 
                                 {/* Performance Tracking */}
@@ -204,13 +217,13 @@ export default function ReportDetailClient({ report, allReports }) {
                                         <div className="flex justify-between items-center py-2 border-b border-gray-700">
                                             <span className="text-gray-400">Upside at Call</span>
                                             <span className={`font-mono font-semibold ${(report.recommendation?.upside_at_call || 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                                {report.recommendation?.upside_at_call ? `${report.recommendation.upside_at_call}%` : '-'}
+                                                {report.recommendation?.upside_at_call ? `${report.recommendation.upside_at_call.toFixed(1)}%` : '-'}
                                             </span>
                                         </div>
                                         <div className="flex justify-between items-center py-2 border-b border-gray-700">
                                             <span className="text-gray-400">Target Price Change</span>
                                             <span className={`font-mono font-semibold ${(report.recommendation?.target_price_change || 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                                {report.recommendation?.target_price_change ? `${report.recommendation.target_price_change}%` : '-'}
+                                                {report.recommendation?.target_price_change ? `${report.recommendation.target_price_change.toFixed(1)}%` : '-'}
                                             </span>
                                         </div>
                                         <div className="grid grid-cols-4 gap-2 pt-2">
@@ -218,7 +231,7 @@ export default function ReportDetailClient({ report, allReports }) {
                                                 <div key={p} className="text-center bg-gray-800 p-2 rounded">
                                                     <div className="text-xs text-gray-500 uppercase">{p}</div>
                                                     <div className={`text-sm font-mono font-bold ${(report.recommendation?.[`return_${p}`] || 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                                        {report.recommendation?.[`return_${p}`] ? `${report.recommendation[`return_${p}`] > 0 ? '+' : ''}${report.recommendation[`return_${p}`]}%` : '-'}
+                                                        {report.recommendation?.[`return_${p}`] ? `${report.recommendation[`return_${p}`] > 0 ? '+' : ''}${report.recommendation[`return_${p}`].toFixed(1)}%` : '-'}
                                                     </div>
                                                 </div>
                                             ))}
@@ -246,6 +259,15 @@ export default function ReportDetailClient({ report, allReports }) {
                             </div>
                         </div>
                     </>
+                )
+            }
+
+            {
+                activeTab === 'financials' && (
+                    <div className="card mb-8">
+                        <h2 className="title mb-6 text-green-400">Financial Forecasts & History</h2>
+                        <ForecastTable forecastData={report.forecast_table} reportDate={formattedDate} />
+                    </div>
                 )
             }
 
