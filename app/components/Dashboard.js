@@ -1562,7 +1562,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                 <td style={{ position: 'sticky', left: 0, zIndex: 40, backgroundColor: '#1e1e1e', textAlign: 'left' }}>{formatDate(r.info_of_report.date_of_issue)}</td>
                                                 <td style={{ textAlign: 'left' }}>{r.info_of_report.ticker}</td>
                                                 <td style={{ textAlign: 'left' }}>{r.info_of_report.issued_company ? `${r.info_of_report.issued_company} Research` : '-'}</td>
-                                                <td style={{ textAlign: 'left' }}>
+                                                <td style={{ textAlign: 'center' }}>
                                                     <span style={{
                                                         ...recStyle,
                                                         padding: '3px 10px',
