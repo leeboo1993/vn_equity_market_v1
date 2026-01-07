@@ -33,26 +33,16 @@ const getQuarterFromDate = (dateString) => {
     const dd = parseInt(dateString.substring(4, 6));
     const year_yymmdd = 2000 + yy;
 
-    // Check if YYMMDD gives reasonable year (2000-2027)
-    const isValidYYMMDD = (mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31 && year_yymmdd <= 2027);
+    // Check if YYMMDD gives reasonable year (2000-2030)
+    // Updated limit to 2030 to support future dates like 2026
+    const isValidYYMMDD = (mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31 && year_yymmdd <= 2030);
 
     if (isValidYYMMDD) {
         const quarter = Math.ceil(mm / 3);
         return { quarter, year: year_yymmdd, label: `Q${quarter} ${year_yymmdd}` };
     }
 
-    // If year > 2027 (e.g., "311223" -> 2031), try DDMMYY interpretation  
-    const dd2 = parseInt(dateString.substring(0, 2));
-    const mm2 = parseInt(dateString.substring(2, 4));
-    const yy2 = parseInt(dateString.substring(4, 6));
-    const year_ddmmyy = 2000 + yy2;
-
-    if (mm2 >= 1 && mm2 <= 12 && dd2 >= 1 && dd2 <= 31 && year_ddmmyy <= 2027) {
-        const quarter = Math.ceil(mm2 / 3);
-        return { quarter, year: year_ddmmyy, label: `Q${quarter} ${year_ddmmyy}` };
-    }
-
-    // Invalid future date
+    // Invalid date
     return null;
 };
 
@@ -295,10 +285,31 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
     };
 
     // === State ===
-    const [reports, setReports] = useState(() => {
-        // Filter propReports on initial load
-        return (propReports || []).filter(validateReport);
-    });
+    const [stockInfo, setStockInfo] = useState({});
+
+    // Fetch Stock Info Map on mount
+    useEffect(() => {
+        fetch('/api/stock-info')
+            .then(res => res.json())
+            .then(data => {
+                console.log("Loaded stock info map:", Object.keys(data).length);
+                setStockInfo(data);
+            })
+            .catch(err => console.error("Failed to load stock info:", err));
+    }, []);
+
+    const [reports, setReports] = useState([]);
+
+    // Initialize reports state only after validating against stock info (if possible), 
+    // but initially we load propReports. We will re-filter when stockInfo loads.
+    useEffect(() => {
+        if (propReports && propReports.length > 0) {
+            // Initial load from props
+            const validReports = propReports.filter(validateReport);
+            setReports(validReports);
+        }
+    }, [propReports]);
+
     const [isLoading, setIsLoading] = useState(shouldFetchData);
     const [selectedReportId, setSelectedReportId] = useState(null);
 
@@ -409,11 +420,39 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
     const [activeTab, setActiveTab] = useState('rec');
 
     // === Derived Data ===
-    const uniqueTickers = useMemo(() => [...new Set(reports.map(r => r.info_of_report.ticker))].sort(), [reports]);
+    // Filter Unique Tickers based on Stock Info Map availability
+    const uniqueTickers = useMemo(() => {
+        // Get all tickers from reports
+        const allTickers = [...new Set(reports.map(r => r.info_of_report.ticker))];
+
+        // Only keep those present in stock information (if loaded)
+        // If stockInfo is empty (loading), show all or valid-looking ones? 
+        // Better to wait or show all initially. Let's filter if we have data.
+        if (Object.keys(stockInfo).length > 0) {
+            return allTickers.filter(t => stockInfo[t]).sort();
+        }
+
+        // Fallback: simple heuristic filtering if stock info not yet ready
+        return allTickers.filter(t => t && t.length === 3 && /^[A-Z]{3}$/.test(t)).sort();
+    }, [reports, stockInfo]);
+
     const uniqueBrokers = useMemo(() => [...new Set(reports.map(r => r.info_of_report.issued_company))]
         .filter(b => b && b.length < 15) // Filter out messy data (long company names mistakenly in issuer field)
         .sort(), [reports]);
-    const uniqueSectors = useMemo(() => [...new Set(reports.map(r => r.info_of_report.sector).filter(s => s && s.trim()))].sort(), [reports]);
+
+    // Use Sector from Stock Info Map
+    const uniqueSectors = useMemo(() => {
+        const sectors = new Set();
+        reports.forEach(r => {
+            const t = r.info_of_report.ticker;
+            // Prioritize stock info sector, then report sector
+            const validSector = stockInfo[t]?.icb_name2 || r.info_of_report.sector;
+            if (validSector && validSector.trim()) {
+                sectors.add(validSector);
+            }
+        });
+        return Array.from(sectors).sort();
+    }, [reports, stockInfo]);
 
     const uniqueQuarters = useMemo(() => {
         const set = new Set(reports.map(r => {
@@ -434,7 +473,15 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
         return reports.filter(r => {
             const mTicker = filterTicker === 'All' || r.info_of_report.ticker === filterTicker;
             const mBroker = filterBroker === 'All' || r.info_of_report.issued_company === filterBroker;
-            const mSector = filterSector === 'All' || r.info_of_report.sector === filterSector;
+
+            // Sector Filter: Use authoritative sector
+            const rSector = stockInfo[r.info_of_report.ticker]?.icb_name2 || r.info_of_report.sector;
+            const mSector = filterSector === 'All' || rSector === filterSector;
+
+            // Also enforce stock validity for ALL reports in the list
+            // If stockInfo is loaded, exclude reports with unknown tickers
+            const isValidStock = Object.keys(stockInfo).length === 0 || !!stockInfo[r.info_of_report.ticker];
+
             let mPeriod = true;
             if (filterPeriod !== 'All') {
                 const q = getQuarterFromDate(r.info_of_report.date_of_issue);
@@ -454,9 +501,9 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                 mTarget = hasTP && hasCP;
             }
 
-            return mTicker && mBroker && mSector && mPeriod && mTarget;
+            return mTicker && mBroker && mSector && mPeriod && mTarget && isValidStock;
         });
-    }, [reports, filterTicker, filterBroker, filterSector, filterPeriod, shouldFilterTargets]);
+    }, [reports, filterTicker, filterBroker, filterSector, filterPeriod, shouldFilterTargets, stockInfo]);
 
     // Separate filtered reports for rankings (Top 10 lists)
     // This excludes the "Has Target Price" checkbox filter to ensure rankings are consistent
@@ -1505,8 +1552,15 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                             <ReportDetailErrorBoundary key={selectedReport.id} reportData={selectedReport}>
                                 <>
                                     <h2 className="card-title text-xl" style={{ marginBottom: '12px' }}>
-                                        {selectedReport.info_of_report.stock_name || selectedReport.info_of_report.covered_stock || selectedReport.info_of_report.ticker}
-                                        {selectedReport.info_of_report.exchange && ` (${selectedReport.info_of_report.exchange}: ${selectedReport.info_of_report.ticker})`}
+                                        {(() => {
+                                            const t = selectedReport.info_of_report.ticker;
+                                            const info = stockInfo[t];
+                                            if (info) {
+                                                return `${info.organ_short} (${info.exchange}: ${t})`;
+                                            }
+                                            // Fallback
+                                            return `${selectedReport.info_of_report.stock_name || selectedReport.info_of_report.covered_stock || t} (${t})`;
+                                        })()}
                                     </h2>
                                     <div className="text-sm text-gray-400" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '5px', marginBottom: '12px' }}>
                                         {(() => {
@@ -1518,11 +1572,14 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                             const upside = selectedReport.recommendation?.upside_at_call;
                                             const upsideStr = upside != null ? `(${upside >= 0 ? '+' : ''}${upside.toFixed(1)}%)` : '';
 
+                                            // Reliable Sector
+                                            const sector = stockInfo[selectedReport.info_of_report.ticker]?.icb_name2 || selectedReport.info_of_report.sector;
+
                                             return (
                                                 <>
-                                                    {selectedReport.info_of_report.sector && (
+                                                    {sector && (
                                                         <>
-                                                            <span className="text-gray-400">{selectedReport.info_of_report.sector}</span>
+                                                            <span className="text-gray-400">{sector}</span>
                                                             <span className="text-gray-600">|</span>
                                                         </>
                                                     )}
