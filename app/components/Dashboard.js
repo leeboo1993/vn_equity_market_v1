@@ -425,7 +425,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
     const [colWidths, setColWidths] = useState({
         date_of_issue: 100,
         ticker: 80,
-        broker: 150,
+        broker: 110,
         recommendation: 120,
         target_price: 100,
         price_now: 100,
