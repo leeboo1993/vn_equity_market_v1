@@ -1431,7 +1431,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                         <th style={{ position: 'sticky', top: 0, zIndex: 50, backgroundColor: '#141414', textAlign: 'left' }} className="shadow-sm cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('ticker')}>
                                             Ticker {sortConfig.key === 'ticker' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                                         </th>
-                                        <th className="sticky-col-header shadow-sm cursor-pointer hover:text-white transition-colors" style={{ textAlign: 'left' }} onClick={() => handleSort('broker')}>
+                                        <th className="sticky-col-header shadow-sm cursor-pointer hover:text-white transition-colors" style={{ textAlign: 'left', width: '150px' }} onClick={() => handleSort('broker')}>
                                             Broker {sortConfig.key === 'broker' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                                         </th>
                                         <th className="sticky-col-header shadow-sm cursor-pointer hover:text-white transition-colors" style={{ textAlign: 'left', width: '1%', whiteSpace: 'nowrap' }} onClick={() => handleSort('recommendation')}>
