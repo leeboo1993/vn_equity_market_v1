@@ -222,7 +222,7 @@ const filterGenericRecommendations = (text) => {
         /We initiate coverage (?:on \w+ )?with (?:a )?\w+ recommendation[^.]*?\\.?/gi,
 
         // Pattern 11: Specific "The stock has a target price of..." phrase (User Request)
-        /The stock has a target price of (?:VND )?[\d,.]+[,.]? representing a potential (?:upside|downside) of [\d,.]+%?\.?/gi
+        /The stock has a target price of (?:VND )?[\d,.]+(?:,)?\s+representing a potential (?:upside|downside) of\s+[-−]?[\d,.]+%?\.?/gi
     ];
 
     // Apply all patterns
