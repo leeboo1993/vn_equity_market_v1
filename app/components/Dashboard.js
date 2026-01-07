@@ -1466,7 +1466,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                             { key: 'date_of_issue', label: 'Date', align: 'left', stickyLeft: true },
                                             { key: 'ticker', label: 'Ticker', align: 'left', stickyTop: true },
                                             { key: 'broker', label: 'Broker', align: 'left' },
-                                            { key: 'recommendation', label: 'Recommendation', align: 'left' },
+                                            { key: 'recommendation', label: 'Recommendation', align: 'center' },
                                             { key: 'target_price', label: 'Target price', align: 'right' },
                                             { key: 'price_now', label: 'Current Price', align: 'right' },
                                             { key: 'upside_at_call', label: 'Upside (Call)', align: 'right' },
