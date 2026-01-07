@@ -1491,7 +1491,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                     minWidth: colWidths[col.key] || 'auto',
                                                     maxWidth: colWidths[col.key] || 'none',
                                                     whiteSpace: 'nowrap',
-                                                    paddingRight: '20px', // Space for resizer
+                                                    paddingRight: '4px', // Minimal space for resizer to fix alignment
                                                     userSelect: 'none'
                                                 }}
                                                 className="shadow-sm cursor-pointer hover:text-white transition-colors relative group"
