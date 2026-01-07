@@ -398,21 +398,6 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
     const [filterSector, setFilterSector] = useState('All');
     const [filterPeriod, setFilterPeriod] = useState('All');
 
-    // Update filterPeriod to latest when reports are loaded
-    useEffect(() => {
-        if (reports.length > 0 && filterPeriod === 'All') {
-            const dates = reports.map(r => getQuarterFromDate(r.info_of_report?.date_of_issue)).filter(Boolean);
-            if (dates.length > 0) {
-                const max = dates.reduce((prev, curr) => {
-                    const pVal = prev.year * 10 + prev.quarter;
-                    const cVal = curr.year * 10 + curr.quarter;
-                    return cVal > pVal ? curr : prev;
-                });
-                if (max) setFilterPeriod(max.label);
-            }
-        }
-    }, [reports, filterPeriod]);
-
     // Checkbox filter
     const [shouldFilterTargets, setShouldFilterTargets] = useState(true);
 
@@ -448,7 +433,11 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
             // Prioritize stock info sector, then report sector
             const validSector = stockInfo[t]?.icb_name2 || r.info_of_report.sector;
             if (validSector && validSector.trim()) {
-                sectors.add(validSector);
+                // Filter out blacklisted sectors (case insensitive)
+                const blacklist = ['bank', 'production', 'nan', 'null', 'undefined'];
+                if (!blacklist.includes(validSector.toLowerCase())) {
+                    sectors.add(validSector);
+                }
             }
         });
         return Array.from(sectors).sort();
@@ -1476,7 +1465,20 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                         const recStyle = getRecommendationStyle(displayRec);
 
                                         // Fallback logic for returns
-                                        const perfCall = r.recommendation?.performance_since_call;
+                                        let perfCall = r.recommendation?.performance_since_call;
+
+                                        // Dynamic calculation if perfCall is 0 or missing
+                                        if (!perfCall && r.recommendation?.target_price && r.recommendation?.upside_at_call != null && r.recommendation?.price_now) {
+                                            const tp = r.recommendation.target_price;
+                                            const upsideCall = r.recommendation.upside_at_call / 100; // Assuming it's in percentage e.g., 41.8
+                                            // price_at_call = TP / (1 + upside)
+                                            const priceAtCall = tp / (1 + upsideCall);
+                                            if (priceAtCall > 0) {
+                                                const perf = (r.recommendation.price_now - priceAtCall) / priceAtCall * 100;
+                                                perfCall = perf;
+                                            }
+                                        }
+
                                         const val1m = r.recommendation?.return_1m != null ? r.recommendation.return_1m : perfCall;
                                         const val3m = r.recommendation?.return_3m != null ? r.recommendation.return_3m : perfCall;
                                         const val6m = r.recommendation?.return_6m != null ? r.recommendation.return_6m : perfCall;
