@@ -401,6 +401,24 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
     // Checkbox filter
     const [shouldFilterTargets, setShouldFilterTargets] = useState(true);
 
+    // Auto-select current quarter on load (ONE TIME)
+    const [hasInitializedPeriod, setHasInitializedPeriod] = useState(false);
+    useEffect(() => {
+        if (!hasInitializedPeriod && reports.length > 0) {
+            const now = new Date();
+            const q = getQuarterFromDate(now);
+            if (q && q.label) {
+                // Check if this quarter actually exists in the data? 
+                // Or just set it blindly. User wants "based on today date".
+                // Better to check if we have data for it, or just defaulting is fine.
+                // Let's check uniqueQuarters to be safe, but uniqueQuarters is derived.
+                // Simple approach: Set it. If no data, it shows empty which is correct "Current status".
+                setFilterPeriod(q.label);
+            }
+            setHasInitializedPeriod(true);
+        }
+    }, [reports, hasInitializedPeriod]);
+
     // Tabs
     const [activeTab, setActiveTab] = useState('rec');
 
