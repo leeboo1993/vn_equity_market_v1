@@ -1462,13 +1462,20 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                         const displayRec = hasTP ? normalizeRecLabel(rawRec) : 'No Rating';
 
                                         // Get pill styling
+                                        // Get pill styling
                                         const recStyle = getRecommendationStyle(displayRec);
 
                                         // Fallback logic for returns
                                         let perfCall = r.recommendation?.performance_since_call;
 
+                                        // Date parsing for performance logic
+                                        const dateStr = r.info_of_report.date_of_issue; // YYYY-MM-DD
+                                        const reportDate = new Date(dateStr);
+                                        const now = new Date();
+                                        const daysElapsed = (now - reportDate) / (1000 * 60 * 60 * 24);
+
                                         // Dynamic calculation if perfCall is 0 or missing
-                                        if (!perfCall && r.recommendation?.target_price && r.recommendation?.upside_at_call != null && r.recommendation?.price_now) {
+                                        if ((!perfCall || perfCall === 0) && r.recommendation?.target_price && r.recommendation?.upside_at_call != null && r.recommendation?.price_now) {
                                             const tp = r.recommendation.target_price;
                                             const upsideCall = r.recommendation.upside_at_call / 100; // Assuming it's in percentage e.g., 41.8
                                             // price_at_call = TP / (1 + upside)
@@ -1479,10 +1486,11 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                             }
                                         }
 
-                                        const val1m = r.recommendation?.return_1m != null ? r.recommendation.return_1m : perfCall;
-                                        const val3m = r.recommendation?.return_3m != null ? r.recommendation.return_3m : perfCall;
-                                        const val6m = r.recommendation?.return_6m != null ? r.recommendation.return_6m : perfCall;
-                                        const val1y = r.recommendation?.return_1y != null ? r.recommendation.return_1y : perfCall;
+                                        // For periods not yet completed, show "Since Call"
+                                        const val1m = (daysElapsed >= 30 && r.recommendation?.return_1m != null) ? r.recommendation.return_1m : perfCall;
+                                        const val3m = (daysElapsed >= 91 && r.recommendation?.return_3m != null) ? r.recommendation.return_3m : perfCall;
+                                        const val6m = (daysElapsed >= 182 && r.recommendation?.return_6m != null) ? r.recommendation.return_6m : perfCall;
+                                        const val1y = (daysElapsed >= 365 && r.recommendation?.return_1y != null) ? r.recommendation.return_1y : perfCall;
 
                                         return (
                                             <tr key={r.id} className={`${selectedReportId === r.id ? 'selected' : ''} group`} onClick={() => setSelectedReportId(r.id)}>
