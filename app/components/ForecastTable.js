@@ -351,7 +351,8 @@ export default function ForecastTable({ forecastData, reportDate }) {
                                     position: 'sticky',
                                     left: 0,
                                     backgroundColor: '#1a1a1a',
-                                    zIndex: 20
+                                    zIndex: 20,
+                                    fontSize: '10px'
                                 }}>
                                     Metric
                                 </th>
@@ -365,7 +366,8 @@ export default function ForecastTable({ forecastData, reportDate }) {
                                             borderLeft: '1px solid #333',
                                             fontWeight: 'bold',
                                             color: isForecast ? '#00ff7f' : '#fff',
-                                            minWidth: '90px'
+                                            minWidth: '90px',
+                                            fontSize: '10px'
                                         }}>
                                             {year}
                                         </th>
@@ -434,7 +436,8 @@ export default function ForecastTable({ forecastData, reportDate }) {
                                                         position: 'sticky',
                                                         left: 0,
                                                         backgroundColor: metricIdx % 2 === 0 ? '#0a0a0a' : '#121212',
-                                                        zIndex: 10
+                                                        zIndex: 10,
+                                                        fontSize: '10px'
                                                     }}>
                                                         {formatMetricName(metricKey)}
                                                     </td>
@@ -446,10 +449,11 @@ export default function ForecastTable({ forecastData, reportDate }) {
                                                         return (
                                                             <td key={yearIdx} style={{
                                                                 padding: '6px 10px',
-                                                                textAlign: 'right',
-                                                                color: '#ccc',
+                                                                textAlign: 'center',
+                                                                color: isRatio ? '#ccc' : '#fff',
                                                                 borderLeft: '1px solid #1a1a1a',
                                                                 borderBottom: '1px solid #1a1a1a',
+                                                                fontSize: '10px',
                                                                 fontFamily: 'monospace'
                                                             }}>
                                                                 {formatNumber(value, isRatio)}

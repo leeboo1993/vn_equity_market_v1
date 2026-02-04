@@ -9,7 +9,7 @@ import ForecastTable from './ForecastTable';
 // ... (existing imports)
 
 export default function ReportDetailClient({ report, allReports }) {
-    console.log("VERSION: UI Standardization Fix Applied (v3) + Financials & Key Tracking");
+
 
     // Helper to format date for ForecastTable
     const formattedDate = useMemo(() => {
@@ -30,12 +30,12 @@ export default function ReportDetailClient({ report, allReports }) {
                 <div className="flex justify-between items-start">
                     <div>
                         <div className="flex items-center gap-4 mb-2">
-                            <h1 className="title">
+                            <h1 className="card-title mb-0" style={{ fontSize: '10px' }}>
                                 {report.info_of_report.stock_name || report.info_of_report.covered_stock || report.info_of_report.ticker}
                                 {report.info_of_report.exchange && ` (${report.info_of_report.exchange}: ${report.info_of_report.ticker})`}
                             </h1>
                         </div>
-                        <div className="text-base mt-2 text-gray-300">
+                        <div className="mt-2 text-gray-300" style={{ fontSize: '10px' }}>
                             {report.info_of_report.sector && (
                                 <>
                                     <span className="text-gray-400">{report.info_of_report.sector}</span>
@@ -46,7 +46,7 @@ export default function ReportDetailClient({ report, allReports }) {
                                 ['Underperform', 'Sell'].includes(report.recommendation?.recommendation) ? 'badge-underperform' :
                                     ['Neutral', 'Hold'].includes(report.recommendation?.recommendation) ? 'badge-neutral' :
                                         'badge-no-rating'
-                                }`}>
+                                }`} style={{ fontSize: '10px', padding: '2px 6px' }}>
                                 {report.recommendation?.recommendation || 'No Rating'}
                             </span>
                             {report.recommendation?.target_price && (

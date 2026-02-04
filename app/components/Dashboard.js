@@ -64,11 +64,32 @@ const getPreviousQuarterLabel = (quarterLabel) => {
 };
 
 const formatDate = (dateStr) => {
-    if (!dateStr || dateStr.length !== 6) return dateStr || '-';
-    const yy = dateStr.substring(0, 2);
-    const mm = dateStr.substring(2, 4);
-    const dd = dateStr.substring(4, 6);
-    return `${dd}/${mm}/20${yy}`;
+    if (!dateStr) return '-';
+    // Use string manipulation if already in YYMMDD to avoid timezone issues
+    if (String(dateStr).length === 6) {
+        const yy = dateStr.substring(0, 2);
+        const mm = dateStr.substring(2, 4);
+        const dd = dateStr.substring(4, 6);
+        return `${dd}/${mm}/20${yy}`;
+    }
+    // If it's a full date string, use local time formatting
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        return `${day}/${month}/${year}`;
+    }
+    return dateStr || '-';
+};
+
+// Helper to format Date object to YYYY-MM-DD in local time
+const formatDateToYYYYMMDD = (date) => {
+    if (!date || isNaN(date.getTime())) return '';
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
 };
 
 // Determine Call Type (Buy/Hold/Sell)
@@ -83,7 +104,7 @@ const getCallType = (call) => {
 
 // Normalize Recommendation Label for Display (Standardize Text)
 const normalizeRecLabel = (rec) => {
-    if (!rec || rec === '-' || rec === 'No Rating') return 'No Rating';
+    if (!rec || rec === '-' || rec === 'No Rating' || rec === 'null') return 'No Rating';
     const r = String(rec).toLowerCase();
 
     // BUY
@@ -292,7 +313,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
         fetch('/api/stock-info')
             .then(res => res.json())
             .then(data => {
-                console.log("Loaded stock info map:", Object.keys(data).length);
+
                 setStockInfo(data);
             })
             .catch(err => console.error("Failed to load stock info:", err));
@@ -328,7 +349,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                         const validReports = data.filter(validateReport);
                         const invalidCount = data.length - validReports.length;
                         if (invalidCount > 0) {
-                            console.log(`Filtered out ${invalidCount} invalid reports`);
+
                         }
                         setReports(validReports.reverse()); // Match previous reverse logic
                     }
@@ -832,18 +853,6 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
             }
         });
 
-        console.log('Coverage changes:', {
-            filterPeriod,
-            horizon: coverageHorizon,
-            prevQuarter: prevQuarterLabel,
-            currentReports: currentQuarterReports.length,
-            pastHorizonReports: periodReports.length,
-            newCoverage: newCoverage.length,
-            dropped: dropped.length,
-            upgraded: upgraded.length,
-            downgraded: downgraded.length
-        });
-
         return { newCoverage, dropped, upgraded, downgraded };
     }, [reports, filterPeriod, coverageHorizon, coverageBrokers]);
 
@@ -875,10 +884,10 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                 />
             </Header>
 
-            <main className="dashboard-grid">
+            <main className="main-container dashboard-grid">
                 {/* COLUMN 1 */}
-                <section className="column">
-                    <div className="card">
+                <section className="column" style={{ height: '100%', overflowY: 'auto', paddingRight: '4px' }}>
+                    <div className="card">{/* Removed height: '100%' to allow content to expand and scroll */}
 
                         <div className="section-block">
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
@@ -896,7 +905,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                         style={{
                                             backgroundColor: rankingMode === 'buy' ? '#00ff7f' : 'transparent',
                                             color: rankingMode === 'buy' ? 'black' : 'white',
-                                            padding: '4px 12px',
+                                            padding: '2px 8px',
                                             borderRadius: '8px',
                                             border: 'none',
                                             cursor: 'pointer',
@@ -913,7 +922,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                         style={{
                                             backgroundColor: rankingMode === 'sell' ? '#ff6666' : 'transparent',
                                             color: 'white',
-                                            padding: '4px 12px',
+                                            padding: '2px 8px',
                                             borderRadius: '8px',
                                             border: 'none',
                                             cursor: 'pointer',
@@ -930,7 +939,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                         style={{
                                             backgroundColor: rankingMode === 'coverage' ? '#666' : 'transparent',
                                             color: 'white',
-                                            padding: '4px 12px',
+                                            padding: '2px 8px',
                                             borderRadius: '8px',
                                             border: 'none',
                                             cursor: 'pointer',
@@ -946,7 +955,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                             </div>
                             <div className="table-wrapper">
                                 <table className="mini-table">
-                                    <thead>
+                                    <thead style={{ fontSize: '10px' }}>
                                         <tr>
                                             <th>Ticker</th>
                                             <th>Target price</th>
@@ -1084,7 +1093,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                 border: 'none',
                                                 cursor: 'pointer',
                                                 outline: 'none',
-                                                fontSize: '9px',
+                                                fontSize: '10px',
                                                 fontWeight: '400'
                                             }}
                                         >
@@ -1095,9 +1104,9 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                             </div>
                             {/* Row 2: Broker Filter */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                                <span style={{ fontSize: '9px', color: '#666' }}>Brokers:</span>
+                                <span style={{ fontSize: '10px', color: '#666' }}>Brokers:</span>
                                 {coverageBrokers.length === 0 ? (
-                                    <span style={{ fontSize: '9px', color: '#999' }}>All</span>
+                                    <span style={{ fontSize: '10px', color: '#999' }}>All</span>
                                 ) : (
                                     coverageBrokers.map(b => (
                                         <span
@@ -1108,7 +1117,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                 color: 'white',
                                                 padding: '2px 8px',
                                                 borderRadius: '10px',
-                                                fontSize: '9px',
+                                                fontSize: '10px',
                                                 cursor: 'pointer'
                                             }}
                                         >
@@ -1128,7 +1137,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                         backgroundColor: 'transparent',
                                         color: '#00ff7f',
                                         border: 'none',
-                                        fontSize: '9px',
+                                        fontSize: '10px',
                                         cursor: 'pointer',
                                         outline: 'none',
                                         appearance: 'none',
@@ -1144,31 +1153,31 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                 {coverageBrokers.length > 0 && (
                                     <span
                                         onClick={() => setCoverageBrokers([])}
-                                        style={{ fontSize: '9px', color: '#ff6666', cursor: 'pointer' }}
+                                        style={{ fontSize: '10px', color: '#ff6666', cursor: 'pointer' }}
                                     >
                                         Reset
                                     </span>
                                 )}
                             </div>
-                            <div className="table-wrapper" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                                <table className="mini-table">
-                                    <thead><tr><th>Type</th><th>Details</th><th>Δ</th></tr></thead>
-                                    <tbody>
+                            <div className="table-wrapper" style={{ maxHeight: 'none', overflowY: 'visible' }}>
+                                <table className="mini-table" style={{ fontSize: '10px' }}>
+                                    <thead style={{ fontSize: '10px' }}><tr><th style={{ fontSize: '10px' }}>Type</th><th style={{ fontSize: '10px' }}>Details</th><th style={{ fontSize: '10px' }}>Δ</th></tr></thead>
+                                    <tbody style={{ fontSize: '10px' }}>
                                         {/* New Coverage */}
                                         {coverageChanges.newCoverage.length > 0 && (
                                             <tr>
                                                 <td>New</td>
                                                 <td
-                                                    style={{ fontSize: '9px', cursor: 'pointer' }}
+                                                    style={{ fontSize: '10px', cursor: 'pointer' }}
                                                     onMouseEnter={(e) => handleMouseEnter(e, 'new')}
                                                     onMouseLeave={() => setHoveredCoverageRow(null)}
                                                 >
                                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                                                         {[...new Set(coverageChanges.newCoverage.map(c => c.ticker))].slice(0, 4).map((ticker, i) => (
-                                                            <span key={i} style={{ padding: '2px 6px', backgroundColor: '#2a3a2a', borderRadius: '4px', fontSize: '8px' }}>{ticker}</span>
+                                                            <span key={i} style={{ padding: '2px 6px', backgroundColor: '#2a3a2a', borderRadius: '4px', fontSize: '10px' }}>{ticker}</span>
                                                         ))}
                                                         {[...new Set(coverageChanges.newCoverage.map(c => c.ticker))].length > 4 &&
-                                                            <span style={{ padding: '2px 6px', backgroundColor: '#333', borderRadius: '4px', fontSize: '8px', color: '#888' }}>+{[...new Set(coverageChanges.newCoverage.map(c => c.ticker))].length - 4}</span>}
+                                                            <span style={{ padding: '2px 6px', backgroundColor: '#333', borderRadius: '4px', fontSize: '10px', color: '#888' }}>+{[...new Set(coverageChanges.newCoverage.map(c => c.ticker))].length - 4}</span>}
                                                     </div>
                                                     {hoveredCoverageRow === 'new' && (
                                                         <div style={{
@@ -1198,7 +1207,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                                     {items.sort((a, b) => new Date(b.date) - new Date(a.date)).map((item, j) => {
                                                                         return (
                                                                             <div key={j} style={{
-                                                                                fontSize: '9px',
+                                                                                fontSize: '10px',
                                                                                 color: '#ddd',
                                                                                 paddingLeft: '8px',
                                                                                 marginBottom: '3px',
@@ -1218,7 +1227,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                         </div>
                                                     )}
                                                 </td>
-                                                <td className="text-green">+{[...new Set(coverageChanges.newCoverage.map(c => c.ticker))].length}</td>
+                                                <td className="text-green" style={{ fontSize: '10px' }}>+{[...new Set(coverageChanges.newCoverage.map(c => c.ticker))].length}</td>
                                             </tr>
                                         )}
                                         {/* Dropped */}
@@ -1226,16 +1235,16 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                             <tr>
                                                 <td>Dropped</td>
                                                 <td
-                                                    style={{ fontSize: '9px', cursor: 'pointer' }}
+                                                    style={{ fontSize: '10px', cursor: 'pointer' }}
                                                     onMouseEnter={(e) => handleMouseEnter(e, 'dropped')}
                                                     onMouseLeave={() => setHoveredCoverageRow(null)}
                                                 >
                                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                                                         {[...new Set(coverageChanges.dropped.map(c => c.ticker))].slice(0, 4).map((ticker, i) => (
-                                                            <span key={i} style={{ padding: '2px 6px', backgroundColor: '#3a2a2a', borderRadius: '4px', fontSize: '8px' }}>{ticker}</span>
+                                                            <span key={i} style={{ padding: '2px 6px', backgroundColor: '#3a2a2a', borderRadius: '4px', fontSize: '10px' }}>{ticker}</span>
                                                         ))}
                                                         {[...new Set(coverageChanges.dropped.map(c => c.ticker))].length > 4 &&
-                                                            <span style={{ padding: '2px 6px', backgroundColor: '#333', borderRadius: '4px', fontSize: '8px', color: '#888' }}>+{[...new Set(coverageChanges.dropped.map(c => c.ticker))].length - 4}</span>}
+                                                            <span style={{ padding: '2px 6px', backgroundColor: '#333', borderRadius: '4px', fontSize: '10px', color: '#888' }}>+{[...new Set(coverageChanges.dropped.map(c => c.ticker))].length - 4}</span>}
                                                     </div>
                                                     {hoveredCoverageRow === 'dropped' && (
                                                         <div style={{
@@ -1265,7 +1274,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                                     {items.sort((a, b) => new Date(b.date) - new Date(a.date)).map((item, j) => {
                                                                         return (
                                                                             <div key={j} style={{
-                                                                                fontSize: '9px',
+                                                                                fontSize: '10px',
                                                                                 color: '#ddd',
                                                                                 paddingLeft: '8px',
                                                                                 marginBottom: '3px',
@@ -1285,7 +1294,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                         </div>
                                                     )}
                                                 </td>
-                                                <td className="text-red">-{[...new Set(coverageChanges.dropped.map(c => c.ticker))].length}</td>
+                                                <td className="text-red" style={{ fontSize: '10px' }}>-{[...new Set(coverageChanges.dropped.map(c => c.ticker))].length}</td>
                                             </tr>
                                         )}
                                         {/* Upgraded */}
@@ -1293,16 +1302,16 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                             <tr>
                                                 <td>Upgraded</td>
                                                 <td
-                                                    style={{ fontSize: '9px', cursor: 'pointer' }}
+                                                    style={{ fontSize: '10px', cursor: 'pointer' }}
                                                     onMouseEnter={(e) => handleMouseEnter(e, 'upgraded')}
                                                     onMouseLeave={() => setHoveredCoverageRow(null)}
                                                 >
                                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                                                         {coverageChanges.upgraded.slice(0, 4).map((c, i) => (
-                                                            <span key={i} style={{ padding: '2px 6px', backgroundColor: '#2a3a2a', borderRadius: '4px', fontSize: '8px' }}>{c.ticker}</span>
+                                                            <span key={i} style={{ padding: '2px 6px', backgroundColor: '#2a3a2a', borderRadius: '4px', fontSize: '10px' }}>{c.ticker}</span>
                                                         ))}
                                                         {coverageChanges.upgraded.length > 4 &&
-                                                            <span style={{ padding: '2px 6px', backgroundColor: '#333', borderRadius: '4px', fontSize: '8px', color: '#888' }}>+{coverageChanges.upgraded.length - 4}</span>}
+                                                            <span style={{ padding: '2px 6px', backgroundColor: '#333', borderRadius: '4px', fontSize: '10px', color: '#888' }}>+{coverageChanges.upgraded.length - 4}</span>}
                                                     </div>
                                                     {hoveredCoverageRow === 'upgraded' && (
                                                         <div style={{
@@ -1333,7 +1342,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                                         const detail = item.type === 'rating' ? `${item.from?.split(' ')[0]}→${item.to?.split(' ')[0]}` : item.change;
                                                                         return (
                                                                             <div key={j} style={{
-                                                                                fontSize: '9px',
+                                                                                fontSize: '10px',
                                                                                 color: '#ddd',
                                                                                 paddingLeft: '8px',
                                                                                 marginBottom: '3px',
@@ -1354,7 +1363,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                         </div>
                                                     )}
                                                 </td>
-                                                <td className="text-green">+{coverageChanges.upgraded.length}</td>
+                                                <td className="text-green" style={{ fontSize: '10px' }}>+{coverageChanges.upgraded.length}</td>
                                             </tr>
                                         )}
                                         {/* Downgraded */}
@@ -1362,16 +1371,16 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                             <tr>
                                                 <td>Downgraded</td>
                                                 <td
-                                                    style={{ fontSize: '9px', cursor: 'pointer' }}
+                                                    style={{ fontSize: '10px', cursor: 'pointer' }}
                                                     onMouseEnter={(e) => handleMouseEnter(e, 'downgraded')}
                                                     onMouseLeave={() => setHoveredCoverageRow(null)}
                                                 >
                                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                                                         {coverageChanges.downgraded.slice(0, 4).map((c, i) => (
-                                                            <span key={i} style={{ padding: '2px 6px', backgroundColor: '#3a2a2a', borderRadius: '4px', fontSize: '8px' }}>{c.ticker}</span>
+                                                            <span key={i} style={{ padding: '2px 6px', backgroundColor: '#3a2a2a', borderRadius: '4px', fontSize: '10px' }}>{c.ticker}</span>
                                                         ))}
                                                         {coverageChanges.downgraded.length > 4 &&
-                                                            <span style={{ padding: '2px 6px', backgroundColor: '#333', borderRadius: '4px', fontSize: '8px', color: '#888' }}>+{coverageChanges.downgraded.length - 4}</span>}
+                                                            <span style={{ padding: '2px 6px', backgroundColor: '#333', borderRadius: '4px', fontSize: '10px', color: '#888' }}>+{coverageChanges.downgraded.length - 4}</span>}
                                                     </div>
                                                     {hoveredCoverageRow === 'downgraded' && (
                                                         <div style={{
@@ -1402,7 +1411,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                                         const detail = item.type === 'rating' ? `${item.from?.split(' ')[0]}→${item.to?.split(' ')[0]}` : item.change;
                                                                         return (
                                                                             <div key={j} style={{
-                                                                                fontSize: '9px',
+                                                                                fontSize: '10px',
                                                                                 color: '#ddd',
                                                                                 paddingLeft: '8px',
                                                                                 marginBottom: '3px',
@@ -1423,7 +1432,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                         </div>
                                                     )}
                                                 </td>
-                                                <td className="text-red">-{coverageChanges.downgraded.length}</td>
+                                                <td className="text-red" style={{ fontSize: '10px' }}>-{coverageChanges.downgraded.length}</td>
                                             </tr>
                                         )}
 
@@ -1443,22 +1452,22 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                 </section>
 
                 {/* COLUMN 2 */}
-                <section className="column">
-                    <div className="card">
+                <section className="column" style={{ height: '100%', overflowY: 'auto', paddingRight: '4px' }}>
+                    <div className="card" style={{ height: '100%' }}>
                         <div className="mb-4" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
-                            <h2 className="card-title mb-0" style={{ fontSize: '12px', display: 'inline-block', verticalAlign: 'middle' }}>Company reports</h2>
+                            <h2 className="card-title mb-0">Company reports</h2>
                             <label className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity" style={{ display: 'flex', alignItems: 'center' }}>
                                 <input
                                     type="checkbox"
                                     checked={shouldFilterTargets}
                                     onChange={(e) => setShouldFilterTargets(e.target.checked)}
                                     // Native checkbox for debugging state
-                                    style={{ width: '16px', height: '16px', accentColor: '#666' }}
+                                    style={{ width: '14px', height: '14px', accentColor: '#666' }}
                                 />
-                                <span className="text-[#666] text-xs font-medium" style={{ lineHeight: '16px' }}>Has Target Price</span>
+                                <span className="text-[#888] text-[10px] font-medium" style={{ fontSize: '10px', lineHeight: '14px' }}>Has Target Price</span>
                             </label>
                         </div>
-                        <div className="table-wrapper overflow-y-auto relative custom-scrollbar" style={{ maxHeight: '485px' }}>
+                        <div className="table-wrapper company-reports-scrollbar relative custom-scrollbar">
                             <table className="report-table">
                                 <thead>
                                     <tr>
@@ -1492,7 +1501,8 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                     maxWidth: colWidths[col.key] || 'none',
                                                     whiteSpace: 'nowrap',
                                                     paddingRight: '4px', // Minimal space for resizer to fix alignment
-                                                    userSelect: 'none'
+                                                    userSelect: 'none',
+                                                    fontSize: '10px'
                                                 }}
                                                 className="shadow-sm cursor-pointer hover:text-white transition-colors relative group"
                                                 onClick={() => handleSort(col.key)}
@@ -1519,12 +1529,27 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                 </thead>
                                 <tbody style={{ fontSize: '10px' }}>
                                     {sortedReports.map(r => {
-                                        // key logic change: if no target price, treat as No Rating
-                                        // key logic change: if no target price, treat as No Rating
+                                        // key logic change: if no target price, check upside
                                         const tp = r.recommendation?.target_price;
                                         const hasTP = tp != null && tp !== '-' && tp !== 0 && tp !== '0';
-                                        const rawRec = r.recommendation?.recommendation || '-';
-                                        const displayRec = hasTP ? normalizeRecLabel(rawRec) : 'No Rating';
+
+                                        // If no TP but we have upside, we can still infer/show the rating if it exists
+                                        // User wants logic: "recommendation based on the upside at call" -> meaning if no explicit rec, use upside.
+                                        // Or simply: DON'T force "No Rating" just because TP is missing.
+
+                                        let rawRec = r.recommendation?.recommendation || '-';
+
+                                        // Infer rating from upside if missing (simple fallback logic based on user complain)
+                                        if (rawRec === '-' || rawRec === 'null' || !rawRec) {
+                                            const upside = r.recommendation?.upside_at_call;
+                                            if (upside != null) {
+                                                if (upside > 15) rawRec = 'Buy';
+                                                else if (upside < -10) rawRec = 'Sell';
+                                                else rawRec = 'Neutral';
+                                            }
+                                        }
+
+                                        const displayRec = normalizeRecLabel(rawRec);
 
                                         // Get pill styling
                                         // Get pill styling
@@ -1621,8 +1646,8 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                 </section >
 
                 {/* COLUMN 3 */}
-                <section className="column">
-                    <div className="card">
+                <section className="column" style={{ height: '100%', overflowY: 'auto', paddingRight: '4px' }}>
+                    <div className="card" style={{ height: '100%' }}>
                         {selectedReport && selectedReport.info_of_report && selectedReport.recommendation ? (
                             <ReportDetailErrorBoundary key={selectedReport.id} reportData={selectedReport}>
                                 <>
@@ -1637,38 +1662,53 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                             return `${selectedReport.info_of_report.stock_name || selectedReport.info_of_report.covered_stock || t} (${t})`;
                                         })()}
                                     </h2>
-                                    <div className="text-sm text-gray-400" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '5px', marginBottom: '12px' }}>
+                                    <div className="text-gray-400" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '5px', marginBottom: '12px', fontSize: '10px' }}>
                                         {(() => {
                                             const tp = selectedReport.recommendation?.target_price;
                                             const hasTP = tp != null && tp !== '-' && tp !== 0 && tp !== '0';
-                                            const rawRec = selectedReport.recommendation?.recommendation || '-';
-                                            const displayRec = hasTP ? normalizeRecLabel(rawRec) : 'No Rating';
-                                            const recStyle = getRecommendationStyle(displayRec);
+                                            let rawRec = selectedReport.recommendation?.recommendation || '-';
                                             const upside = selectedReport.recommendation?.upside_at_call;
                                             const upsideStr = upside != null ? `(${upside >= 0 ? '+' : ''}${upside.toFixed(1)}%)` : '';
 
+                                            // 1. INFER RATING IF MISSING
+                                            if (rawRec === '-' || rawRec === 'null' || !rawRec || rawRec === 'undefined') {
+                                                if (upside != null) {
+                                                    if (upside > 15) rawRec = 'Buy';
+                                                    else if (upside < -10) rawRec = 'Sell';
+                                                    else rawRec = 'Neutral';
+                                                }
+                                            }
+
+                                            const displayRec = normalizeRecLabel(rawRec);
+                                            const recStyle = getRecommendationStyle(displayRec);
+
                                             // Reliable Sector
                                             const sector = stockInfo[selectedReport.info_of_report.ticker]?.icb_name2 || selectedReport.info_of_report.sector;
+
+                                            // Check if we should show the badge
+                                            const showBadge = displayRec && displayRec !== 'No Rating' && displayRec !== 'no rating' && displayRec !== '-' && displayRec !== 'null' && displayRec !== 'undefined';
 
                                             return (
                                                 <>
                                                     {sector && (
                                                         <>
-                                                            <span className="text-gray-400">{sector}</span>
-                                                            <span className="text-gray-600">|</span>
+                                                            <span className="text-gray-400" style={{ fontSize: '10px' }}>{sector}</span>
+                                                            <span className="text-gray-600" style={{ fontSize: '10px' }}>|</span>
                                                         </>
                                                     )}
-                                                    <span style={{
-                                                        ...recStyle,
-                                                        padding: '3px 10px',
-                                                        borderRadius: '9999px',
-                                                        fontWeight: 'bold',
-                                                        fontSize: '10px',
-                                                        display: 'inline-block'
-                                                    }}>
-                                                        {displayRec}
-                                                    </span>
-                                                    <span className="text-white" style={{ fontWeight: 500 }}>
+                                                    {showBadge && (
+                                                        <span style={{
+                                                            ...recStyle,
+                                                            padding: '3px 10px',
+                                                            borderRadius: '9999px',
+                                                            fontWeight: 'bold',
+                                                            fontSize: '10px',
+                                                            display: 'inline-block'
+                                                        }}>
+                                                            {displayRec}
+                                                        </span>
+                                                    )}
+                                                    <span className="text-white" style={{ fontWeight: 500, fontSize: '10px' }}>
                                                         {tp?.toLocaleString() || '-'} {upsideStr}
                                                     </span>
                                                 </>
@@ -1786,7 +1826,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
 
                                     <div className="overflow-y-auto relative custom-scrollbar pr-2 pb-2 block" style={{ maxHeight: '485px', overflowY: 'auto', display: 'block' }}>
                                         <div className={`detail-tab-content ${activeTab === 'rec' ? 'active' : ''}`}>
-                                            <h3 className="section-title">Price performance</h3>
+                                            <h3 className="section-title" style={{ fontSize: '10px', textTransform: 'uppercase' }}>Price performance</h3>
                                             <div className="overflow-x-auto">
                                                 <table className="mini-table w-full table-fixed">
                                                     <thead>
@@ -2318,8 +2358,8 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
 
                                                                 return (
                                                                     <tr key={key}>
-                                                                        <td className="text-left border-r border-gray-700"
-                                                                            style={{ position: 'sticky', left: 0, zIndex: 10, backgroundColor: '#1E1E1E' }}>
+                                                                        <td className="text-left border-r border-gray-700 font-medium !text-[10px]"
+                                                                            style={{ position: 'sticky', left: 0, zIndex: 10, backgroundColor: '#1E1E1E', fontSize: '10px' }}>
                                                                             {label}
                                                                         </td>
                                                                         {(() => {
@@ -2363,7 +2403,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                                                 // Wrap entire logic in try-catch to prevent crashes
                                                                                 try {
                                                                                     // Add null safety for rep
-                                                                                    if (!rep) return <td key={`empty-${idx}`} className="text-center">-</td>;
+                                                                                    if (!rep) return <td key={`empty-${idx}`} className="text-center !text-[10px]">-</td>;
 
                                                                                     const repKey = rep.id || rep.info_of_report?.date_of_issue || idx;
 
@@ -2385,19 +2425,34 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                                                         const tpChange = rep.recommendation?.target_price_change;
 
                                                                                         // Recommendation Logic Override
-                                                                                        let displayRec = rep.recommendation?.recommendation || '-';
+                                                                                        let displayRec = rep.recommendation?.recommendation;
+                                                                                        // Handle null/undefined/string 'null' immediately
+                                                                                        if (!displayRec || displayRec === 'null') displayRec = '-';
+
                                                                                         let recStyle = { backgroundColor: '#333', color: '#ccc' }; // Default Neutral
+                                                                                        let badgeClass = 'badge-neutral'; // Default badge class
 
                                                                                         // 1. Normalize Text
-                                                                                        const recLower = displayRec.toLowerCase();
+                                                                                        let recLower = '';
+                                                                                        if (displayRec && typeof displayRec === 'string') {
+                                                                                            recLower = displayRec.toLowerCase();
+                                                                                            if (recLower === 'null') {
+                                                                                                displayRec = 'No Rating';
+                                                                                                recLower = 'no rating';
+                                                                                            }
+                                                                                        } else {
+                                                                                            displayRec = 'No Rating';
+                                                                                            recLower = 'no rating';
+                                                                                        }
                                                                                         if (recLower.includes('buy') || recLower.includes('mua') || recLower.includes('outperform') || recLower.includes('positive') || recLower.includes('accumulate')) {
                                                                                             displayRec = 'BUY';
-                                                                                            recStyle = { backgroundColor: 'rgba(0, 255, 127, 0.2)', color: '#00ff7f' };
+                                                                                            badgeClass = 'badge-buy';
                                                                                         } else if (recLower.includes('sell') || recLower.includes('bán') || recLower.includes('underperform') || recLower.includes('negative') || recLower.includes('reduce')) {
                                                                                             displayRec = 'SELL';
-                                                                                            recStyle = { backgroundColor: 'rgba(255, 68, 68, 0.2)', color: '#ff4444' };
+                                                                                            badgeClass = 'badge-sell';
                                                                                         } else {
                                                                                             if (displayRec !== '-') displayRec = 'NEUTRAL';
+                                                                                            badgeClass = 'badge-neutral';
                                                                                         }
 
                                                                                         // 2. Override based on Upside (Call) if available
@@ -2405,38 +2460,37 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                                                         if (upsideAtCall !== null && upsideAtCall !== undefined) {
                                                                                             if (upsideAtCall >= 15) {
                                                                                                 displayRec = 'BUY';
-                                                                                                recStyle = { backgroundColor: 'rgba(0, 255, 127, 0.2)', color: '#00ff7f' };
+                                                                                                badgeClass = 'badge-buy';
                                                                                             } else if (upsideAtCall <= -5) {
                                                                                                 displayRec = 'SELL';
-                                                                                                recStyle = { backgroundColor: 'rgba(255, 68, 68, 0.2)', color: '#ff4444' };
+                                                                                                badgeClass = 'badge-sell';
                                                                                             }
                                                                                         }
                                                                                         return (
-                                                                                            <td key={repKey} className="text-center">
-                                                                                                <span style={{
-                                                                                                    ...recStyle,
-                                                                                                    padding: '4px 12px',
-                                                                                                    borderRadius: '9999px',
-                                                                                                    fontWeight: 'bold',
-                                                                                                    fontSize: '10px',
+                                                                                            <td key={repKey} className="text-center !text-[10px]" style={{ fontSize: '10px' }}>
+                                                                                                <span className={`badge ${badgeClass}`} style={{
+                                                                                                    padding: '2px 8px',
+                                                                                                    fontSize: '9px', // Badge text slightly smaller inside 10px cell
+                                                                                                    fontWeight: '600',
+                                                                                                    minWidth: '60px',
                                                                                                     display: 'inline-block'
                                                                                                 }}>
-                                                                                                    {val}
+                                                                                                    {displayRec}
                                                                                                 </span>
                                                                                             </td>
                                                                                         );
                                                                                     }
-                                                                                    if (isText) return <td key={repKey} className="text-center">{val}</td>;
+                                                                                    if (isText) return <td key={repKey} className="text-center !text-[10px]" style={{ fontSize: '10px' }}>{val}</td>;
                                                                                     // Add safety for toFixed() - ensure val is a number
                                                                                     if (isPercent) {
                                                                                         const numVal = typeof val === 'number' ? val : parseFloat(val);
-                                                                                        if (isNaN(numVal)) return <td key={repKey} className="text-center">-</td>;
-                                                                                        return <td key={repKey} className="text-center">{numVal.toFixed(1)}%</td>;
+                                                                                        if (isNaN(numVal)) return <td key={repKey} className="text-center !text-[10px]" style={{ fontSize: '10px' }}>-</td>;
+                                                                                        return <td key={repKey} className="text-center !text-[10px]" style={{ fontSize: '10px' }}>{numVal.toFixed(1)}%</td>;
                                                                                     }
                                                                                     // Add safety for toLocaleString()
                                                                                     const numVal = typeof val === 'number' ? val : parseFloat(val);
-                                                                                    if (isNaN(numVal)) return <td key={repKey} className="text-center">{val}</td>;
-                                                                                    return <td key={repKey} className="text-center">{numVal.toLocaleString()}</td>;
+                                                                                    if (isNaN(numVal)) return <td key={repKey} className="text-center !text-[10px]" style={{ fontSize: '10px' }}>{val}</td>;
+                                                                                    return <td key={repKey} className="text-center !text-[10px]" style={{ fontSize: '10px' }}>{numVal.toLocaleString()}</td>;
                                                                                 } catch (error) {
                                                                                     console.error('Error rendering comparison cell:', error, { rep, key, targetYear });
                                                                                     return <td key={`error-${idx}`} className="text-center">-</td>;
@@ -2444,7 +2498,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                                             });
                                                                         })()}
                                                                         {comparisonMode === 'historical' && (
-                                                                            <td className={`text-center ${change > 0 ? 'text-[#00ff7f]' : change < 0 ? 'text-[#ff6666]' : ''}`}>
+                                                                            <td className={`text-center !text-[10px] ${change > 0 ? 'text-[#00ff7f]' : change < 0 ? 'text-[#ff6666]' : ''}`} style={{ fontSize: '10px' }}>
                                                                                 {key === 'recommendation'
                                                                                     ? (valLatest !== valPrev && valPrev ? 'Change' : '')
                                                                                     : (change != null ? (change > 0 ? '+' : '') + change.toFixed(1) + '%' : '-')}
@@ -2460,13 +2514,13 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                                     <table className="mini-table w-full relative border-collapse">
                                                                         <thead>
                                                                             <tr>
-                                                                                <th className="text-left border-r border-b border-gray-700"
-                                                                                    style={{ position: 'sticky', left: 0, top: 0, zIndex: 30, backgroundColor: '#1E1E1E' }}>
+                                                                                <th className="text-left border-r border-b border-gray-700 !text-[10px]"
+                                                                                    style={{ position: 'sticky', left: 0, top: 0, zIndex: 30, backgroundColor: '#1E1E1E', fontSize: '10px' }}>
                                                                                     Metric
                                                                                 </th>
                                                                                 {comparisonReports.map(rep => (
-                                                                                    <th key={rep.id} className="text-center border-b border-gray-700 whitespace-nowrap px-4"
-                                                                                        style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#1E1E1E' }}>
+                                                                                    <th key={rep.id} className="text-center border-b border-gray-700 whitespace-nowrap px-4 !text-[10px]"
+                                                                                        style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#1E1E1E', fontSize: '10px' }}>
                                                                                         {comparisonMode === 'peers' ? (
                                                                                             <span className="font-bold text-white">{rep.info_of_report.issued_company}</span>
                                                                                         ) : (
@@ -2475,8 +2529,8 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                                                     </th>
                                                                                 ))}
                                                                                 {comparisonMode === 'historical' && (
-                                                                                    <th className="text-center border-b border-gray-700"
-                                                                                        style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#1E1E1E' }}>
+                                                                                    <th className="text-center border-b border-gray-700 !text-[10px]"
+                                                                                        style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#1E1E1E', fontSize: '10px' }}>
                                                                                         Δ
                                                                                     </th>
                                                                                 )}
@@ -2485,11 +2539,11 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                                         <tbody>
                                                                             {comparisonMode === 'peers' && (
                                                                                 <tr>
-                                                                                    <td className="text-left border-r border-gray-700 font-medium" style={{ position: 'sticky', left: 0, zIndex: 10, backgroundColor: '#1E1E1E' }}>
+                                                                                    <td className="text-left border-r border-gray-700 font-medium !text-[10px]" style={{ position: 'sticky', left: 0, zIndex: 10, backgroundColor: '#1E1E1E', fontSize: '10px' }}>
                                                                                         Date
                                                                                     </td>
                                                                                     {comparisonReports.map(rep => (
-                                                                                        <td key={rep.id} className="text-center border-gray-700 px-4">
+                                                                                        <td key={rep.id} className="text-center border-gray-700 px-4 !text-[10px]" style={{ fontSize: '10px' }}>
                                                                                             {formatDate(rep.info_of_report.date_of_issue)}
                                                                                         </td>
                                                                                     ))}

@@ -111,7 +111,7 @@ function RecommendationView({ report, recommendationColor, recommendationText })
 }
 
 function InvestmentView({ report }) {
-    console.log('Investment View Report:', report); // Debugging
+
     return (
         <div className="space-y-6">
             {/* Thesis */}
@@ -183,9 +183,7 @@ function FinancialView({ report }) {
             )}
 
             {/* Financial Forecast Table */}
-            {console.log('DEBUG: forecastTable value:', forecastTable)}
-            {console.log('DEBUG: forecastTable exists?:', !!forecastTable)}
-            {console.log('DEBUG: forecastTable.sections?:', forecastTable?.sections)}
+
             {forecastTable && (
                 <div>
                     <SectionHeader title="Financial Forecast" />

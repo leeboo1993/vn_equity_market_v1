@@ -23,22 +23,6 @@ export default function ReportList({ reports, selectedReportId, onSelectReport, 
         return { backgroundColor: 'transparent', color: 'white', border: '1px solid #3A3A3C' };
     };
 
-    const getSortIcon = (key) => {
-        if (sortKey !== key) return null;
-        return sortOrder === 'asc' ? '↑' : '↓';
-    };
-
-    const HeaderCell = ({ label, sortKeyName, align = 'text-left', className = '' }) => (
-        <th
-            className={`${align} ${className} cursor-pointer hover:text-white transition-colors`}
-            onClick={() => onSort(sortKeyName)}
-        >
-            <div className={`flex items-center gap-1 ${align === 'text-right' ? 'justify-end' : ''}`}>
-                {label} <span className="text-[9px] w-2">{getSortIcon(sortKeyName)}</span>
-            </div>
-        </th>
-    );
-
     const formatDate = (dateString) => {
         if (!dateString || dateString.length !== 6) return dateString;
         const year = `20${dateString.substring(0, 2)}`;
@@ -75,13 +59,13 @@ export default function ReportList({ reports, selectedReportId, onSelectReport, 
                 <table className="table">
                     <thead>
                         <tr>
-                            <HeaderCell label="Date" sortKeyName="date" />
-                            <HeaderCell label="Ticker" sortKeyName="ticker" />
+                            <HeaderCell label="Date" sortKeyName="date" sortKey={sortKey} sortOrder={sortOrder} onSort={onSort} />
+                            <HeaderCell label="Ticker" sortKeyName="ticker" sortKey={sortKey} sortOrder={sortOrder} onSort={onSort} />
                             <th>Broker</th>
                             <th>Call</th>
                             <th className="text-right">Target</th>
                             <th className="text-right">Price</th>
-                            <HeaderCell label="Upside" sortKeyName="upside" align="text-right" />
+                            <HeaderCell label="Upside" sortKeyName="upside" align="text-right" sortKey={sortKey} sortOrder={sortOrder} onSort={onSort} />
                         </tr>
                     </thead>
                     <tbody style={{ fontSize: '9px' }}>
@@ -122,5 +106,23 @@ export default function ReportList({ reports, selectedReportId, onSelectReport, 
                 </table>
             </div>
         </div>
+    );
+}
+
+function HeaderCell({ label, sortKeyName, align = 'text-left', className = '', sortKey, sortOrder, onSort }) {
+    const getSortIcon = (key) => {
+        if (sortKey !== key) return null;
+        return sortOrder === 'asc' ? '↑' : '↓';
+    };
+
+    return (
+        <th
+            className={`${align} ${className} cursor-pointer hover:text-white transition-colors`}
+            onClick={() => onSort(sortKeyName)}
+        >
+            <div className={`flex items-center gap-1 ${align === 'text-right' ? 'justify-end' : ''}`}>
+                {label} <span className="text-[9px] w-2">{getSortIcon(sortKeyName)}</span>
+            </div>
+        </th>
     );
 }

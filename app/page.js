@@ -24,6 +24,15 @@ const formatDateDisplay = (dateStr) => {
     return dateStr;
 };
 
+// Helper to format Date object to YYYY-MM-DD in local time (prevents timezone shift)
+const formatDateToYYYYMMDD = (date) => {
+    if (!date || isNaN(date.getTime())) return '';
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+};
+
 const parseDateYYMMDD = (dateStr) => {
     if (!dateStr) return null;
     const s = String(dateStr).trim();
@@ -253,11 +262,17 @@ export default function DailyTrackingPage() {
     const [selectedDate, setSelectedDate] = useState(null);
 
     // Stock recommendation filters
-    const [recFromDate, setRecFromDate] = useState('');
-    const [recToDate, setRecToDate] = useState('');
+
+    // Stock recommendation filters - Internal state for user overrides
+    const [recFromDateInput, setRecFromDateInput] = useState('');
+    const [recToDateInput, setRecToDateInput] = useState('');
     const [recBrokerFilter, setRecBrokerFilter] = useState('all');
     const [recTickerFilter, setRecTickerFilter] = useState('');
     const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
+
+
+
+    // Brokers filter (shared for Overview and News)
 
 
     // Brokers filter (shared for Overview and News)
@@ -268,7 +283,7 @@ export default function DailyTrackingPage() {
 
     // Load daily report data from R2
     useEffect(() => {
-        setIsLoading(true);
+
 
         fetch(`/api/daily-report?t=${new Date().getTime()}`)
             .then(res => res.json())
@@ -322,48 +337,48 @@ export default function DailyTrackingPage() {
 
     // Get unique dates
     const uniqueDates = useMemo(() => {
-        const dates = [...new Set(allReports.map(r => r.info_of_report?.date_of_issue))].filter(Boolean);
-        dates.sort((a, b) => b.localeCompare(a)); // Descending
-        return dates;
+        return [...new Set(allReports.map(r => r.info_of_report?.date_of_issue))]
+            .filter(Boolean)
+            .slice()
+            .sort((a, b) => b.localeCompare(a)); // Descending
     }, [allReports]);
 
     // Set default selected date to latest
-    useEffect(() => {
-        if (uniqueDates.length > 0) {
-            // Check if current selectedDate is valid
-            const isCurrentValid = selectedDate && uniqueDates.includes(selectedDate);
-            if (!isCurrentValid) {
-                console.log("Setting default date to:", uniqueDates[0]);
-                setSelectedDate(uniqueDates[0]);
+    // Derived active date (matches useEffect logic but clean)
+    const activeDate = useMemo(() => {
+        if (selectedDate && uniqueDates.includes(selectedDate)) return selectedDate;
+        return uniqueDates.length > 0 ? uniqueDates[0] : null;
+    }, [selectedDate, uniqueDates]);
+
+
+
+    // Calculate defaults for Recommendation Dates
+    const { defaultFromDate, defaultToDate } = useMemo(() => {
+        if (uniqueDates.length === 0) return { defaultFromDate: '', defaultToDate: '' };
+
+        const newestDateStr = uniqueDates[0];
+        const newestDate = parseDateYYMMDD(newestDateStr);
+        if (!newestDate) return { defaultFromDate: '', defaultToDate: '' };
+
+        const defTo = formatDateToYYYYMMDD(newestDate);
+
+        // From date = T-5 working days
+        let fromDate = new Date(newestDate);
+        let workingDaysBack = 0;
+        while (workingDaysBack < 5) {
+            fromDate.setDate(fromDate.getDate() - 1);
+            const dayOfWeek = fromDate.getDay();
+            if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Not weekend
+                workingDaysBack++;
             }
         }
-    }, [uniqueDates, selectedDate]);
+        const defFrom = formatDateToYYYYMMDD(fromDate);
 
-    // Set default recommendation filter dates (To = newest, From = T-5 working days)
-    useEffect(() => {
-        if (uniqueDates.length > 0 && !recToDate && !recFromDate) {
-            // To date = newest available
-            const newestDate = parseDateYYMMDD(uniqueDates[0]);
-            if (newestDate) {
-                setRecToDate(newestDate.toISOString().split('T')[0]);
+        return { defaultFromDate: defFrom, defaultToDate: defTo };
+    }, [uniqueDates]);
 
-                setRecToDate(newestDate.toISOString().split('T')[0]);
-
-                // From date = T-5 working days from newest
-                let fromDate = new Date(newestDate);
-                let workingDaysBack = 0;
-                while (workingDaysBack < 5) {
-                    fromDate.setDate(fromDate.getDate() - 1);
-                    const dayOfWeek = fromDate.getDay();
-                    if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Not weekend
-                        workingDaysBack++;
-                    }
-                }
-                setRecFromDate(fromDate.toISOString().split('T')[0]);
-                // setRecFromDate(''); // Default to all history
-            }
-        }
-    }, [uniqueDates, recToDate, recFromDate]);
+    const activeRecFromDate = recFromDateInput || defaultFromDate;
+    const activeRecToDate = recToDateInput || defaultToDate;
 
     // Get unique brokers
     const uniqueBrokers = useMemo(() => {
@@ -372,9 +387,9 @@ export default function DailyTrackingPage() {
 
     // Filter reports for selected date
     const reportsForDate = useMemo(() => {
-        if (!selectedDate) return allReports.slice(0, 10);
-        return allReports.filter(r => r.info_of_report?.date_of_issue === selectedDate);
-    }, [allReports, selectedDate]);
+        if (!activeDate) return allReports.slice(0, 10);
+        return allReports.filter(r => r.info_of_report?.date_of_issue === activeDate);
+    }, [allReports, activeDate]);
 
     // Aggregate market news for selected date
     const aggregatedNews = useMemo(() => {
@@ -525,14 +540,14 @@ export default function DailyTrackingPage() {
         // Apply filters
         return recs.filter(rec => {
             // Date filter
-            if (recFromDate && rec.date) {
+            if (activeRecFromDate && rec.date) {
                 const recDateObj = parseDateYYMMDD(rec.date);
-                const fromDateObj = new Date(recFromDate);
+                const fromDateObj = new Date(activeRecFromDate);
                 if (recDateObj && recDateObj < fromDateObj) return false;
             }
-            if (recToDate && rec.date) {
+            if (activeRecToDate && rec.date) {
                 const recDateObj = parseDateYYMMDD(rec.date);
-                const toDateObj = new Date(recToDate);
+                const toDateObj = new Date(activeRecToDate);
                 if (recDateObj && recDateObj > toDateObj) return false;
             }
 
@@ -548,7 +563,7 @@ export default function DailyTrackingPage() {
 
             return true;
         });
-    }, [allReports, recFromDate, recToDate, recBrokerFilter, recTickerFilter]);
+    }, [allReports, activeRecFromDate, activeRecToDate, recBrokerFilter, recTickerFilter]);
 
     // --- SORTING ADDITION ---
     // 1. Process Recommendations with Calculated Fields for Sorting
@@ -673,19 +688,19 @@ export default function DailyTrackingPage() {
                                     <input
                                         type="date"
                                         value={(() => {
-                                            if (!selectedDate) return '';
-                                            const d = parseDateYYMMDD(selectedDate);
-                                            return d ? d.toISOString().split('T')[0] : '';
+                                            if (!activeDate) return '';
+                                            const d = parseDateYYMMDD(activeDate);
+                                            return formatDateToYYYYMMDD(d);
                                         })()}
                                         min={(() => {
                                             const oldest = uniqueDates[uniqueDates.length - 1];
                                             const d = parseDateYYMMDD(oldest);
-                                            return d ? d.toISOString().split('T')[0] : '';
+                                            return formatDateToYYYYMMDD(d);
                                         })()}
                                         max={(() => {
                                             const newest = uniqueDates[0];
                                             const d = parseDateYYMMDD(newest);
-                                            return d ? d.toISOString().split('T')[0] : '';
+                                            return formatDateToYYYYMMDD(d);
                                         })()}
                                         onChange={e => {
                                             const val = e.target.value; // YYYY-MM-DD
@@ -981,15 +996,15 @@ export default function DailyTrackingPage() {
                             <input
                                 type="date"
                                 className="date-input"
-                                value={recFromDate}
-                                onChange={(e) => setRecFromDate(e.target.value)}
+                                value={activeRecFromDate}
+                                onChange={(e) => setRecFromDateInput(e.target.value)}
                             />
                             <label>To:</label>
                             <input
                                 type="date"
                                 className="date-input"
-                                value={recToDate}
-                                onChange={(e) => setRecToDate(e.target.value)}
+                                value={activeRecToDate}
+                                onChange={(e) => setRecToDateInput(e.target.value)}
                             />
                             <label>Broker:</label>
                             <select
@@ -1019,8 +1034,8 @@ export default function DailyTrackingPage() {
                                     // Log current filter values for debugging
                                     console.log('Search clicked with filters:', {
                                         ticker: recTickerFilter,
-                                        from: recFromDate,
-                                        to: recToDate,
+                                        from: activeRecFromDate,
+                                        to: activeRecToDate,
                                         broker: recBrokerFilter
                                     });
 
@@ -1160,4 +1175,4 @@ export default function DailyTrackingPage() {
         </>
     );
 }
- 
+
