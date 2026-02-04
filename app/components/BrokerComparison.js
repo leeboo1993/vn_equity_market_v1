@@ -160,11 +160,11 @@ export default function BrokerComparison({ currentReport, allReports }) {
                             zIndex: 10,
                             backgroundColor: '#1E1E1E'
                         }}>
-                            <th>Metric</th>
+                            <th style={{ fontSize: '10px' }}>Metric</th>
                             {brokerData.brokers.map((broker, idx) => {
                                 const brokerName = broker.info_of_report?.issued_company;
                                 return (
-                                    <th key={idx}>
+                                    <th key={idx} style={{ fontSize: '10px' }}>
                                         {brokerName}
                                     </th>
                                 );
@@ -182,14 +182,28 @@ export default function BrokerComparison({ currentReport, allReports }) {
                                         position: 'sticky',
                                         left: 0,
                                         backgroundColor: '#1E1E1E',
-                                        zIndex: 10
+                                        zIndex: 10,
+                                        fontSize: '10px'
                                     }}>
                                         {metric.label}
                                     </td>
                                     {brokerData.brokers.map((broker, brokerIdx) => {
-                                        const value = getValue(broker, metric.key);
+                                        let value = getValue(broker, metric.key);
 
                                         if (isRec) {
+                                            // INFER RATING IF MISSING
+                                            if (!value || value === '-' || value === 'null' || value === 'undefined' || value === 'No Rating') {
+                                                const upside = broker.recommendation?.upside_at_call;
+                                                if (upside != null) {
+                                                    if (upside > 15) value = 'Buy';
+                                                    else if (upside < -10) value = 'Sell';
+                                                    else value = 'Neutral';
+                                                }
+                                            }
+                                            if (!value || value === 'No Rating' || value === 'no rating' || value === '-' || value === 'null' || value === 'undefined') {
+                                                return <td key={brokerIdx}></td>;
+                                            }
+
                                             const style = getRecommendationStyle(value);
                                             return (
                                                 <td key={brokerIdx} style={{
@@ -217,7 +231,7 @@ export default function BrokerComparison({ currentReport, allReports }) {
                                         }
 
                                         return (
-                                            <td key={brokerIdx}>
+                                            <td key={brokerIdx} style={{ fontSize: '10px' }}>
                                                 {value}
                                             </td>
                                         );

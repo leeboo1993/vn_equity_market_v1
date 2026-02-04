@@ -434,8 +434,19 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
         if (metricKey === 'recommendation') {
             const tp = report.recommendation?.target_price;
             const hasTP = tp != null && tp !== '-' && tp !== 0 && tp !== '0';
-            const rawRec = report.recommendation?.recommendation;
-            return hasTP ? normalizeRecLabel(rawRec) : 'No Rating';
+            let rawRec = report.recommendation?.recommendation;
+
+            // INFER RATING IF MISSING
+            if (!rawRec || rawRec === '-' || rawRec === 'null' || rawRec === 'undefined') {
+                const upside = report.recommendation?.upside_at_call;
+                if (upside != null) {
+                    if (upside > 15) rawRec = 'Buy';
+                    else if (upside < -10) rawRec = 'Sell';
+                    else rawRec = 'Neutral';
+                }
+            }
+
+            return normalizeRecLabel(rawRec);
         }
 
         if (isFinancial) {
@@ -575,14 +586,15 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                 zIndex: 20,
                                 backgroundColor: '#1E1E1E',
                                 borderBottom: '1px solid #333',
-                                color: '#4ade80'
+                                color: '#4ade80',
+                                fontSize: '10px'
                             }}>Metric</th>
                             {tableData.columns.map((col, idx) => (
-                                <th key={idx} style={{ textAlign: 'center', color: '#4ade80' }}>
+                                <th key={idx} style={{ textAlign: 'center', color: '#4ade80', fontSize: '10px' }}>
                                     {tableData.getColumnHeader(col)}
                                 </th>
                             ))}
-                            {showLastCol && <th style={{ textAlign: 'center', color: '#4ade80' }}>{lastColLabel}</th>}
+                            {showLastCol && <th style={{ textAlign: 'center', color: '#4ade80', fontSize: '10px' }}>{lastColLabel}</th>}
                         </tr>
                     </thead>
 
@@ -595,12 +607,14 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                     left: 0,
                                     backgroundColor: '#1E1E1E',
                                     zIndex: 10,
-                                    textAlign: 'left'
+                                    zIndex: 10,
+                                    textAlign: 'left',
+                                    fontSize: '10px'
                                 }}>
                                     Date
                                 </td>
                                 {tableData.columns.map((col, colIdx) => (
-                                    <td key={colIdx} style={{ textAlign: 'center' }}>
+                                    <td key={colIdx} style={{ textAlign: 'center', fontSize: '10px' }}>
                                         {formatDate(col.info_of_report?.date_of_issue)}
                                     </td>
                                 ))}
@@ -695,7 +709,9 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                         left: 0,
                                         backgroundColor: '#1E1E1E',
                                         zIndex: 10,
-                                        textAlign: 'left'
+                                        zIndex: 10,
+                                        textAlign: 'left',
+                                        fontSize: '10px'
                                     }}>
                                         {metric.label}
                                     </td>
@@ -704,7 +720,9 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
 
                                         if (isRec) {
                                             // Show empty if "No Rating" (user request: "no need to show -")
-                                            if (value === 'No Rating' || value === 'no rating' || value === '-') {
+                                            // Show empty if "No Rating" (user request: "no need to show -") or explicit null-strings
+                                            // But if we successfully inferred it, it shouldn't be "null" anymore.
+                                            if (!value || value === 'No Rating' || value === 'no rating' || value === '-' || value === 'null' || value === 'undefined') {
                                                 return (
                                                     <td key={colIdx} style={{ textAlign: 'center' }}></td>
                                                 );
@@ -728,7 +746,7 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
                                         }
 
                                         return (
-                                            <td key={colIdx} style={{ textAlign: 'center' }}>
+                                            <td key={colIdx} style={{ textAlign: 'center', fontSize: '10px' }}>
                                                 {value || '-'}
                                             </td>
                                         );

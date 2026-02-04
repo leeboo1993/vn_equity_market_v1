@@ -6,11 +6,13 @@
   /* Neon Green */
   --text: #e0e0e0;
   --muted: #9a9a9a;
-  --radius: 14px;
-  --shadow: 0 0 16px rgba(0, 0, 0, 0.45);
-  --fs-small: 1rem;
+  --radius: 16px;
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  --fs-small: 0.85rem;
   --fs-normal: 1rem;
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  --max-width: 1440px;
+  /* Constrain desktop width */
 }
 
 *,
@@ -25,21 +27,37 @@ body {
   font-family: var(--font-sans);
   background: var(--bg);
   color: var(--text);
-  font-size: 10px;
-  /* Base override if needed */
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+  /* Prevent horizontal scroll on body */
 }
 
-/* Global scrollbar hiding for cleaner UI */
+/* Global scrollbar styling for better cross-platform consistency (especially Windows) */
 * {
-  scrollbar-width: none;
-  /* Firefox */
-  -ms-overflow-style: none;
-  /* IE and Edge */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 
 *::-webkit-scrollbar {
-  display: none;
-  /* Chrome, Safari, Opera */
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* Header */
@@ -50,9 +68,18 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.9rem 2rem;
-  background: #0c0c0c;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  padding: 0.75rem 1.25rem;
+  background: rgba(12, 12, 12, 0.8);
+  backdrop-filter: blur(12px);
+  /* Glassmorphism */
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+.main-container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  width: 100%;
 }
 
 .header-left {
@@ -114,13 +141,20 @@ body {
 /* Dashboard Layout */
 .dashboard-grid {
   display: grid;
-  /* Percentage-based layout: 25% - 35% - 40% distribution with gaps accounted for */
-  grid-template-columns: calc(25% - 1.07rem) calc(35% - 1.07rem) calc(40% - 1.07rem);
-  gap: 1.6rem;
-  padding: 1.6rem 2rem 2.2rem;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  padding: 1rem;
   align-items: start;
-  height: calc(100vh - 60px);
-  overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 5fr 7fr 8fr;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    height: calc(100vh - 64px);
+    overflow: hidden;
+  }
 }
 
 /* Cards */
@@ -422,14 +456,14 @@ body {
 /* Media Queries */
 @media (max-width: 1400px) {
   .dashboard-grid {
-    grid-template-columns: calc(25% - 0.8rem) calc(35% - 0.8rem) calc(40% - 0.8rem);
+    grid-template-columns: 5fr 7fr 8fr;
     gap: 1.2rem;
   }
 }
 
 @media (max-width: 1200px) {
   .dashboard-grid {
-    grid-template-columns: calc(25% - 0.67rem) calc(35% - 0.67rem) calc(40% - 0.67rem);
+    grid-template-columns: 5fr 7fr 8fr;
     gap: 1rem;
     padding: 1.2rem;
   }
@@ -541,8 +575,8 @@ body {
 .sidebar {
   position: fixed;
   top: 0;
-  left: -280px;
-  width: 280px;
+  left: -300px;
+  width: 300px;
   height: 100vh;
   background: #0c0c0c;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
@@ -565,9 +599,10 @@ body {
 }
 
 .sidebar-title {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--accent);
+  white-space: nowrap;
 }
 
 .sidebar-close {
@@ -632,20 +667,36 @@ body {
 
 /* ===== DAILY TRACKING PAGE ===== */
 .daily-tracking-grid {
-  display: grid;
-  grid-template-columns: 35% 1fr;
-  gap: 1.5rem;
-  padding: 1.5rem 2rem;
-  height: calc(100vh - 60px);
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .daily-tracking-grid {
+    display: grid;
+    grid-template-columns: 30% 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    height: calc(100vh - 64px);
+    overflow: hidden;
+  }
 }
 
 .daily-left-column,
 .daily-right-column {
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
-  overflow-y: auto;
+  gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+
+  .daily-left-column,
+  .daily-right-column {
+    overflow-y: auto;
+  }
 }
 
 .daily-card {
@@ -941,10 +992,21 @@ body {
 .placeholder-card {
   text-align: center;
   padding: 3rem;
+  max-width: 400px;
+}
+
+.card {
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  max-width: 400px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  border-color: rgba(0, 255, 127, 0.4);
+  /* Consistent with original accent */
 }
 
 .placeholder-icon {
@@ -1194,5 +1256,179 @@ body {
     grid-template-columns: 1fr;
     height: auto;
     overflow: visible;
+  }
+}
+
+/* Sidebar Role-specific Styles */
+.sidebar-divider {
+  padding: 1.5rem 1.25rem 0.5rem;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+
+.sidebar-link.admin {
+  color: var(--accent);
+}
+
+.sidebar-link.admin:hover {
+  background: rgba(0, 255, 127, 0.1);
+}
+
+/* User Profile & Logout */
+.sidebar-user {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  margin: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sidebar-user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-user-name {
+  font-weight: 600;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.sidebar-user-email {
+  font-size: 0.75rem;
+  color: #888;
+}
+
+.sidebar-logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  background: rgba(255, 68, 68, 0.1);
+  border: 1px solid rgba(255, 68, 68, 0.2);
+  border-radius: 8px;
+  color: #ff4444;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sidebar-logout-btn:hover {
+  background: #ff4444;
+  color: #fff;
+}
+
+/* Updated Sidebar Account Info at Top */
+.sidebar-account-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 1.25rem 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  justify-content: space-between;
+}
+
+.sidebar-user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  color: #000;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.sidebar-user-details {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-user-name {
+  font-weight: 600;
+  color: #fff;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-user-email {
+  font-size: 0.75rem;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Fix main container black margin */
+.main-container {
+  max-width: none !important;
+  margin: 0 !important;
+  width: 100% !important;
+}
+
+
+/* Sidebar Logout Icon Button at Top */
+.sidebar-account-info {
+  justify-content: space-between;
+}
+
+.sidebar-logout-icon-btn {
+  background: rgba(255, 68, 68, 0.1);
+  border: 1px solid rgba(255, 68, 68, 0.2);
+  border-radius: 8px;
+  color: #ff4444;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+}
+
+.sidebar-logout-icon-btn:hover {
+  background: #ff4444;
+  color: #fff;
+}
+
+/* Company Reports Scrollbar - Desktop: flex fill, Mobile: fixed height (~10 rows) */
+.company-reports-scrollbar {
+  height: 500px;
+  /* Mobile default */
+  overflow-y: auto;
+}
+
+@media (min-width: 1100px) {
+  .company-reports-scrollbar {
+    height: 100% !important;
+    flex: 1;
+    min-height: 0;
   }
 }

@@ -165,11 +165,11 @@ export default function PeerComparison({ currentReport, allReports }) {
                             zIndex: 10,
                             backgroundColor: '#1E1E1E'
                         }}>
-                            <th>Metric</th>
+                            <th style={{ fontSize: '10px' }}>Metric</th>
                             {peerData.peers.map((peer, idx) => {
                                 const peerTicker = peer.info_of_report?.ticker;
                                 return (
-                                    <th key={idx}>
+                                    <th key={idx} style={{ fontSize: '10px' }}>
                                         {peerTicker}
                                     </th>
                                 );
@@ -187,14 +187,28 @@ export default function PeerComparison({ currentReport, allReports }) {
                                         position: 'sticky',
                                         left: 0,
                                         backgroundColor: '#1E1E1E',
-                                        zIndex: 10
+                                        zIndex: 10,
+                                        fontSize: '10px'
                                     }}>
                                         {metric.label}
                                     </td>
                                     {peerData.peers.map((peer, peerIdx) => {
-                                        const value = getValue(peer, metric.key);
+                                        let value = getValue(peer, metric.key);
 
                                         if (isRec) {
+                                            // INFER RATING IF MISSING
+                                            if (!value || value === '-' || value === 'null' || value === 'undefined' || value === 'No Rating') {
+                                                const upside = peer.recommendation?.upside_at_call;
+                                                if (upside != null) {
+                                                    if (upside > 15) value = 'Buy';
+                                                    else if (upside < -10) value = 'Sell';
+                                                    else value = 'Neutral';
+                                                }
+                                            }
+                                            if (!value || value === 'No Rating' || value === 'no rating' || value === '-' || value === 'null' || value === 'undefined') {
+                                                return <td key={peerIdx}></td>;
+                                            }
+
                                             const style = getRecommendationStyle(value);
                                             return (
                                                 <td key={peerIdx} style={{
@@ -229,7 +243,8 @@ export default function PeerComparison({ currentReport, allReports }) {
                                                 color: '#ccc',
                                                 borderLeft: '1px solid #1a1a1a',
                                                 borderBottom: '1px solid #1a1a1a',
-                                                fontFamily: 'monospace'
+                                                fontFamily: 'monospace',
+                                                fontSize: '10px'
                                             }}>
                                                 {value}
                                             </td>
