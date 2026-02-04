@@ -60,17 +60,25 @@ export default function Sidebar({ isOpen, onClose }) {
                 )}
 
                 <ul className="sidebar-nav">
-                    {navItems.map((item) => (
-                        <li key={item.href}>
-                            <Link
-                                href={item.href}
-                                className={`sidebar-link ${pathname === item.href ? 'active' : ''}`}
-                                onClick={onClose}
-                            >
-                                <span className="sidebar-label">{item.label}</span>
-                            </Link>
-                        </li>
-                    ))}
+                    {navItems
+                        .filter(item => {
+                            // Hide Macro Research for non-admin users
+                            if (item.href === '/macro-research' && session?.user?.role !== 'admin') {
+                                return false;
+                            }
+                            return true;
+                        })
+                        .map((item) => (
+                            <li key={item.href}>
+                                <Link
+                                    href={item.href}
+                                    className={`sidebar-link ${pathname === item.href ? 'active' : ''}`}
+                                    onClick={onClose}
+                                >
+                                    <span className="sidebar-label">{item.label}</span>
+                                </Link>
+                            </li>
+                        ))}
 
                     {session?.user?.role === 'admin' && (
                         <>

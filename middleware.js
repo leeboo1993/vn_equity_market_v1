@@ -35,6 +35,24 @@ export default auth((req) => {
         return NextResponse.redirect(new URL("/", nextUrl));
     }
 
+    // Feature-based Route Protection
+    const routeFeatureMap = {
+        '/macro-research': 'Macro Research',
+        '/strategy-research': 'Strategy Research',
+        '/company-research': 'Company Research',
+    };
+
+    const feature = routeFeatureMap[nextUrl.pathname];
+    if (feature) {
+        const userRole = req.auth?.user?.role;
+        // For now, use hardcoded check. In production, you'd fetch from R2
+        const restrictedToAdmin = feature === 'Macro Research';
+
+        if (restrictedToAdmin && userRole !== 'admin') {
+            return NextResponse.redirect(new URL("/", nextUrl));
+        }
+    }
+
     return null;
 });
 
