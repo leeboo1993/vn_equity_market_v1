@@ -3,17 +3,19 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
+import { useFeatureAccess } from '../../lib/useFeatureAccess';
 
 const navItems = [
-    { href: '/', label: 'Daily Tracking' },
-    { href: '/company-research', label: 'Company Research' },
-    { href: '/macro-research', label: 'Macro Research' },
-    { href: '/strategy-research', label: 'Strategy Research' },
+    { href: '/', label: 'Daily Tracking', feature: 'Daily Tracking' },
+    { href: '/company-research', label: 'Company Research', feature: 'Company Research' },
+    { href: '/macro-research', label: 'Macro Research', feature: 'Macro Research' },
+    { href: '/strategy-research', label: 'Strategy Research', feature: 'Strategy Research' },
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
     const pathname = usePathname();
     const { data: session } = useSession();
+    const { hasAccess } = useFeatureAccess();
 
     return (
         <>
@@ -61,13 +63,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
                 <ul className="sidebar-nav">
                     {navItems
-                        .filter(item => {
-                            // Hide Macro Research for non-admin users
-                            if (item.href === '/macro-research' && session?.user?.role !== 'admin') {
-                                return false;
-                            }
-                            return true;
-                        })
+                        .filter(item => hasAccess(item.feature))
                         .map((item) => (
                             <li key={item.href}>
                                 <Link

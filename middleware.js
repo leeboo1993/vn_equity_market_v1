@@ -1,10 +1,27 @@
 import NextAuth from "next-auth";
 import authConfig from "./auth.config";
 import { NextResponse } from "next/server";
+import { getFeatureSettings, hasAccess } from "./lib/rbac";
 
 const { auth } = NextAuth(authConfig);
 
-export default auth((req) => {
+// In-memory cache for feature settings (60 second TTL)
+let featureCache = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 60 * 1000; // 60 seconds
+
+async function getCachedFeatures() {
+    const now = Date.now();
+    if (featureCache && (now - cacheTimestamp < CACHE_TTL)) {
+        return featureCache;
+    }
+
+    featureCache = await getFeatureSettings();
+    cacheTimestamp = now;
+    return featureCache;
+}
+
+export default auth(async (req) => {
     const { nextUrl } = req;
     const isLoggedIn = !!req.auth;
     const isApproved = req.auth?.user?.approved;
@@ -35,8 +52,9 @@ export default auth((req) => {
         return NextResponse.redirect(new URL("/", nextUrl));
     }
 
-    // Feature-based Route Protection
+    // Dynamic Feature-based Route Protection
     const routeFeatureMap = {
+        '/': 'Daily Tracking',
         '/macro-research': 'Macro Research',
         '/strategy-research': 'Strategy Research',
         '/company-research': 'Company Research',
@@ -45,10 +63,9 @@ export default auth((req) => {
     const feature = routeFeatureMap[nextUrl.pathname];
     if (feature) {
         const userRole = req.auth?.user?.role;
-        // For now, use hardcoded check. In production, you'd fetch from R2
-        const restrictedToAdmin = feature === 'Macro Research';
+        const features = await getCachedFeatures();
 
-        if (restrictedToAdmin && userRole !== 'admin') {
+        if (!hasAccess(userRole, feature, features)) {
             return NextResponse.redirect(new URL("/", nextUrl));
         }
     }
