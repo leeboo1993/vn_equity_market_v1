@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getReports } from '@/lib/data';
+import { getRawReports, enrichReportsBatch } from '@/lib/data';
 import rateLimit from '@/lib/rateLimit';
 
 const limiter = rateLimit({
@@ -25,9 +25,10 @@ export async function GET(request) {
         const brokerParam = searchParams.get('broker'); // issued_company
         const sectorParam = searchParams.get('sector');
 
-        let reports = await getReports();
+        // 1. Get Raw Reports (Fast, no enrichment yet)
+        let reports = await getRawReports();
 
-        // 1. Filter by Quarter(s)
+        // 2. Filter by Quarter(s)
         if (quartersParam && quartersParam !== 'all') {
             const quartersToLoad = quartersParam.split(',');
             // Format of reports date: YYMMDD
@@ -46,32 +47,36 @@ export async function GET(request) {
             });
         }
 
-        // 2. Filter by Ticker
+        // 3. Filter by Ticker
         if (tickerParam) {
             reports = reports.filter(r => r.info_of_report?.ticker === tickerParam);
         }
 
-        // 3. Filter by Broker
+        // 4. Filter by Broker
         if (brokerParam) {
             reports = reports.filter(r => r.info_of_report?.issued_company === brokerParam);
         }
 
-        // 4. Filter by Sector
+        // 5. Filter by Sector
         if (sectorParam && sectorParam !== 'All') {
             reports = reports.filter(r => r.info_of_report?.sector === sectorParam);
         }
 
-        // 5. Pagination
+        // 6. Pagination (Slice RAW data first)
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '50');
         const startIndex = (page - 1) * limit;
         const endIndex = startIndex + limit;
 
         const total = reports.length;
-        const paginatedReports = reports.slice(startIndex, endIndex);
+        // Optimization: Slice first, then enrich only the slice
+        const paginatedRawReports = reports.slice(startIndex, endIndex);
+
+        // 7. Enrich ONLY the paginated chunk
+        const enrichedReports = await enrichReportsBatch(paginatedRawReports);
 
         return NextResponse.json({
-            reports: paginatedReports,
+            reports: enrichedReports,
             total,
             page,
             limit,
