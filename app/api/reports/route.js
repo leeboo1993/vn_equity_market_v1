@@ -58,8 +58,8 @@ function getQuarterFromDate(dateString) {
 }
 
 export async function GET(request) {
-    // ANTI-CRAWLER: Require authentication
-    const { authorized, response } = await requireAuth(request);
+    // ANTI-CRAWLER: Require authentication + Rate limiting
+    const { authorized, response, rateLimitHeaders } = await requireAuth(request);
     if (!authorized) return response;
 
     try {
@@ -132,7 +132,10 @@ export async function GET(request) {
             reports: filteredReports,
             total: filteredReports.length,
             loadedQuarters: quarters.length > 0 ? quarters : ['all']
+        }, {
+            headers: rateLimitHeaders
         });
+
 
     } catch (error) {
         console.error('Error in reports API:', error);
