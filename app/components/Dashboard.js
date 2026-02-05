@@ -339,7 +339,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
     // Recursive Pagination Fetcher
     const fetchReportsRecursively = async (quartersToLoad) => {
         setIsLoading(true);
-        const limit = 100; // Safe chunk size (~1MB)
+        const limit = 300; // Increased to ~300 to reduce round trips (safe within 4.5MB)
         let page = 1;
         let hasMore = true;
         let allNewReports = [];
@@ -1691,6 +1691,30 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                 </tbody>
                             </table>
                         </div>
+
+                        {/* Quarter Loading Indicator (Admin Only) */}
+                        {shouldFetchData && isAdmin && (
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '16px',
+                                borderTop: '1px solid #2a2a2a',
+                                fontSize: '10px'
+                            }}>
+                                <div className="text-gray-400">
+                                    Loaded quarters: <span className="text-green-400">{loadedQuarters.join(', ') || 'None'}</span>
+                                    {' • '}
+                                    {reports.length.toLocaleString()} reports
+                                </div>
+
+                                {isLoading && (
+                                    <div className="text-gray-400">
+                                        Loading...
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </section >
 
