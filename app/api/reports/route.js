@@ -14,7 +14,7 @@ export async function GET(request) {
         // Rate Limiting
         const ip = request.headers.get('x-forwarded-for') || 'anonymous';
         try {
-            await limiter.check(NextResponse.next(), 20, ip); // 20 requests per minute
+            await limiter.check(NextResponse.next(), 200, ip); // Increased to 200 to support parallel pagination
         } catch {
             return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
         }
