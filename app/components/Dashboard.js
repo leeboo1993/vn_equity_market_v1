@@ -2950,9 +2950,6 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                     </ul>
                                                 </div>
                                             )}
-                                            {(!selectedReport.company_update || selectedReport.company_update.length === 0) && (
-                                                <div style={{ color: '#666', fontStyle: 'italic', fontSize: '0.8rem' }}>No company update available</div>
-                                            )}
                                         </div>
                                     </div>
                                 </>
@@ -2961,7 +2958,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                             <div className="text-center text-gray-500 mt-10">Select a report</div>
                         )}
                     </div>
-                </section >
+                </section>
             </main >
         </>
     );
