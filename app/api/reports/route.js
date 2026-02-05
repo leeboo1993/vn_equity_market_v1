@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getFullRawReports, enrichReportsBatch } from '@/lib/data';
+import { getFullRawReports, enrichReportsBatch, getQuarterLabel } from '@/lib/data';
 import rateLimit from '@/lib/rateLimit';
 
 const limiter = rateLimit({
@@ -33,23 +33,8 @@ export async function GET(request) {
         if (quartersParam && quartersParam !== 'all') {
             const quartersToLoad = quartersParam.split(',');
             reports = reports.filter(r => {
-                const dStr = r.info_of_report?.date_of_issue;
-                if (!dStr) return false;
-                const s = String(dStr);
-                let yy, mm, year;
-                if (s.length === 8) {
-                    year = parseInt(s.substring(0, 4));
-                    mm = parseInt(s.substring(4, 6));
-                } else if (s.length === 6) {
-                    yy = parseInt(s.substring(0, 2));
-                    mm = parseInt(s.substring(2, 4));
-                    year = 2000 + yy;
-                } else {
-                    return false;
-                }
-                const q = Math.ceil(mm / 3);
-                const qLabel = `Q${q} ${year}`;
-                return quartersToLoad.includes(qLabel);
+                const qLabel = getQuarterLabel(r.info_of_report?.date_of_issue);
+                return qLabel && quartersToLoad.includes(qLabel);
             });
         }
 

@@ -341,13 +341,27 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
     const [selectedReportId, setSelectedReportId] = useState(null);
     const [enrichedIds, setEnrichedIds] = useState(new Set());
 
+    // Sync Progress State
+    const [syncProgress, setSyncProgress] = useState({
+        total: 0,
+        current: 0,
+        eta: null,
+        startTime: null,
+        isSyncing: false
+    });
+
     const enrichReportsInBackground = async (newReports) => {
         if (!newReports || newReports.length === 0) return;
 
-        // Only enrich those not already enriched or missing performance metrics
-        // We'll trust the enrichedIds set
         const toProcess = newReports.filter(r => !enrichedIds.has(r.id));
         if (toProcess.length === 0) return;
+
+        setSyncProgress(prev => ({
+            ...prev,
+            total: prev.total + toProcess.length,
+            startTime: prev.startTime || Date.now(),
+            isSyncing: true
+        }));
 
         // Process in smaller batches to keep UI responsive and parallelize
         const batchSize = 200;
@@ -367,6 +381,21 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                             const next = new Set(prev);
                             data.reports.forEach(r => next.add(r.id));
                             return next;
+                        });
+
+                        setSyncProgress(prev => {
+                            const newCurrent = prev.current + data.reports.length;
+                            const elapsed = Date.now() - prev.startTime;
+                            const avgPerReport = elapsed / newCurrent;
+                            const remaining = prev.total - newCurrent;
+                            const etaSeconds = Math.ceil((remaining * avgPerReport) / 1000);
+
+                            return {
+                                ...prev,
+                                current: newCurrent,
+                                eta: etaSeconds > 0 ? etaSeconds : null,
+                                isSyncing: newCurrent < prev.total
+                            };
                         });
                     }
                 })
@@ -412,9 +441,12 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                 page++;
 
                 // If first page is loaded, we can stop the overall "loading" spinner
-                if (page > 1) setIsLoading(false);
+                if (page > 1) {
+                    setIsLoading(false);
+                    // Update loaded quarters early to show what we're working on
+                    setLoadedQuarters(prev => [...new Set([...prev, ...quartersToLoad])]);
+                }
             }
-            setLoadedQuarters(prev => [...new Set([...prev, ...quartersToLoad])]);
         } catch (err) {
             console.error("Pagination fetch error:", err);
         } finally {
@@ -1539,17 +1571,49 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                 {/* COLUMN 2 */}
                 <section className="column" style={{ height: '100%', overflowY: 'auto', paddingRight: '4px' }}>
                     <div className="card" style={{ height: '100%' }}>
-                        <div className="mb-4" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+                        {/* Sync Progress Bar for Admins - More prominent */}
+                        {isAdmin && syncProgress.isSyncing && (
+                            <div style={{
+                                marginBottom: '16px',
+                                padding: '12px',
+                                background: 'rgba(0, 255, 127, 0.05)',
+                                borderRadius: '8px',
+                                border: '1px solid rgba(0, 255, 127, 0.1)'
+                            }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <div className="animate-pulse" style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--accent)' }}></div>
+                                        <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)' }}>Background Data Syncing...</span>
+                                    </div>
+                                    <span style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'monospace' }}>
+                                        {syncProgress.current} / {syncProgress.total} reports
+                                        {syncProgress.eta && ` (ETA: ${syncProgress.eta}s)`}
+                                    </span>
+                                </div>
+                                <div style={{ height: '4px', width: '100%', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+                                    <div
+                                        style={{
+                                            height: '100%',
+                                            width: `${(syncProgress.current / syncProgress.total) * 100}%`,
+                                            backgroundColor: 'var(--accent)',
+                                            boxShadow: '0 0 10px var(--accent)',
+                                            transition: 'width 0.4s ease'
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                             <h2 className="card-title mb-0">Company reports</h2>
                             <label className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity" style={{ display: 'flex', alignItems: 'center' }}>
                                 <input
                                     type="checkbox"
                                     checked={shouldFilterTargets}
                                     onChange={(e) => setShouldFilterTargets(e.target.checked)}
-                                    // Native checkbox for debugging state
                                     style={{ width: '14px', height: '14px', accentColor: '#666' }}
                                 />
-                                <span className="text-[#888] text-[10px] font-medium" style={{ fontSize: '10px', lineHeight: '14px' }}>Has Target Price</span>
+                                <span className="text-[#888] text-[10px] font-medium" style={{ fontSize: '10px', lineHeight: '14px', marginLeft: '6px' }}>Has Target Price</span>
                             </label>
                         </div>
                         <div className="table-wrapper company-reports-scrollbar relative custom-scrollbar">
@@ -1739,9 +1803,19 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                 fontSize: '10px'
                             }}>
                                 <div className="text-gray-400">
-                                    Loaded quarters: <span className="text-green-400">{loadedQuarters.join(', ') || 'None'}</span>
-                                    {' • '}
-                                    {reports.length.toLocaleString()} reports
+                                    {syncProgress.isSyncing && (
+                                        <div className="flex items-center gap-2 mb-1" style={{ fontSize: '10px', color: 'var(--accent)', opacity: 0.8 }}>
+                                            <span className="animate-pulse">●</span> Processing Performance Metrics... ({syncProgress.current}/{syncProgress.total})
+                                        </div>
+                                    )}
+                                    <div style={{ fontSize: '11px', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <span>Loaded quarters:</span>
+                                        <span style={{ color: 'var(--accent)', fontWeight: '500' }}>
+                                            {loadedQuarters.length > 0 ? loadedQuarters.join(', ') : 'Initializing...'}
+                                        </span>
+                                        <span style={{ opacity: 0.3 }}>|</span>
+                                        <span>{reports.length.toLocaleString()} reports matched</span>
+                                    </div>
                                 </div>
 
                                 {isLoading && (
