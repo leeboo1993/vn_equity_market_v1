@@ -25,22 +25,22 @@ const safeToFixed = (val, digits = 1) => {
 };
 
 const getQuarterFromDate = (dateString) => {
-    if (!dateString || dateString.length !== 6) return null;
+    const dStr = String(dateString || '').trim();
+    let year, mm, dd;
 
-    // User confirmed JSON uses YYMMDD format
-    // Try YYMMDD first
-    const yy = parseInt(dateString.substring(0, 2));
-    const mm = parseInt(dateString.substring(2, 4));
-    const dd = parseInt(dateString.substring(4, 6));
-    const year_yymmdd = 2000 + yy;
+    if (dStr.length === 8) {
+        year = parseInt(dStr.substring(0, 4));
+        mm = parseInt(dStr.substring(4, 6));
+        dd = parseInt(dStr.substring(6, 8));
+    } else if (dStr.length === 6) {
+        year = 2000 + parseInt(dStr.substring(0, 2));
+        mm = parseInt(dStr.substring(2, 4));
+        dd = parseInt(dStr.substring(4, 6));
+    }
 
-    // Check if YYMMDD gives reasonable year (2000-2030)
-    // Updated limit to 2030 to support future dates like 2026
-    const isValidYYMMDD = (mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31 && year_yymmdd <= 2030);
-
-    if (isValidYYMMDD) {
+    if (year && mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31 && year <= 2030) {
         const quarter = Math.ceil(mm / 3);
-        return { quarter, year: year_yymmdd, label: `Q${quarter} ${year_yymmdd}` };
+        return { quarter, year, label: `Q${quarter} ${year}` };
     }
 
     // Invalid date
@@ -1800,8 +1800,10 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                             if (info) {
                                                 return `${info.organ_short} (${info.exchange}: ${t})`;
                                             }
-                                            // Fallback
-                                            return `${selectedReport.info_of_report.stock_name || selectedReport.info_of_report.covered_stock || t} (${t})`;
+                                            const ticker = selectedReport.info_of_report?.ticker || 'N/A';
+                                            const name = selectedReport.info_of_report?.stock_name;
+                                            const displayName = (name && name !== 'undefined' && name !== 'null') ? name : (selectedReport.info_of_report?.covered_stock || ticker);
+                                            return `${displayName} (${ticker})`;
                                         })()}
                                     </h2>
                                     <div className="text-gray-400" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '5px', marginBottom: '12px', fontSize: '10px' }}>

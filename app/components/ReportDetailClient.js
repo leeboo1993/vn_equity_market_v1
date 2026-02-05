@@ -31,7 +31,7 @@ export default function ReportDetailClient({ report, allReports }) {
                     <div>
                         <div className="flex items-center gap-4 mb-2">
                             <h1 className="card-title mb-0" style={{ fontSize: '10px' }}>
-                                {report.info_of_report.stock_name || report.info_of_report.covered_stock || report.info_of_report.ticker}
+                                {(report.info_of_report.stock_name && report.info_of_report.stock_name !== 'undefined') ? report.info_of_report.stock_name : (report.info_of_report.covered_stock || report.info_of_report.ticker)}
                                 {report.info_of_report.exchange && ` (${report.info_of_report.exchange}: ${report.info_of_report.ticker})`}
                             </h1>
                         </div>

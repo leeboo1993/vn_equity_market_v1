@@ -55,16 +55,23 @@ export async function GET(request) {
             // Format of reports date: YYMMDD
             // Helper to get Q from YYMMDD
             reports = reports.filter(r => {
-                const dStr = r.info_of_report?.date_of_issue;
-                if (!dStr || dStr.length !== 6) return false;
+                const dStr = String(r.info_of_report?.date_of_issue || '').trim();
+                let year, mm;
 
-                const yy = parseInt(dStr.substring(0, 2));
-                const mm = parseInt(dStr.substring(2, 4));
-                const year = 2000 + yy;
-                const q = Math.ceil(mm / 3);
-                const qLabel = `Q${q} ${year}`;
+                if (dStr.length === 8) {
+                    year = parseInt(dStr.substring(0, 4));
+                    mm = parseInt(dStr.substring(4, 6));
+                } else if (dStr.length === 6) {
+                    year = 2000 + parseInt(dStr.substring(0, 2));
+                    mm = parseInt(dStr.substring(2, 4));
+                }
 
-                return quartersToLoad.includes(qLabel);
+                if (year && mm >= 1 && mm <= 12 && year <= 2030) {
+                    const q = Math.ceil(mm / 3);
+                    const qLabel = `Q${q} ${year}`;
+                    return quartersToLoad.includes(qLabel);
+                }
+                return false;
             });
         }
 
@@ -94,11 +101,18 @@ export async function GET(request) {
         // Calculate available quarters from the filtered set (for UI dropdowns)
         const quartersSet = new Set();
         reports.forEach(r => {
-            const dStr = r.info_of_report?.date_of_issue;
-            if (dStr && dStr.length === 6) {
-                const yy = parseInt(dStr.substring(0, 2));
-                const mm = parseInt(dStr.substring(2, 4));
-                const year = 2000 + yy;
+            const dStr = String(r.info_of_report?.date_of_issue || '').trim();
+            let year, mm;
+
+            if (dStr.length === 8) {
+                year = parseInt(dStr.substring(0, 4));
+                mm = parseInt(dStr.substring(4, 6));
+            } else if (dStr.length === 6) {
+                year = 2000 + parseInt(dStr.substring(0, 2));
+                mm = parseInt(dStr.substring(2, 4));
+            }
+
+            if (year && mm >= 1 && mm <= 12 && year <= 2030) {
                 const q = Math.ceil(mm / 3);
                 quartersSet.add(`Q${q} ${year}`);
             }
