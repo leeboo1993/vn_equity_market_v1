@@ -24,11 +24,18 @@ export default function ReportList({ reports, selectedReportId, onSelectReport, 
     };
 
     const formatDate = (dateString) => {
-        if (!dateString || dateString.length !== 6) return dateString;
-        const year = `20${dateString.substring(0, 2)}`;
-        const month = dateString.substring(2, 4);
-        const day = dateString.substring(4, 6);
-        return `${day}/${month}/${year}`;
+        if (!dateString) return '-';
+        const s = String(dateString);
+        if (s.length === 8) {
+            return `${s.substring(6, 8)}/${s.substring(4, 6)}/${s.substring(0, 4)}`;
+        }
+        if (s.length === 6) {
+            const year = `20${s.substring(0, 2)}`;
+            const month = s.substring(2, 4);
+            const day = s.substring(4, 6);
+            return `${day}/${month}/${year}`;
+        }
+        return dateString;
     };
 
     const getDisplayRecommendation = (upside, targetPrice) => {

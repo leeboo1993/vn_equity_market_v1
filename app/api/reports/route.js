@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getFullRawReports, enrichReportsBatch, getQuarterLabel } from '@/lib/data';
+import { getFullRawReports, enrichReportsBatch, getQuarterLabel, getThinReports } from '@/lib/data';
 import rateLimit from '@/lib/rateLimit';
 
 const limiter = rateLimit({
@@ -27,7 +27,14 @@ export async function GET(request) {
         const rawParam = searchParams.get('raw') === 'true';
         const idsParam = searchParams.get('ids');
 
-        let reports = await getFullRawReports();
+        // PERFORMANCE: Use thin reports for "raw" initial loads.
+        // Use full reports ONLY for enrichment (raw=false) or specific requests.
+        let reports;
+        if (rawParam && !idsParam) {
+            reports = await getThinReports();
+        } else {
+            reports = await getFullRawReports();
+        }
 
         // 1. Filter by Quarter(s)
         if (quartersParam && quartersParam !== 'all') {

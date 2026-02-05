@@ -4,11 +4,18 @@ import { useMemo } from 'react';
 
 // Helper to format dates to DD/MM/YYYY
 const formatDate = (dateStr) => {
-    if (!dateStr || dateStr.length !== 6) return dateStr;
-    const day = dateStr.substring(4, 6);
-    const month = dateStr.substring(2, 4);
-    const year = `20${dateStr.substring(0, 2)}`;
-    return `${day}/${month}/${year}`;
+    if (!dateStr) return '-';
+    const s = String(dateStr);
+    if (s.length === 8) {
+        return `${s.substring(6, 8)}/${s.substring(4, 6)}/${s.substring(0, 4)}`;
+    }
+    if (s.length === 6) {
+        const day = s.substring(4, 6);
+        const month = s.substring(2, 4);
+        const year = `20${s.substring(0, 2)}`;
+        return `${day}/${month}/${year}`;
+    }
+    return dateStr;
 };
 
 // Helper to format numbers
@@ -31,10 +38,20 @@ const formatPercentage = (value) => {
 // Assuming date_of_issue is YYMMDD or DDMMYY based on existing code usage
 // Existing code parseDateDate used YYMMDD logic: 2000 + substr(0,2)
 const parseDateHelper = (dateStr) => {
-    if (!dateStr || dateStr.length !== 6) return null;
-    const y = 2000 + parseInt(dateStr.substring(0, 2));
-    const m = parseInt(dateStr.substring(2, 4)) - 1; // 0-indexed
-    const d = parseInt(dateStr.substring(4, 6));
+    if (!dateStr) return null;
+    const s = String(dateStr);
+    let y, m, d;
+    if (s.length === 8) {
+        y = parseInt(s.substring(0, 4));
+        m = parseInt(s.substring(4, 6)) - 1;
+        d = parseInt(s.substring(6, 8));
+    } else if (s.length === 6) {
+        y = 2000 + parseInt(s.substring(0, 2));
+        m = parseInt(s.substring(2, 4)) - 1;
+        d = parseInt(s.substring(4, 6));
+    } else {
+        return null;
+    }
     const date = new Date(y, m, d);
     return isNaN(date.getTime()) ? null : date;
 };
@@ -234,9 +251,19 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
             // Historical comparison: same broker + ticker, grouped by quarter
             const parseDateDate = (dStr) => {
                 if (!dStr) return new Date(0);
-                const y = 2000 + parseInt(dStr.substring(0, 2));
-                const m = parseInt(dStr.substring(2, 4)) - 1;
-                const d = parseInt(dStr.substring(4, 6));
+                const s = String(dStr);
+                let y, m, d;
+                if (s.length === 8) {
+                    y = parseInt(s.substring(0, 4));
+                    m = parseInt(s.substring(4, 6)) - 1;
+                    d = parseInt(s.substring(6, 8));
+                } else if (s.length === 6) {
+                    y = 2000 + parseInt(s.substring(0, 2));
+                    m = parseInt(s.substring(2, 4)) - 1;
+                    d = parseInt(s.substring(4, 6));
+                } else {
+                    return new Date(0);
+                }
                 return new Date(y, m, d);
             };
 
@@ -350,8 +377,13 @@ export default function UnifiedComparisonTable({ mode, currentReport, allReports
         if (!rep || !rep.forecast_table || !rep.forecast_table.columns) return [];
 
         // Get report date to determine which years are forecasts
-        const reportDate = rep.info_of_report?.date_of_issue || '250101'; // Default to 2025
-        const reportYear = 2000 + parseInt(reportDate.substring(0, 2));
+        const reportDate = String(rep.info_of_report?.date_of_issue || '20250101');
+        let reportYear;
+        if (reportDate.length === 8) {
+            reportYear = parseInt(reportDate.substring(0, 4));
+        } else {
+            reportYear = 2000 + parseInt(reportDate.substring(0, 2));
+        }
 
         // Helper to normalize year formats
         const normalizeYear = (yearStr) => {

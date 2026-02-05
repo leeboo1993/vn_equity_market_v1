@@ -4,8 +4,15 @@ import { useMemo } from 'react';
 
 // Helper to format dates
 const formatDate = (dateStr) => {
-    if (!dateStr || dateStr.length !== 6) return dateStr;
-    return `${dateStr.substring(4, 6)}/${dateStr.substring(2, 4)}/20${dateStr.substring(0, 2)}`;
+    if (!dateStr) return '-';
+    const str = String(dateStr);
+    if (str.length === 8) {
+        return `${str.substring(6, 8)}/${str.substring(4, 6)}/${str.substring(0, 4)}`;
+    }
+    if (str.length === 6) {
+        return `${str.substring(4, 6)}/${str.substring(2, 4)}/20${str.substring(0, 2)}`;
+    }
+    return dateStr;
 };
 
 // Helper to format numbers

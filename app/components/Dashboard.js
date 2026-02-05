@@ -2158,8 +2158,13 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                         if (!rep || !rep.forecast_table || !rep.forecast_table.columns) return [];
 
                                                         // Get report date to determine which years are forecasts
-                                                        const reportDate = rep.info_of_report?.date_of_issue || '250101'; // Default to 2025
-                                                        const reportYear = 2000 + parseInt(reportDate.substring(0, 2));
+                                                        const reportDate = String(rep.info_of_report?.date_of_issue || '20250101');
+                                                        let reportYear;
+                                                        if (reportDate.length === 8) {
+                                                            reportYear = parseInt(reportDate.substring(0, 4));
+                                                        } else {
+                                                            reportYear = 2000 + parseInt(reportDate.substring(0, 2));
+                                                        }
 
                                                         // Helper to normalize year formats
                                                         const normalizeYear = (yearStr) => {
@@ -2280,9 +2285,17 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                             // Function to parse date
                                                             const parseDateDate = (dStr) => {
                                                                 if (!dStr) return new Date(0);
-                                                                const y = 2000 + parseInt(dStr.substring(0, 2));
-                                                                const m = parseInt(dStr.substring(2, 4)) - 1;
-                                                                const d = parseInt(dStr.substring(4, 6));
+                                                                const s = String(dStr);
+                                                                let y, m, d;
+                                                                if (s.length === 8) {
+                                                                    y = parseInt(s.substring(0, 4));
+                                                                    m = parseInt(s.substring(4, 6)) - 1;
+                                                                    d = parseInt(s.substring(6, 8));
+                                                                } else {
+                                                                    y = 2000 + parseInt(s.substring(0, 2));
+                                                                    m = parseInt(s.substring(2, 4)) - 1;
+                                                                    d = parseInt(s.substring(4, 6));
+                                                                }
                                                                 return new Date(y, m, d);
                                                             };
                                                             const currentRepDate = parseDateDate(selectedReport.info_of_report?.date_of_issue);
