@@ -339,6 +339,8 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
     const [loadedQuarters, setLoadedQuarters] = useState([]);
     const [isLoading, setIsLoading] = useState(shouldFetchData);
     const [selectedReportId, setSelectedReportId] = useState(null);
+    const [fullReportDetail, setFullReportDetail] = useState(null);
+    const [isDetailLoading, setIsDetailLoading] = useState(false);
 
     // Recursive Pagination Fetcher (Optimized with Parallel Requests)
     const fetchReportsRecursively = async (quartersToLoad) => {
@@ -611,6 +613,42 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
         }
     }, [filterPeriod, loadedQuarters, uniqueQuarters]);
 
+    // Fetch Full Report Detail when selected
+    useEffect(() => {
+        if (!selectedReportId) {
+            setFullReportDetail(null);
+            return;
+        }
+
+        const fetchFullDetail = async () => {
+            setIsDetailLoading(true);
+            setFullReportDetail(null); // Clear previous to avoid mixing data
+            try {
+                // Find basic info from list as fallback/initial
+                const basicReport = reports.find(r => r.id === selectedReportId);
+
+                // Fetch FULL detail (heavy fields like company_update)
+                const res = await fetch(`/api/reports?id=${selectedReportId}`);
+                if (res.ok) {
+                    const fullData = await res.json();
+                    setFullReportDetail(fullData);
+                } else {
+                    console.error("Failed to fetch full report detail");
+                    setFullReportDetail(basicReport); // Fallback to lite data
+                }
+            } catch (e) {
+                console.error("Error fetching report detail:", e);
+                // Fallback
+                const basicReport = reports.find(r => r.id === selectedReportId);
+                setFullReportDetail(basicReport);
+            } finally {
+                setIsDetailLoading(false);
+            }
+        };
+
+        fetchFullDetail();
+    }, [selectedReportId, reports]);
+
     const filteredReports = useMemo(() => {
         return reports.filter(r => {
             const mTicker = filterTicker === 'All' || r.info_of_report.ticker === filterTicker;
@@ -751,7 +789,10 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
         setSortConfig({ key, direction });
     };
 
-    const selectedReport = sortedReports.find(r => r.id === selectedReportId) || sortedReports[0];
+    const selectedReport = useMemo(() => {
+        if (fullReportDetail && fullReportDetail.id === selectedReportId) return fullReportDetail;
+        return sortedReports.find(r => r.id === selectedReportId) || sortedReports[0];
+    }, [sortedReports, selectedReportId, fullReportDetail]);
 
     // Stats
     const reportsWithUpside = filteredReports.filter(r => r.recommendation?.upside != null);

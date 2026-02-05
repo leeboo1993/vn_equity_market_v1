@@ -28,6 +28,19 @@ export async function GET(request) {
         }
 
         const { searchParams } = new URL(request.url);
+        const idParam = searchParams.get('id');
+
+        // 0. Single Report Fetch (Full Detail)
+        if (idParam) {
+            const { getReport } = await import('@/lib/data');
+            const report = await getReport(idParam);
+            if (report) {
+                return NextResponse.json(report);
+            } else {
+                return NextResponse.json({ error: 'Report not found' }, { status: 404 });
+            }
+        }
+
         const quartersParam = searchParams.get('quarters');
         const tickerParam = searchParams.get('ticker');
         const brokerParam = searchParams.get('broker'); // issued_company
