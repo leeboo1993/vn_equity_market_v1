@@ -24,6 +24,8 @@ export async function GET(request) {
         const tickerParam = searchParams.get('ticker');
         const brokerParam = searchParams.get('broker'); // issued_company
         const sectorParam = searchParams.get('sector');
+        const rawParam = searchParams.get('raw') === 'true';
+        const idsParam = searchParams.get('ids');
 
         let reports = await getFullRawReports();
 
@@ -66,18 +68,28 @@ export async function GET(request) {
             reports = reports.filter(r => r.info_of_report?.sector === sectorParam);
         }
 
-        // --- ENRICHMENT ONLY ON RESULTS ---
-        // Instead of enriching 18,000 reports, we only enrich the filtered subset
-        const enrichedReports = await enrichReportsBatch(reports);
+        // 5. Filter by IDs (New for background enrichment)
+        if (idsParam) {
+            const idList = idsParam.split(',');
+            reports = reports.filter(r => idList.includes(r.id));
+        }
 
-        // 5. Pagination
+        // --- OPTIMIZED LOADING ---
+        let finalReports;
+        if (rawParam) {
+            finalReports = reports;
+        } else {
+            finalReports = await enrichReportsBatch(reports);
+        }
+
+        // 6. Pagination
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '50');
         const startIndex = (page - 1) * limit;
         const endIndex = startIndex + limit;
 
-        const total = enrichedReports.length;
-        const paginatedReports = enrichedReports.slice(startIndex, endIndex);
+        const total = finalReports.length;
+        const paginatedReports = finalReports.slice(startIndex, endIndex);
 
         return NextResponse.json({
             reports: paginatedReports,

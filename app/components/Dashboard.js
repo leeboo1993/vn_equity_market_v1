@@ -339,6 +339,40 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
     const [loadedQuarters, setLoadedQuarters] = useState([]);
     const [isLoading, setIsLoading] = useState(shouldFetchData);
     const [selectedReportId, setSelectedReportId] = useState(null);
+    const [enrichedIds, setEnrichedIds] = useState(new Set());
+
+    const enrichReportsInBackground = async (newReports) => {
+        if (!newReports || newReports.length === 0) return;
+
+        // Only enrich those not already enriched or missing performance metrics
+        // We'll trust the enrichedIds set
+        const toProcess = newReports.filter(r => !enrichedIds.has(r.id));
+        if (toProcess.length === 0) return;
+
+        // Process in smaller batches to keep UI responsive and parallelize
+        const batchSize = 200;
+        for (let i = 0; i < toProcess.length; i += batchSize) {
+            const batch = toProcess.slice(i, i + batchSize);
+            const ids = batch.map(r => r.id).join(',');
+
+            fetch(`/api/reports?ids=${ids}&raw=false`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.reports) {
+                        setReports(prev => prev.map(oldR => {
+                            const match = data.reports.find(nr => nr.id === oldR.id);
+                            return match ? { ...oldR, ...match } : oldR;
+                        }));
+                        setEnrichedIds(prev => {
+                            const next = new Set(prev);
+                            data.reports.forEach(r => next.add(r.id));
+                            return next;
+                        });
+                    }
+                })
+                .catch(err => console.error("Batch enrichment failed:", err));
+        }
+    };
 
     // Recursive Pagination Fetcher
     const fetchReportsRecursively = async (quartersToLoad) => {
@@ -351,7 +385,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
         try {
             while (hasMore) {
                 const qStr = quartersToLoad.join(',');
-                const res = await fetch(`/api/reports?quarters=${qStr}&page=${page}&limit=${limit}`);
+                const res = await fetch(`/api/reports?quarters=${qStr}&page=${page}&limit=${limit}&raw=true`);
                 if (!res.ok) throw new Error('API fetch failed');
 
                 const data = await res.json();
@@ -366,6 +400,10 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
             setReports(prev => {
                 const existingIds = new Set(prev.map(r => r.id));
                 const uniqueNew = allNewReports.filter(r => !existingIds.has(r.id));
+                // Trigger background enrichment for these new reports
+                if (uniqueNew.length > 0) {
+                    enrichReportsInBackground(uniqueNew);
+                }
                 // Sort descending by date
                 return [...prev, ...uniqueNew].sort((a, b) =>
                     b.info_of_report.date_of_issue.localeCompare(a.info_of_report.date_of_issue)
