@@ -340,38 +340,57 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
     const [isLoading, setIsLoading] = useState(shouldFetchData);
     const [selectedReportId, setSelectedReportId] = useState(null);
 
-    // Recursive Pagination Fetcher
+    // Recursive Pagination Fetcher (Optimized with Parallel Requests)
     const fetchReportsRecursively = async (quartersToLoad) => {
         setIsLoading(true);
         const limit = 400; // Optimized to 400 (max safe size ~3.7MB < 4.5MB)
-        let page = 1;
-        let hasMore = true;
-        let allNewReports = [];
+        const qStr = quartersToLoad.join(',');
 
         try {
-            while (hasMore) {
-                const qStr = quartersToLoad.join(',');
-                const res = await fetch(`/api/reports?quarters=${qStr}&page=${page}&limit=${limit}`);
-                if (!res.ok) throw new Error('API fetch failed');
+            // 1. Fetch First Page to get total and initial data
+            const res1 = await fetch(`/api/reports?quarters=${qStr}&page=1&limit=${limit}`);
+            if (!res1.ok) throw new Error('API fetch failed');
+            const data1 = await res1.json();
 
-                const data = await res.json();
-                if (data.reports) {
-                    allNewReports = [...allNewReports, ...data.reports];
-                }
-
-                hasMore = data.hasMore;
-                page++;
+            // 2. Render Page 1 Immediately (Progressive Rendering)
+            if (data1.reports) {
+                setReports(prev => {
+                    const existingIds = new Set(prev.map(r => r.id));
+                    const uniqueNew = data1.reports.filter(r => !existingIds.has(r.id));
+                    return [...prev, ...uniqueNew].sort((a, b) =>
+                        (b.info_of_report?.date_of_issue || '').localeCompare(a.info_of_report?.date_of_issue || '')
+                    );
+                });
             }
 
-            setReports(prev => {
-                const existingIds = new Set(prev.map(r => r.id));
-                const uniqueNew = allNewReports.filter(r => !existingIds.has(r.id));
-                // Sort descending by date
-                return [...prev, ...uniqueNew].sort((a, b) =>
-                    b.info_of_report.date_of_issue.localeCompare(a.info_of_report.date_of_issue)
-                );
-            });
+            const total = data1.total || 0;
+            const totalPages = Math.ceil(total / limit);
+
+            // 3. Fetch Remaining Pages in Parallel
+            if (totalPages > 1) {
+                const promises = [];
+                for (let p = 2; p <= totalPages; p++) {
+                    promises.push(fetch(`/api/reports?quarters=${qStr}&page=${p}&limit=${limit}`).then(r => r.json()));
+                }
+
+                const results = await Promise.all(promises);
+                let allRemainingReports = [];
+                results.forEach(d => {
+                    if (d.reports) allRemainingReports.push(...d.reports);
+                });
+
+                // 4. Update UI with remaining data
+                setReports(prev => {
+                    const existingIds = new Set(prev.map(r => r.id));
+                    const uniqueNew = allRemainingReports.filter(r => !existingIds.has(r.id));
+                    return [...prev, ...uniqueNew].sort((a, b) =>
+                        (b.info_of_report?.date_of_issue || '').localeCompare(a.info_of_report?.date_of_issue || '')
+                    );
+                });
+            }
+
             setLoadedQuarters(prev => [...new Set([...prev, ...quartersToLoad])]);
+
         } catch (err) {
             console.error("Pagination fetch error:", err);
         } finally {
