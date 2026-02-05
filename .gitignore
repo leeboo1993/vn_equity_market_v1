@@ -44,3 +44,6 @@ next-env.d.ts
 # Generated data files (fetched via prebuild script)
 /public/reports.json
 /public/data/
+
+# Protected server-side data
+/data/

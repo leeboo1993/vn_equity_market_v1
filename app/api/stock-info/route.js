@@ -1,11 +1,15 @@
 
 import { NextResponse } from 'next/server';
 import { getStockInfoMap } from '../../../lib/stockInfo';
+import { requireAuth } from '@/lib/apiAuth';
 
 // Cache for 1 hour
 export const revalidate = 3600;
 
-export async function GET() {
+export async function GET(request) {
+    // ANTI-CRAWLER: Require authentication
+    const { authorized, response } = await requireAuth(request);
+    if (!authorized) return response;
     try {
         const stockMap = await getStockInfoMap();
 

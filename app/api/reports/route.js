@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { requireAuth } from '@/lib/apiAuth';
 
 // Helper to parse YYMMDD date format
 function parseDateYYMMDD(dateStr) {
@@ -57,6 +58,10 @@ function getQuarterFromDate(dateString) {
 }
 
 export async function GET(request) {
+    // ANTI-CRAWLER: Require authentication
+    const { authorized, response } = await requireAuth(request);
+    if (!authorized) return response;
+
     try {
         const { searchParams } = new URL(request.url);
 
@@ -71,8 +76,8 @@ export async function GET(request) {
         const period = searchParams.get('period') || 'All';
         const filterTargets = searchParams.get('filterTargets') === 'true';
 
-        // Read reports.json from public directory
-        const reportsPath = path.join(process.cwd(), 'public', 'reports.json');
+        // Read reports.json from protected data directory (NOT public)
+        const reportsPath = path.join(process.cwd(), 'data', 'reports.json');
 
         if (!fs.existsSync(reportsPath)) {
             return NextResponse.json({ error: 'Reports data not found' }, { status: 404 });

@@ -1,7 +1,12 @@
 import { getTickerPrices } from '../../../lib/data.js';
 import { NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/apiAuth';
 
 export async function POST(request) {
+    // ANTI-CRAWLER: Require authentication
+    const { authorized, response } = await requireAuth(request);
+    if (!authorized) return response;
+
     try {
         const { tickers, callDates } = await request.json();
 

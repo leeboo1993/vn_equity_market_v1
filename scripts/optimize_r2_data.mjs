@@ -186,4 +186,12 @@ async function optimize() {
     }
 }
 
-optimize();
+optimize().then(async () => {
+    // Dynamically import the trigger script to avoid top-level await issues if not supported
+    try {
+        const { triggerRebuild } = await import('./trigger_rebuild.mjs');
+        await triggerRebuild();
+    } catch (e) {
+        console.error("Failed to load trigger script:", e);
+    }
+});
