@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getReports } from '@/lib/data';
+import { getFullRawReports } from '@/lib/data';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
-        const reports = await getReports();
+        const reports = await getFullRawReports();
 
         // Extract unique metadata
         const uniqueTickers = [...new Set(reports.map(r => r.info_of_report?.ticker).filter(Boolean))].sort();
@@ -13,15 +13,20 @@ export async function GET() {
         const uniqueSectors = [...new Set(reports.map(r => r.info_of_report?.sector).filter(Boolean))].sort();
 
         // Extract unique quarters
-        // Format of reports date: YYMMDD
         const quartersSet = new Set();
         reports.forEach(r => {
             const dStr = r.info_of_report?.date_of_issue;
-            if (dStr && dStr.length === 6) {
-                const yy = parseInt(dStr.substring(0, 2));
-                const mm = parseInt(dStr.substring(2, 4));
-                const year = 2000 + yy;
-                if (!isNaN(year) && !isNaN(mm)) {
+            if (dStr) {
+                const s = String(dStr);
+                let year, mm;
+                if (s.length === 8) {
+                    year = parseInt(s.substring(0, 4));
+                    mm = parseInt(s.substring(4, 6));
+                } else if (s.length === 6) {
+                    year = 2000 + parseInt(s.substring(0, 2));
+                    mm = parseInt(s.substring(2, 4));
+                }
+                if (year && mm) {
                     const q = Math.ceil(mm / 3);
                     quartersSet.add(`Q${q} ${year}`);
                 }

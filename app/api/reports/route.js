@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getReports } from '@/lib/data';
+import { getFullRawReports, enrichReportsBatch } from '@/lib/data';
 import rateLimit from '@/lib/rateLimit';
 
 const limiter = rateLimit({
@@ -25,23 +25,28 @@ export async function GET(request) {
         const brokerParam = searchParams.get('broker'); // issued_company
         const sectorParam = searchParams.get('sector');
 
-        let reports = await getReports();
+        let reports = await getFullRawReports();
 
         // 1. Filter by Quarter(s)
         if (quartersParam && quartersParam !== 'all') {
             const quartersToLoad = quartersParam.split(',');
-            // Format of reports date: YYMMDD
-            // Helper to get Q from YYMMDD
             reports = reports.filter(r => {
                 const dStr = r.info_of_report?.date_of_issue;
-                if (!dStr || dStr.length !== 6) return false;
-
-                const yy = parseInt(dStr.substring(0, 2));
-                const mm = parseInt(dStr.substring(2, 4));
-                const year = 2000 + yy;
+                if (!dStr) return false;
+                const s = String(dStr);
+                let yy, mm, year;
+                if (s.length === 8) {
+                    year = parseInt(s.substring(0, 4));
+                    mm = parseInt(s.substring(4, 6));
+                } else if (s.length === 6) {
+                    yy = parseInt(s.substring(0, 2));
+                    mm = parseInt(s.substring(2, 4));
+                    year = 2000 + yy;
+                } else {
+                    return false;
+                }
                 const q = Math.ceil(mm / 3);
                 const qLabel = `Q${q} ${year}`;
-
                 return quartersToLoad.includes(qLabel);
             });
         }
@@ -61,14 +66,18 @@ export async function GET(request) {
             reports = reports.filter(r => r.info_of_report?.sector === sectorParam);
         }
 
+        // --- ENRICHMENT ONLY ON RESULTS ---
+        // Instead of enriching 18,000 reports, we only enrich the filtered subset
+        const enrichedReports = await enrichReportsBatch(reports);
+
         // 5. Pagination
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '50');
         const startIndex = (page - 1) * limit;
         const endIndex = startIndex + limit;
 
-        const total = reports.length;
-        const paginatedReports = reports.slice(startIndex, endIndex);
+        const total = enrichedReports.length;
+        const paginatedReports = enrichedReports.slice(startIndex, endIndex);
 
         return NextResponse.json({
             reports: paginatedReports,
