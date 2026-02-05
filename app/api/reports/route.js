@@ -1,10 +1,24 @@
 import { NextResponse } from 'next/server';
 import { getReports } from '@/lib/data';
+import rateLimit from '@/lib/rateLimit';
+
+const limiter = rateLimit({
+    interval: 60 * 1000, // 60 seconds
+    uniqueTokenPerInterval: 500, // Max 500 users per second
+});
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
     try {
+        // Rate Limiting
+        const ip = request.headers.get('x-forwarded-for') || 'anonymous';
+        try {
+            await limiter.check(NextResponse.next(), 20, ip); // 20 requests per minute
+        } catch {
+            return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+        }
+
         const { searchParams } = new URL(request.url);
         const quartersParam = searchParams.get('quarters');
         const tickerParam = searchParams.get('ticker');
@@ -47,9 +61,21 @@ export async function GET(request) {
             reports = reports.filter(r => r.info_of_report?.sector === sectorParam);
         }
 
+        // 5. Pagination
+        const page = parseInt(searchParams.get('page') || '1');
+        const limit = parseInt(searchParams.get('limit') || '50');
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+
+        const total = reports.length;
+        const paginatedReports = reports.slice(startIndex, endIndex);
+
         return NextResponse.json({
-            reports,
-            total: reports.length
+            reports: paginatedReports,
+            total,
+            page,
+            limit,
+            hasMore: endIndex < total
         });
     } catch (error) {
         console.error('Error in /api/reports:', error);

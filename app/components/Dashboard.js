@@ -331,35 +331,65 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
         }
     }, [propReports]);
 
-    const [isLoading, setIsLoading] = useState(shouldFetchData);
-    const [selectedReportId, setSelectedReportId] = useState(null);
+    const [metadata, setMetadata] = useState(null);
+    const [loadedQuarters, setLoadedQuarters] = useState([]);
 
+    // Recursive Pagination Fetcher
+    const fetchReportsRecursively = async (quartersToLoad) => {
+        setIsLoading(true);
+        const limit = 100; // Safe chunk size (~1MB)
+        let page = 1;
+        let hasMore = true;
+        let allNewReports = [];
+
+        try {
+            while (hasMore) {
+                const qStr = quartersToLoad.join(',');
+                const res = await fetch(`/api/reports?quarters=${qStr}&page=${page}&limit=${limit}`);
+                if (!res.ok) throw new Error('API fetch failed');
+
+                const data = await res.json();
+                if (data.reports) {
+                    allNewReports = [...allNewReports, ...data.reports];
+                }
+
+                hasMore = data.hasMore;
+                page++;
+            }
+
+            setReports(prev => {
+                const existingIds = new Set(prev.map(r => r.id));
+                const uniqueNew = allNewReports.filter(r => !existingIds.has(r.id));
+                // Sort descending by date
+                return [...prev, ...uniqueNew].sort((a, b) =>
+                    b.info_of_report.date_of_issue.localeCompare(a.info_of_report.date_of_issue)
+                );
+            });
+            setLoadedQuarters(prev => [...new Set([...prev, ...quartersToLoad])]);
+        } catch (err) {
+            console.error("Pagination fetch error:", err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Initial Load: Metadata -> Top 5 Quarters
     useEffect(() => {
         if (shouldFetchData) {
-            setIsLoading(true);
-            // Add timestamp to bypass browser cache and ensure fresh data
-            fetch(`/reports.json?t=${new Date().getTime()}`)
-                .then(res => {
-                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                    return res.json();
-                })
+            fetch('/api/reports-metadata')
+                .then(res => res.json())
                 .then(data => {
-                    if (Array.isArray(data)) {
-                        // Filter out invalid reports before setting state
-                        const validReports = data.filter(validateReport);
-                        const invalidCount = data.length - validReports.length;
-                        if (invalidCount > 0) {
-
-                        }
-                        setReports(validReports.reverse()); // Match previous reverse logic
+                    setMetadata(data);
+                    if (data.uniqueQuarters && data.uniqueQuarters.length > 0) {
+                        // User Request: Load 5 recent quarters initially
+                        const recent5 = data.uniqueQuarters.slice(0, 5);
+                        fetchReportsRecursively(recent5);
+                    } else {
+                        // Fallback if no quarters defined
+                        fetchReportsRecursively(['all']);
                     }
-                    setIsLoading(false);
                 })
-                .catch(err => {
-                    console.error("Failed to load reports:", err);
-                    setIsLoading(false);
-                    // Optionally set error state to show UI message
-                });
+                .catch(console.error);
         }
     }, [shouldFetchData]);
 
@@ -520,19 +550,36 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
     }, [reports, stockInfo]);
 
     const uniqueQuarters = useMemo(() => {
+        if (metadata && metadata.uniqueQuarters) {
+            return metadata.uniqueQuarters;
+        }
+        // Fallback to loaded reports if metadata not ready
         const set = new Set(reports.map(r => {
             const q = getQuarterFromDate(r.info_of_report.date_of_issue);
             return q ? q.label : null;
         }).filter(Boolean));
-        // Sort descending (Newest first) - parsing the "Qx YYYY" string
         return Array.from(set).sort((a, b) => {
             const [qA, yA] = a.split(' ');
             const [qB, yB] = b.split(' ');
             const valA = parseInt(yA) * 10 + parseInt(qA.replace('Q', ''));
             const valB = parseInt(yB) * 10 + parseInt(qB.replace('Q', ''));
-            return valB - valA; // Descending
+            return valB - valA;
         });
-    }, [reports]);
+    }, [reports, metadata]);
+
+    // On-Demand Loading for Selected Period
+    useEffect(() => {
+        if (filterPeriod !== 'All') {
+            const isLoaded = loadedQuarters.some(q => q === filterPeriod);
+            // Note: loadedQuarters stores labels like "Q4 2025"
+            // But we actually store that in `loadedQuarters` state in `fetchReportsRecursively`
+
+            if (!isLoaded && uniqueQuarters.includes(filterPeriod)) {
+                console.log(`Loading missing quarter: ${filterPeriod}`);
+                fetchReportsRecursively([filterPeriod]);
+            }
+        }
+    }, [filterPeriod, loadedQuarters, uniqueQuarters]);
 
     const filteredReports = useMemo(() => {
         return reports.filter(r => {
