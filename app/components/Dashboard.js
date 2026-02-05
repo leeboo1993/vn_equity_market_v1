@@ -333,6 +333,8 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
 
     const [metadata, setMetadata] = useState(null);
     const [loadedQuarters, setLoadedQuarters] = useState([]);
+    const [isLoading, setIsLoading] = useState(shouldFetchData);
+    const [selectedReportId, setSelectedReportId] = useState(null);
 
     // Recursive Pagination Fetcher
     const fetchReportsRecursively = async (quartersToLoad) => {
