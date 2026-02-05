@@ -2058,7 +2058,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
 
                                     <div className="overflow-y-auto relative custom-scrollbar pr-2 pb-2 block" style={{ maxHeight: '485px', overflowY: 'auto', display: 'block' }}>
                                         <div className={`detail-tab-content ${activeTab === 'rec' ? 'active' : ''}`}>
-                                            <h3 className="section-title" style={{ fontSize: '10px', textTransform: 'uppercase' }}>Price performance</h3>
+                                            <h3 className="section-title" style={{ fontSize: '10px' }}>Price performance</h3>
                                             <div className="overflow-x-auto">
                                                 <table className="mini-table w-full table-fixed">
                                                     <thead>
