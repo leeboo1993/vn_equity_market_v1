@@ -389,7 +389,12 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                 });
             }
 
-            setLoadedQuarters(prev => [...new Set([...prev, ...quartersToLoad])]);
+            // Update loaded state from server response if available, otherwise fallback
+            if (data1.loadedQuarters && Array.isArray(data1.loadedQuarters)) {
+                setLoadedQuarters(data1.loadedQuarters);
+            } else {
+                setLoadedQuarters(prev => [...new Set([...prev, ...quartersToLoad])]);
+            }
 
         } catch (err) {
             console.error("Pagination fetch error:", err);

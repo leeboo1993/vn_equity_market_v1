@@ -77,6 +77,21 @@ export async function GET(request) {
         const endIndex = startIndex + limit;
 
         const total = reports.length;
+
+        // Calculate available quarters from the filtered set (for UI dropdowns)
+        const quartersSet = new Set();
+        reports.forEach(r => {
+            const dStr = r.info_of_report?.date_of_issue;
+            if (dStr && dStr.length === 6) {
+                const yy = parseInt(dStr.substring(0, 2));
+                const mm = parseInt(dStr.substring(2, 4));
+                const year = 2000 + yy;
+                const q = Math.ceil(mm / 3);
+                quartersSet.add(`Q${q} ${year}`);
+            }
+        });
+        const loadedQuarters = Array.from(quartersSet).sort((a, b) => b.localeCompare(a));
+
         // Optimization: Slice first, then enrich only the slice
         const paginatedRawReports = reports.slice(startIndex, endIndex);
 
@@ -88,7 +103,8 @@ export async function GET(request) {
             total,
             page,
             limit,
-            hasMore: endIndex < total
+            hasMore: endIndex < total,
+            loadedQuarters // Return calculated quarters
         });
     } catch (error) {
         console.error('Error in /api/reports:', error);
