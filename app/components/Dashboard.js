@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useRef, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import ForecastTable from './ForecastTable';
@@ -247,6 +248,9 @@ const getCompanyName = (ticker) => {
 };
 
 export default function Dashboard({ reports: propReports, shouldFetchData }) {
+    const { data: session } = useSession();
+    const isAdmin = session?.user?.role === 'admin';
+
     // === Validation Function ===
     const validateReport = (report) => {
         try {
