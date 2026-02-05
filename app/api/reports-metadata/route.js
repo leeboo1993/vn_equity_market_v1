@@ -45,16 +45,14 @@ export async function GET(request) {
             return NextResponse.json({ error: 'Invalid reports data format' }, { status: 500 });
         }
 
-        // Apply same filters as reports endpoint
+        // Apply filters EXCEPT period (period shouldn't filter uniqueQuarters - circular dependency!)
         let filteredReports = reportsData.filter(r => {
             if (ticker !== 'All' && r.info_of_report?.ticker !== ticker) return false;
             if (broker !== 'All' && r.info_of_report?.issued_company !== broker) return false;
             if (sector !== 'All' && r.info_of_report?.sector !== sector) return false;
 
-            if (period !== 'All') {
-                const q = getQuarterFromDate(r.info_of_report?.date_of_issue);
-                if (!q || q.label !== period) return false;
-            }
+            // DON'T filter by period here - we need all quarters for the dropdown!
+            // The period filter is applied client-side in Dashboard after loading
 
             if (filterTargets) {
                 const tp = r.recommendation?.target_price;

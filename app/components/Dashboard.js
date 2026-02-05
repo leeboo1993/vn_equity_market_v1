@@ -431,10 +431,10 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                     distribution: data.distribution || { buy: 0, hold: 0, sell: 0 }
                 });
 
-                // Auto-load 2 most recent quarters on first load
+                // Auto-load 5 most recent quarters on first load (better for historical data)
                 if (loadedQuarters.length === 0 && data.uniqueQuarters && data.uniqueQuarters.length > 0) {
-                    const twoMostRecent = data.uniqueQuarters.slice(0, 2);
-                    loadQuarters(twoMostRecent);
+                    const fiveMostRecent = data.uniqueQuarters.slice(0, 5);
+                    loadQuarters(fiveMostRecent);
                 }
             })
             .catch(err => console.error("Failed to load metadata:", err));
@@ -501,7 +501,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
         }
     }, [filterPeriod]);
 
-    // Auto-select current quarter on load (ONE TIME)
+    // Auto-select current quarter on load (shows latest quarter by default)
     const [hasInitializedPeriod, setHasInitializedPeriod] = useState(false);
     useEffect(() => {
         if (!hasInitializedPeriod && metadata.uniqueQuarters && metadata.uniqueQuarters.length > 0) {
