@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getRawReports, enrichReportsBatch } from '@/lib/data';
+import { getStockInfoMap } from '@/lib/stockInfo';
+import { getPriceHistoryMap } from '@/lib/priceHistory';
 import rateLimit from '@/lib/rateLimit';
 
 const limiter = rateLimit({
@@ -11,6 +13,12 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
     try {
+        // Trigger background fetches immediately (Parallel Execution)
+        // We don't await them here; we let them start downloading/parsing while we do other checks.
+        // They will be awaited downstream in enrichReportsBatch or getRawReports.
+        getStockInfoMap();
+        getPriceHistoryMap();
+
         // Rate Limiting
         const ip = request.headers.get('x-forwarded-for') || 'anonymous';
         try {
