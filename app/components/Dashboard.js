@@ -374,7 +374,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
             isSyncing: true
         }));
 
-        const batchSize = 500; // Increased from 200 to 500
+        const batchSize = 50; // Reduced from 500 to 50 to avoid URL length issues
         const batches = [];
         for (let i = 0; i < toProcess.length; i += batchSize) {
             batches.push(toProcess.slice(i, i + batchSize));
@@ -389,11 +389,13 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
             const currentBatch = batches[index++];
             const ids = currentBatch.map(r => r.id).join(',');
 
+            let processedCount = 0;
             try {
                 const res = await fetch(`/api/reports?ids=${ids}&raw=false`);
                 const data = await res.json();
 
-                if (data.reports) {
+                if (data.reports && data.reports.length > 0) {
+                    processedCount = data.reports.length;
                     setReports(prev => prev.map(oldR => {
                         const match = data.reports.find(nr => nr.id === oldR.id);
                         return match ? { ...oldR, ...match } : oldR;
@@ -404,24 +406,33 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                         data.reports.forEach(r => next.add(r.id));
                         return next;
                     });
-
-                    setSyncProgress(prev => {
-                        const newCurrent = prev.current + data.reports.length;
-                        const elapsed = Date.now() - prev.startTime;
-                        const avgPerReport = elapsed / newCurrent;
-                        const remaining = prev.total - newCurrent;
-                        const etaSeconds = Math.ceil((remaining * avgPerReport) / 1000);
-
-                        return {
-                            ...prev,
-                            current: newCurrent,
-                            eta: etaSeconds > 0 ? etaSeconds : null,
-                            isSyncing: newCurrent < prev.total
-                        };
-                    });
+                } else {
+                    processedCount = currentBatch.length;
                 }
             } catch (err) {
                 console.error("Batch enrichment failed:", err);
+                processedCount = currentBatch.length;
+            } finally {
+                setSyncProgress(prev => {
+                    const newCurrent = prev.current + processedCount;
+                    const elapsed = Date.now() - prev.startTime;
+
+                    let etaSeconds = null;
+                    if (newCurrent > 0 && elapsed > 0) {
+                        const avgPerReport = elapsed / newCurrent;
+                        const remaining = prev.total - newCurrent;
+                        if (remaining > 0) {
+                            etaSeconds = Math.ceil((remaining * avgPerReport) / 1000);
+                        }
+                    }
+
+                    return {
+                        ...prev,
+                        current: newCurrent,
+                        eta: (etaSeconds && isFinite(etaSeconds) && etaSeconds > 0) ? etaSeconds : null,
+                        isSyncing: newCurrent < prev.total
+                    };
+                });
             }
 
             // Trigger next batch in this "worker"

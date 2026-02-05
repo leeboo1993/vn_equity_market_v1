@@ -62,8 +62,8 @@ export async function GET(request) {
 
         // 5. Filter by IDs (New for background enrichment)
         if (idsParam) {
-            const idList = idsParam.split(',');
-            reports = reports.filter(r => idList.includes(r.id));
+            const idSet = new Set(idsParam.split(','));
+            reports = reports.filter(r => idSet.has(r.id));
         }
 
         // --- OPTIMIZED LOADING ---
