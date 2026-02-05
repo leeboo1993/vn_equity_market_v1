@@ -53,6 +53,14 @@ async function optimize() {
 
     console.log(`Processing ${flattened.length} reports...`);
 
+    // Sort flattened by date ascending for TP change calculation
+    flattened.sort((a, b) => {
+        const dA = parseIssueDate(a.info_of_report?.date_of_issue);
+        const dB = parseIssueDate(b.info_of_report?.date_of_issue);
+        return dA - dB;
+    });
+
+    const tpMap = new Map();
     const thinList = [];
     const tickers = new Set();
     const brokers = new Set();
@@ -75,6 +83,21 @@ async function optimize() {
         const dInt = parseIssueDate(info.date_of_issue);
         const standardizedDate = dInt > 0 ? String(dInt) : info.date_of_issue;
 
+        // Calculate Target Price Change
+        let tpChange = null;
+        const tp = rec.target_price;
+        if (info.issued_company && info.ticker && dInt > 0) {
+            const key = `${info.issued_company}|${info.ticker}`;
+            const last = tpMap.get(key);
+            if (last && last.tp > 0 && tp > 0) {
+                const change = ((tp - last.tp) / last.tp) * 100;
+                tpChange = parseFloat(change.toFixed(1));
+            }
+            if (tp > 0) {
+                tpMap.set(key, { tp, dateInt: dInt });
+            }
+        }
+
         // Create thin object
         thinList.push({
             id: r.id,
@@ -88,12 +111,13 @@ async function optimize() {
             recommendation: {
                 recommendation: rec.recommendation,
                 target_price: rec.target_price,
-                upside_at_call: rec.upside_at_call
+                upside_at_call: rec.upside_at_call,
+                target_price_change: tpChange
             }
         });
     });
 
-    // Sort thin list descending
+    // Sort thin list descending for display
     thinList.sort((a, b) => {
         const dA = parseIssueDate(b.info_of_report.date_of_issue);
         const dB = parseIssueDate(a.info_of_report.date_of_issue);
