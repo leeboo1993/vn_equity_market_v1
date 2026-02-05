@@ -128,9 +128,20 @@ export async function GET(request) {
             return true;
         });
 
+        // OPTIMIZATION: Strip heavy text fields to reduce payload size (from 172MB to ~15MB)
+        // Keep only fields needed for Dashboard listing and charts
+        const lightweightReports = filteredReports.map(r => ({
+            id: r.id,
+            info_of_report: r.info_of_report,
+            recommendation: r.recommendation,
+            forecast_summary: r.forecast_summary,
+            // forecast_table: r.forecast_table, // Removed to fit 5 quarters into 4.5MB limit
+            // company_update: r.company_update ? r.company_update.substring(0, 100) + '...' : null,
+        }));
+
         return NextResponse.json({
-            reports: filteredReports,
-            total: filteredReports.length,
+            reports: lightweightReports,
+            total: lightweightReports.length,
             loadedQuarters: quarters.length > 0 ? quarters : ['all']
         }, {
             headers: rateLimitHeaders
