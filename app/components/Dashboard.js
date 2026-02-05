@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import ForecastTable from './ForecastTable';
@@ -320,25 +319,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
             .catch(err => console.error("Failed to load stock info:", err));
     }, []);
 
-    // Get user session to check role (admin only for debug info)
-    const { data: session } = useSession();
-    const isAdmin = session?.user?.role === 'admin' ? true : false;
-
     const [reports, setReports] = useState([]);
-
-    // Quarter-based loading state
-    const [loadedQuarters, setLoadedQuarters] = useState([]); // Quarters we've already loaded
-    const [totalReports, setTotalReports] = useState(0);
-
-    // Metadata state (for filters, stats, rankings based on ALL filtered reports)
-    const [metadata, setMetadata] = useState({
-        uniqueTickers: [],
-        uniqueBrokers: [],
-        uniqueSectors: [],
-        uniqueQuarters: [],
-        topCalls: [],
-        distribution: { buy: 0, hold: 0, sell: 0 }
-    });
 
     // Initialize reports state only after validating against stock info (if possible), 
     // but initially we load propReports. We will re-filter when stockInfo loads.
@@ -352,6 +333,35 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
 
     const [isLoading, setIsLoading] = useState(shouldFetchData);
     const [selectedReportId, setSelectedReportId] = useState(null);
+
+    useEffect(() => {
+        if (shouldFetchData) {
+            setIsLoading(true);
+            // Add timestamp to bypass browser cache and ensure fresh data
+            fetch(`/reports.json?t=${new Date().getTime()}`)
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                    return res.json();
+                })
+                .then(data => {
+                    if (Array.isArray(data)) {
+                        // Filter out invalid reports before setting state
+                        const validReports = data.filter(validateReport);
+                        const invalidCount = data.length - validReports.length;
+                        if (invalidCount > 0) {
+
+                        }
+                        setReports(validReports.reverse()); // Match previous reverse logic
+                    }
+                    setIsLoading(false);
+                })
+                .catch(err => {
+                    console.error("Failed to load reports:", err);
+                    setIsLoading(false);
+                    // Optionally set error state to show UI message
+                });
+        }
+    }, [shouldFetchData]);
 
     // Fallback or loading indicator?
     // The rest of the code uses 'filteredReports' derived from 'reports' (which should be 'reports' now)
@@ -412,104 +422,10 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
     // Checkbox filter
     const [shouldFilterTargets, setShouldFilterTargets] = useState(true);
 
-    // Fetch metadata (statistics from ALL filtered reports)
-    useEffect(() => {
-        if (!shouldFetchData) return;
-
-        const params = new URLSearchParams({
-            ticker: filterTicker,
-            broker: filterBroker,
-            sector: filterSector,
-            period: filterPeriod,
-            filterTargets: shouldFilterTargets.toString()
-        });
-
-        fetch(`/api/reports-metadata?${params}`)
-            .then(res => res.ok ? res.json() : Promise.reject(res))
-            .then(data => {
-                setMetadata({
-                    uniqueTickers: data.uniqueTickers || [],
-                    uniqueBrokers: data.uniqueBrokers || [],
-                    uniqueSectors: data.uniqueSectors || [],
-                    uniqueQuarters: data.uniqueQuarters || [],
-                    topCalls: data.topCalls || [],
-                    distribution: data.distribution || { buy: 0, hold: 0, sell: 0 }
-                });
-
-                // Auto-load 5 most recent quarters on first load (better for historical data)
-                if (loadedQuarters.length === 0 && data.uniqueQuarters && data.uniqueQuarters.length > 0) {
-                    const fiveMostRecent = data.uniqueQuarters.slice(0, 5);
-                    loadQuarters(fiveMostRecent);
-                }
-            })
-            .catch(err => console.error("Failed to load metadata:", err));
-    }, [shouldFetchData, filterTicker, filterBroker, filterSector, filterPeriod, shouldFilterTargets]);
-
-    // Function to load specific quarters
-    const loadQuarters = (quartersToLoad) => {
-        if (!shouldFetchData || quartersToLoad.length === 0) return;
-
-        setIsLoading(true);
-
-        const params = new URLSearchParams({
-            quarters: quartersToLoad.join(','),
-            ticker: filterTicker,
-            broker: filterBroker,
-            sector: filterSector,
-            filterTargets: shouldFilterTargets.toString()
-        });
-
-        fetch(`/api/reports?${params}`)
-            .then(res => {
-                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                return res.json();
-            })
-            .then(data => {
-                if (data.reports && Array.isArray(data.reports)) {
-                    const validReports = data.reports.filter(validateReport);
-
-                    // Merge with existing reports (avoid duplicates by ID)
-                    setReports(prevReports => {
-                        const existingIds = new Set(prevReports.map(r => r.id));
-                        const newReports = validReports.filter(r => !existingIds.has(r.id));
-                        return [...prevReports, ...newReports].sort((a, b) => {
-                            // Sort by date descending
-                            const dateA = a.info_of_report?.date_of_issue || '000000';
-                            const dateB = b.info_of_report?.date_of_issue || '000000';
-                            return dateB.localeCompare(dateA);
-                        });
-                    });
-
-                    // Update loaded quarters
-                    setLoadedQuarters(prev => {
-                        const newSet = new Set([...prev, ...quartersToLoad]);
-                        return Array.from(newSet);
-                    });
-
-                    setTotalReports(data.total);
-                }
-                setIsLoading(false);
-            })
-            .catch(err => {
-                console.error("Failed to load reports:", err);
-                setIsLoading(false);
-            });
-    };
-
-    // When user selects a quarter via period filter, load that quarter if not already loaded
-    useEffect(() => {
-        if (!shouldFetchData || filterPeriod === 'All') return;
-
-        // Check if this quarter is already loaded
-        if (!loadedQuarters.includes(filterPeriod)) {
-            loadQuarters([filterPeriod]);
-        }
-    }, [filterPeriod]);
-
-    // Auto-select current quarter on load (shows latest quarter by default)
+    // Auto-select current quarter on load (ONE TIME)
     const [hasInitializedPeriod, setHasInitializedPeriod] = useState(false);
     useEffect(() => {
-        if (!hasInitializedPeriod && metadata.uniqueQuarters && metadata.uniqueQuarters.length > 0) {
+        if (!hasInitializedPeriod && reports.length > 0) {
             const now = new Date();
             const yy = String(now.getFullYear()).slice(2);
             const mm = String(now.getMonth() + 1).padStart(2, '0');
@@ -521,7 +437,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
             }
             setHasInitializedPeriod(true);
         }
-    }, [metadata.uniqueQuarters, hasInitializedPeriod]);
+    }, [reports, hasInitializedPeriod]);
 
     // Tabs
     const [activeTab, setActiveTab] = useState('rec');
@@ -565,13 +481,58 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
     };
 
     // === Derived Data ===
-    // Use metadata from API for filter dropdowns (based on ALL filtered reports)
-    const uniqueTickers = metadata.uniqueTickers;
-    const uniqueBrokers = metadata.uniqueBrokers;
-    const uniqueSectors = metadata.uniqueSectors;
-    const uniqueQuarters = metadata.uniqueQuarters;
+    // Filter Unique Tickers based on Stock Info Map availability
+    const uniqueTickers = useMemo(() => {
+        // Get all tickers from reports
+        const allTickers = [...new Set(reports.map(r => r.info_of_report.ticker))];
 
+        // Only keep those present in stock information (if loaded)
+        // If stockInfo is empty (loading), show all or valid-looking ones? 
+        // Better to wait or show all initially. Let's filter if we have data.
+        if (Object.keys(stockInfo).length > 0) {
+            return allTickers.filter(t => stockInfo[t]).sort();
+        }
 
+        // Fallback: simple heuristic filtering if stock info not yet ready
+        return allTickers.filter(t => t && t.length === 3 && /^[A-Z]{3}$/.test(t)).sort();
+    }, [reports, stockInfo]);
+
+    const uniqueBrokers = useMemo(() => [...new Set(reports.map(r => r.info_of_report.issued_company))]
+        .filter(b => b && b.length < 15) // Filter out messy data (long company names mistakenly in issuer field)
+        .sort(), [reports]);
+
+    // Use Sector from Stock Info Map
+    const uniqueSectors = useMemo(() => {
+        const sectors = new Set();
+        reports.forEach(r => {
+            const t = r.info_of_report.ticker;
+            // Prioritize stock info sector, then report sector
+            const validSector = stockInfo[t]?.icb_name2 || r.info_of_report.sector;
+            if (validSector && validSector.trim()) {
+                // Filter out blacklisted sectors (case insensitive)
+                const blacklist = ['bank', 'production', 'nan', 'null', 'undefined'];
+                if (!blacklist.includes(validSector.toLowerCase())) {
+                    sectors.add(validSector);
+                }
+            }
+        });
+        return Array.from(sectors).sort();
+    }, [reports, stockInfo]);
+
+    const uniqueQuarters = useMemo(() => {
+        const set = new Set(reports.map(r => {
+            const q = getQuarterFromDate(r.info_of_report.date_of_issue);
+            return q ? q.label : null;
+        }).filter(Boolean));
+        // Sort descending (Newest first) - parsing the "Qx YYYY" string
+        return Array.from(set).sort((a, b) => {
+            const [qA, yA] = a.split(' ');
+            const [qB, yB] = b.split(' ');
+            const valA = parseInt(yA) * 10 + parseInt(qA.replace('Q', ''));
+            const valB = parseInt(yB) * 10 + parseInt(qB.replace('Q', ''));
+            return valB - valA; // Descending
+        });
+    }, [reports]);
 
     const filteredReports = useMemo(() => {
         return reports.filter(r => {
@@ -721,12 +682,16 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
         ? (reportsWithUpside.reduce((acc, curr) => acc + curr.recommendation.upside, 0) / reportsWithUpside.length * 100)
         : 0;
 
-    // Use top calls from metadata (calculated from ALL filtered reports, not just current page)
-    const topCalls = metadata.topCalls;
+    const topCalls = [...filteredReports]
+        .sort((a, b) => (b.recommendation?.upside_at_call ?? -999) - (a.recommendation?.upside_at_call ?? -999))
+        .slice(0, 10);
 
-    // Use distribution from metadata (calculated from ALL filtered reports)
     const chartData = useMemo(() => {
-        const { buy, hold, sell } = metadata.distribution;
+        let buy = 0, hold = 0, sell = 0;
+        filteredReports.forEach(r => {
+            const t = getCallType(r.recommendation?.recommendation);
+            if (t === 'Buy') buy++; else if (t === 'Sell') sell++; else hold++;
+        });
         return {
             labels: ['Buy', 'Hold', 'Sell'],
             datasets: [{
@@ -736,7 +701,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                 cutout: '70%',
             }]
         };
-    }, [metadata.distribution]);
+    }, [filteredReports]);
 
     // Calculate coverage changes comparing current quarter with previous quarters based on horizon
     const coverageChanges = useMemo(() => {
@@ -1677,30 +1642,6 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                 </tbody>
                             </table>
                         </div>
-
-                        {/* Quarter Loading Indicator (Admin Only) */}
-                        {shouldFetchData && isAdmin && (
-                            <div style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                padding: '16px',
-                                borderTop: '1px solid #2a2a2a',
-                                fontSize: '10px'
-                            }}>
-                                <div className="text-gray-400">
-                                    Loaded quarters: <span className="text-green-400">{loadedQuarters.join(', ') || 'None'}</span>
-                                    {' • '}
-                                    {totalReports.toLocaleString()} reports
-                                </div>
-
-                                {isLoading && (
-                                    <div className="text-gray-400">
-                                        Loading...
-                                    </div>
-                                )}
-                            </div>
-                        )}
                     </div>
                 </section >
 

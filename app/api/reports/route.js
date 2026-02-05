@@ -1,159 +1,58 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-import { requireAuth } from '@/lib/apiAuth';
+import { getReports } from '@/lib/data';
 
-// Helper to parse YYMMDD date format
-function parseDateYYMMDD(dateStr) {
-    if (!dateStr) return null;
-    const s = String(dateStr).trim();
-
-    // YYYY-MM-DD
-    if (s.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        return new Date(s);
-    }
-
-    // YYMMDD (6 digits)
-    if (s.length === 6) {
-        const yy = parseInt(s.substring(0, 2));
-        const mm = parseInt(s.substring(2, 4)) - 1;
-        const dd = parseInt(s.substring(4, 6));
-        return new Date(2000 + yy, mm, dd);
-    }
-
-    // YYYYMMDD (8 digits)
-    if (s.length === 8) {
-        const yyyy = parseInt(s.substring(0, 4));
-        const mm = parseInt(s.substring(4, 6)) - 1;
-        const dd = parseInt(s.substring(6, 8));
-        return new Date(yyyy, mm, dd);
-    }
-
-    // Fallback: Try native Date parse
-    const nativeDate = new Date(s);
-    if (!isNaN(nativeDate.getTime())) {
-        return nativeDate;
-    }
-
-    return null;
-}
-
-// Helper to get quarter from date string
-function getQuarterFromDate(dateString) {
-    if (!dateString || dateString.length !== 6) return null;
-
-    const yy = parseInt(dateString.substring(0, 2));
-    const mm = parseInt(dateString.substring(2, 4));
-    const dd = parseInt(dateString.substring(4, 6));
-    const year_yymmdd = 2000 + yy;
-
-    const isValidYYMMDD = (mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31 && year_yymmdd <= 2030);
-
-    if (isValidYYMMDD) {
-        const quarter = Math.ceil(mm / 3);
-        return { quarter, year: year_yymmdd, label: `Q${quarter} ${year_yymmdd}` };
-    }
-
-    return null;
-}
+export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
-    // ANTI-CRAWLER: Require authentication + Rate limiting
-    const { authorized, response, rateLimitHeaders } = await requireAuth(request);
-    if (!authorized) return response;
-
     try {
         const { searchParams } = new URL(request.url);
-
-        // Quarter-based loading: accepts comma-separated quarters like "Q4 2025,Q3 2025"
         const quartersParam = searchParams.get('quarters');
-        const quarters = quartersParam ? quartersParam.split(',').map(q => q.trim()) : [];
+        const tickerParam = searchParams.get('ticker');
+        const brokerParam = searchParams.get('broker'); // issued_company
+        const sectorParam = searchParams.get('sector');
 
-        // Filter parameters
-        const ticker = searchParams.get('ticker') || 'All';
-        const broker = searchParams.get('broker') || 'All';
-        const sector = searchParams.get('sector') || 'All';
-        const period = searchParams.get('period') || 'All';
-        const filterTargets = searchParams.get('filterTargets') === 'true';
+        let reports = await getReports();
 
-        // Read reports.json from protected data directory (NOT public)
-        const reportsPath = path.join(process.cwd(), 'data', 'reports.json');
+        // 1. Filter by Quarter(s)
+        if (quartersParam && quartersParam !== 'all') {
+            const quartersToLoad = quartersParam.split(',');
+            // Format of reports date: YYMMDD
+            // Helper to get Q from YYMMDD
+            reports = reports.filter(r => {
+                const dStr = r.info_of_report?.date_of_issue;
+                if (!dStr || dStr.length !== 6) return false;
 
-        if (!fs.existsSync(reportsPath)) {
-            return NextResponse.json({ error: 'Reports data not found' }, { status: 404 });
+                const yy = parseInt(dStr.substring(0, 2));
+                const mm = parseInt(dStr.substring(2, 4));
+                const year = 2000 + yy;
+                const q = Math.ceil(mm / 3);
+                const qLabel = `Q${q} ${year}`;
+
+                return quartersToLoad.includes(qLabel);
+            });
         }
 
-        const reportsData = JSON.parse(fs.readFileSync(reportsPath, 'utf-8'));
-
-        if (!Array.isArray(reportsData)) {
-            return NextResponse.json({ error: 'Invalid reports data format' }, { status: 500 });
+        // 2. Filter by Ticker
+        if (tickerParam) {
+            reports = reports.filter(r => r.info_of_report?.ticker === tickerParam);
         }
 
-        // Apply filters
-        let filteredReports = reportsData.filter(r => {
-            // Quarter filter (if quarters specified, only include those quarters)
-            if (quarters.length > 0) {
-                const q = getQuarterFromDate(r.info_of_report?.date_of_issue);
-                if (!q || !quarters.includes(q.label)) return false;
-            }
+        // 3. Filter by Broker
+        if (brokerParam) {
+            reports = reports.filter(r => r.info_of_report?.issued_company === brokerParam);
+        }
 
-            // Ticker filter
-            if (ticker !== 'All' && r.info_of_report?.ticker !== ticker) return false;
-
-            // Broker filter
-            if (broker !== 'All' && r.info_of_report?.issued_company !== broker) return false;
-
-            // Sector filter
-            if (sector !== 'All' && r.info_of_report?.sector !== sector) return false;
-
-            // Period filter (for single quarter selection)
-            if (period !== 'All') {
-                const q = getQuarterFromDate(r.info_of_report?.date_of_issue);
-                if (!q || q.label !== period) return false;
-            }
-
-            // Target price filter
-            if (filterTargets) {
-                const tp = r.recommendation?.target_price;
-                const numericTp = Number(tp);
-                const hasTP = tp != null && !isNaN(numericTp) && numericTp > 0;
-
-                const cp = r.recommendation?.price_now;
-                const numericCp = Number(cp);
-                const hasCP = cp != null && !isNaN(numericCp) && numericCp > 0;
-
-                if (!hasTP || !hasCP) return false;
-            }
-
-            return true;
-        });
-
-        // OPTIMIZATION: Strip heavy text fields to reduce payload size (from 172MB to ~15MB)
-        // Keep only fields needed for Dashboard listing and charts
-        const lightweightReports = filteredReports.map(r => ({
-            id: r.id,
-            info_of_report: r.info_of_report,
-            recommendation: r.recommendation,
-            forecast_summary: r.forecast_summary,
-            // forecast_table: r.forecast_table, // Removed to fit 5 quarters into 4.5MB limit
-            // company_update: r.company_update ? r.company_update.substring(0, 100) + '...' : null,
-        }));
+        // 4. Filter by Sector
+        if (sectorParam && sectorParam !== 'All') {
+            reports = reports.filter(r => r.info_of_report?.sector === sectorParam);
+        }
 
         return NextResponse.json({
-            reports: lightweightReports,
-            total: lightweightReports.length,
-            loadedQuarters: quarters.length > 0 ? quarters : ['all']
-        }, {
-            headers: rateLimitHeaders
+            reports,
+            total: reports.length
         });
-
-
     } catch (error) {
-        console.error('Error in reports API:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch reports', details: error.message },
-            { status: 500 }
-        );
+        console.error('Error in /api/reports:', error);
+        return NextResponse.json({ error: 'Failed to load reports' }, { status: 500 });
     }
 }
-
