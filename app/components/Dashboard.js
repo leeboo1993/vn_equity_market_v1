@@ -25,22 +25,22 @@ const safeToFixed = (val, digits = 1) => {
 };
 
 const getQuarterFromDate = (dateString) => {
-    const dStr = String(dateString || '').trim();
-    let year, mm, dd;
+    if (!dateString || dateString.length !== 6) return null;
 
-    if (dStr.length === 8) {
-        year = parseInt(dStr.substring(0, 4));
-        mm = parseInt(dStr.substring(4, 6));
-        dd = parseInt(dStr.substring(6, 8));
-    } else if (dStr.length === 6) {
-        year = 2000 + parseInt(dStr.substring(0, 2));
-        mm = parseInt(dStr.substring(2, 4));
-        dd = parseInt(dStr.substring(4, 6));
-    }
+    // User confirmed JSON uses YYMMDD format
+    // Try YYMMDD first
+    const yy = parseInt(dateString.substring(0, 2));
+    const mm = parseInt(dateString.substring(2, 4));
+    const dd = parseInt(dateString.substring(4, 6));
+    const year_yymmdd = 2000 + yy;
 
-    if (year && mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31 && year <= 2030) {
+    // Check if YYMMDD gives reasonable year (2000-2030)
+    // Updated limit to 2030 to support future dates like 2026
+    const isValidYYMMDD = (mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31 && year_yymmdd <= 2030);
+
+    if (isValidYYMMDD) {
         const quarter = Math.ceil(mm / 3);
-        return { quarter, year, label: `Q${quarter} ${year}` };
+        return { quarter, year: year_yymmdd, label: `Q${quarter} ${year_yymmdd}` };
     }
 
     // Invalid date
@@ -66,25 +66,14 @@ const getPreviousQuarterLabel = (quarterLabel) => {
 
 const formatDate = (dateStr) => {
     if (!dateStr) return '-';
-    const s = String(dateStr).trim();
-
-    // YYYYMMDD
-    if (s.length === 8) {
-        const y = s.substring(0, 4);
-        const m = s.substring(4, 6);
-        const d = s.substring(6, 8);
-        return `${d}/${m}/${y}`;
-    }
-
-    // YYMMDD
-    if (s.length === 6) {
-        const yy = s.substring(0, 2);
-        const mm = s.substring(2, 4);
-        const dd = s.substring(4, 6);
+    // Use string manipulation if already in YYMMDD to avoid timezone issues
+    if (String(dateStr).length === 6) {
+        const yy = dateStr.substring(0, 2);
+        const mm = dateStr.substring(2, 4);
+        const dd = dateStr.substring(4, 6);
         return `${dd}/${mm}/20${yy}`;
     }
-
-    // If it's a full ISO date string, use local time formatting
+    // If it's a full date string, use local time formatting
     const d = new Date(dateStr);
     if (!isNaN(d.getTime())) {
         const day = String(d.getDate()).padStart(2, '0');
@@ -350,65 +339,39 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
     const [loadedQuarters, setLoadedQuarters] = useState([]);
     const [isLoading, setIsLoading] = useState(shouldFetchData);
     const [selectedReportId, setSelectedReportId] = useState(null);
-    const [fullReportDetail, setFullReportDetail] = useState(null);
-    const [isDetailLoading, setIsDetailLoading] = useState(false);
 
-    // Recursive Pagination Fetcher (Optimized with Parallel Requests)
+    // Recursive Pagination Fetcher
     const fetchReportsRecursively = async (quartersToLoad) => {
         setIsLoading(true);
-        const limit = 200; // Reduced to 200 (Safe for FULL data ~3MB < 4.5MB)
-        const qStr = quartersToLoad.join(',');
+        const limit = 400; // Optimized to 400 (max safe size ~3.7MB < 4.5MB)
+        let page = 1;
+        let hasMore = true;
+        let allNewReports = [];
 
         try {
-            // 1. Fetch First Page to get total and initial data
-            const res1 = await fetch(`/api/reports?quarters=${qStr}&page=1&limit=${limit}`);
-            if (!res1.ok) throw new Error('API fetch failed');
-            const data1 = await res1.json();
+            while (hasMore) {
+                const qStr = quartersToLoad.join(',');
+                const res = await fetch(`/api/reports?quarters=${qStr}&page=${page}&limit=${limit}`);
+                if (!res.ok) throw new Error('API fetch failed');
 
-            // 2. Render Page 1 Immediately (Progressive Rendering)
-            if (data1.reports) {
-                setReports(prev => {
-                    const existingIds = new Set(prev.map(r => r.id));
-                    const uniqueNew = data1.reports.filter(r => !existingIds.has(r.id));
-                    return [...prev, ...uniqueNew].sort((a, b) =>
-                        (b.info_of_report?.date_of_issue || '').localeCompare(a.info_of_report?.date_of_issue || '')
-                    );
-                });
-            }
-
-            const total = data1.total || 0;
-            const totalPages = Math.ceil(total / limit);
-
-            // 3. Fetch Remaining Pages in Parallel
-            if (totalPages > 1) {
-                const promises = [];
-                for (let p = 2; p <= totalPages; p++) {
-                    promises.push(fetch(`/api/reports?quarters=${qStr}&page=${p}&limit=${limit}`).then(r => r.json()));
+                const data = await res.json();
+                if (data.reports) {
+                    allNewReports = [...allNewReports, ...data.reports];
                 }
 
-                const results = await Promise.all(promises);
-                let allRemainingReports = [];
-                results.forEach(d => {
-                    if (d.reports) allRemainingReports.push(...d.reports);
-                });
-
-                // 4. Update UI with remaining data
-                setReports(prev => {
-                    const existingIds = new Set(prev.map(r => r.id));
-                    const uniqueNew = allRemainingReports.filter(r => !existingIds.has(r.id));
-                    return [...prev, ...uniqueNew].sort((a, b) =>
-                        (b.info_of_report?.date_of_issue || '').localeCompare(a.info_of_report?.date_of_issue || '')
-                    );
-                });
+                hasMore = data.hasMore;
+                page++;
             }
 
-            // Update loaded state from server response if available, otherwise fallback
-            if (data1.loadedQuarters && Array.isArray(data1.loadedQuarters)) {
-                setLoadedQuarters(data1.loadedQuarters);
-            } else {
-                setLoadedQuarters(prev => [...new Set([...prev, ...quartersToLoad])]);
-            }
-
+            setReports(prev => {
+                const existingIds = new Set(prev.map(r => r.id));
+                const uniqueNew = allNewReports.filter(r => !existingIds.has(r.id));
+                // Sort descending by date
+                return [...prev, ...uniqueNew].sort((a, b) =>
+                    b.info_of_report.date_of_issue.localeCompare(a.info_of_report.date_of_issue)
+                );
+            });
+            setLoadedQuarters(prev => [...new Set([...prev, ...quartersToLoad])]);
         } catch (err) {
             console.error("Pagination fetch error:", err);
         } finally {
@@ -624,42 +587,6 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
         }
     }, [filterPeriod, loadedQuarters, uniqueQuarters]);
 
-    // Fetch Full Report Detail when selected
-    useEffect(() => {
-        if (!selectedReportId) {
-            setFullReportDetail(null);
-            return;
-        }
-
-        const fetchFullDetail = async () => {
-            setIsDetailLoading(true);
-            setFullReportDetail(null); // Clear previous to avoid mixing data
-            try {
-                // Find basic info from list as fallback/initial
-                const basicReport = reports.find(r => r.id === selectedReportId);
-
-                // Fetch FULL detail (heavy fields like company_update)
-                const res = await fetch(`/api/reports?id=${selectedReportId}`);
-                if (res.ok) {
-                    const fullData = await res.json();
-                    setFullReportDetail(fullData);
-                } else {
-                    console.error("Failed to fetch full report detail");
-                    setFullReportDetail(basicReport); // Fallback to lite data
-                }
-            } catch (e) {
-                console.error("Error fetching report detail:", e);
-                // Fallback
-                const basicReport = reports.find(r => r.id === selectedReportId);
-                setFullReportDetail(basicReport);
-            } finally {
-                setIsDetailLoading(false);
-            }
-        };
-
-        fetchFullDetail();
-    }, [selectedReportId, reports]);
-
     const filteredReports = useMemo(() => {
         return reports.filter(r => {
             const mTicker = filterTicker === 'All' || r.info_of_report.ticker === filterTicker;
@@ -800,10 +727,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
         setSortConfig({ key, direction });
     };
 
-    const selectedReport = useMemo(() => {
-        if (fullReportDetail && fullReportDetail.id === selectedReportId) return fullReportDetail;
-        return sortedReports.find(r => r.id === selectedReportId) || sortedReports[0];
-    }, [sortedReports, selectedReportId, fullReportDetail]);
+    const selectedReport = sortedReports.find(r => r.id === selectedReportId) || sortedReports[0];
 
     // Stats
     const reportsWithUpside = filteredReports.filter(r => r.recommendation?.upside != null);
@@ -1811,10 +1735,8 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                             if (info) {
                                                 return `${info.organ_short} (${info.exchange}: ${t})`;
                                             }
-                                            const ticker = selectedReport.info_of_report?.ticker || 'N/A';
-                                            const name = selectedReport.info_of_report?.stock_name;
-                                            const displayName = (name && name !== 'undefined' && name !== 'null') ? name : (selectedReport.info_of_report?.covered_stock || ticker);
-                                            return `${displayName} (${ticker})`;
+                                            // Fallback
+                                            return `${selectedReport.info_of_report.stock_name || selectedReport.info_of_report.covered_stock || t} (${t})`;
                                         })()}
                                     </h2>
                                     <div className="text-gray-400" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '5px', marginBottom: '12px', fontSize: '10px' }}>

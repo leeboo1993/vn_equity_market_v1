@@ -1,35 +1,30 @@
 import { NextResponse } from 'next/server';
-import { getFullRawReports } from '@/lib/data';
+import { getReports } from '@/lib/data';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
-        const reports = await getFullRawReports();
+        const reports = await getReports();
 
-        // Extract unique metadata from RAW reports (FAST)
+        // Extract unique metadata
         const uniqueTickers = [...new Set(reports.map(r => r.info_of_report?.ticker).filter(Boolean))].sort();
         const uniqueBrokers = [...new Set(reports.map(r => r.info_of_report?.issued_company).filter(Boolean))].sort();
         const uniqueSectors = [...new Set(reports.map(r => r.info_of_report?.sector).filter(Boolean))].sort();
 
         // Extract unique quarters
-        // Support YYMMDD or YYYYMMDD
+        // Format of reports date: YYMMDD
         const quartersSet = new Set();
         reports.forEach(r => {
-            const dStr = String(r.info_of_report?.date_of_issue || '').trim();
-            let year, mm;
-
-            if (dStr.length === 8) {
-                year = parseInt(dStr.substring(0, 4));
-                mm = parseInt(dStr.substring(4, 6));
-            } else if (dStr.length === 6) {
-                year = 2000 + parseInt(dStr.substring(0, 2));
-                mm = parseInt(dStr.substring(2, 4));
-            }
-
-            if (year && mm >= 1 && mm <= 12 && year <= 2030) {
-                const q = Math.ceil(mm / 3);
-                quartersSet.add(`Q${q} ${year}`);
+            const dStr = r.info_of_report?.date_of_issue;
+            if (dStr && dStr.length === 6) {
+                const yy = parseInt(dStr.substring(0, 2));
+                const mm = parseInt(dStr.substring(2, 4));
+                const year = 2000 + yy;
+                if (!isNaN(year) && !isNaN(mm)) {
+                    const q = Math.ceil(mm / 3);
+                    quartersSet.add(`Q${q} ${year}`);
+                }
             }
         });
 
