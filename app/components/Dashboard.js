@@ -25,25 +25,25 @@ const safeToFixed = (val, digits = 1) => {
 };
 
 const getQuarterFromDate = (dateString) => {
-    if (!dateString || dateString.length !== 6) return null;
+    if (!dateString) return null;
+    const s = String(dateString);
 
-    // User confirmed JSON uses YYMMDD format
-    // Try YYMMDD first
-    const yy = parseInt(dateString.substring(0, 2));
-    const mm = parseInt(dateString.substring(2, 4));
-    const dd = parseInt(dateString.substring(4, 6));
-    const year_yymmdd = 2000 + yy;
-
-    // Check if YYMMDD gives reasonable year (2000-2030)
-    // Updated limit to 2030 to support future dates like 2026
-    const isValidYYMMDD = (mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31 && year_yymmdd <= 2030);
-
-    if (isValidYYMMDD) {
-        const quarter = Math.ceil(mm / 3);
-        return { quarter, year: year_yymmdd, label: `Q${quarter} ${year_yymmdd}` };
+    // Support YYYYMMDD (length 8) or YYMMDD (length 6)
+    let year, mm;
+    if (s.length === 8) {
+        year = parseInt(s.substring(0, 4));
+        mm = parseInt(s.substring(4, 6));
+    } else if (s.length === 6) {
+        year = 2000 + parseInt(s.substring(0, 2));
+        mm = parseInt(s.substring(2, 4));
+    } else {
+        return null;
     }
 
-    // Invalid date
+    if (year >= 2010 && year <= 2030 && mm >= 1 && mm <= 12) {
+        const quarter = Math.ceil(mm / 3);
+        return { quarter, year, label: `Q${quarter} ${year}` };
+    }
     return null;
 };
 
@@ -66,19 +66,30 @@ const getPreviousQuarterLabel = (quarterLabel) => {
 
 const formatDate = (dateStr) => {
     if (!dateStr) return '-';
-    // Use string manipulation if already in YYMMDD to avoid timezone issues
-    if (String(dateStr).length === 6) {
-        const yy = dateStr.substring(0, 2);
-        const mm = dateStr.substring(2, 4);
-        const dd = dateStr.substring(4, 6);
+    const s = String(dateStr);
+
+    // Support YYYYMMDD
+    if (s.length === 8) {
+        const y = s.substring(0, 4);
+        const m = s.substring(4, 6);
+        const d = s.substring(6, 8);
+        return `${d}/${m}/${y}`;
+    }
+
+    // Support YYMMDD
+    if (s.length === 6) {
+        const yy = s.substring(0, 2);
+        const mm = s.substring(2, 4);
+        const dd = s.substring(4, 6);
         return `${dd}/${mm}/20${yy}`;
     }
-    // If it's a full date string, use local time formatting
-    const d = new Date(dateStr);
-    if (!isNaN(d.getTime())) {
-        const day = String(d.getDate()).padStart(2, '0');
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const year = d.getFullYear();
+
+    // Fallback to JS Date
+    const dObj = new Date(dateStr);
+    if (!isNaN(dObj.getTime())) {
+        const day = String(dObj.getDate()).padStart(2, '0');
+        const month = String(dObj.getMonth() + 1).padStart(2, '0');
+        const year = dObj.getFullYear();
         return `${day}/${month}/${year}`;
     }
     return dateStr || '-';
