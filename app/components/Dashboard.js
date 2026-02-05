@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useRef, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import ForecastTable from './ForecastTable';
@@ -318,6 +319,10 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
             })
             .catch(err => console.error("Failed to load stock info:", err));
     }, []);
+
+    // Get user session to check role
+    const { data: session } = useSession();
+    const isAdmin = session?.user?.role === 'admin';
 
     const [reports, setReports] = useState([]);
 
@@ -1673,8 +1678,8 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                             </table>
                         </div>
 
-                        {/* Quarter Loading Indicator */}
-                        {shouldFetchData && (
+                        {/* Quarter Loading Indicator (Admin Only) */}
+                        {shouldFetchData && isAdmin && (
                             <div style={{
                                 display: 'flex',
                                 justifyContent: 'space-between',
