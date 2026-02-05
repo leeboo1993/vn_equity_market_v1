@@ -363,44 +363,63 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
             isSyncing: true
         }));
 
-        // Process in smaller batches to keep UI responsive and parallelize
-        const batchSize = 200;
+        const batchSize = 500; // Increased from 200 to 500
+        const batches = [];
         for (let i = 0; i < toProcess.length; i += batchSize) {
-            const batch = toProcess.slice(i, i + batchSize);
-            const ids = batch.map(r => r.id).join(',');
-
-            fetch(`/api/reports?ids=${ids}&raw=false`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.reports) {
-                        setReports(prev => prev.map(oldR => {
-                            const match = data.reports.find(nr => nr.id === oldR.id);
-                            return match ? { ...oldR, ...match } : oldR;
-                        }));
-                        setEnrichedIds(prev => {
-                            const next = new Set(prev);
-                            data.reports.forEach(r => next.add(r.id));
-                            return next;
-                        });
-
-                        setSyncProgress(prev => {
-                            const newCurrent = prev.current + data.reports.length;
-                            const elapsed = Date.now() - prev.startTime;
-                            const avgPerReport = elapsed / newCurrent;
-                            const remaining = prev.total - newCurrent;
-                            const etaSeconds = Math.ceil((remaining * avgPerReport) / 1000);
-
-                            return {
-                                ...prev,
-                                current: newCurrent,
-                                eta: etaSeconds > 0 ? etaSeconds : null,
-                                isSyncing: newCurrent < prev.total
-                            };
-                        });
-                    }
-                })
-                .catch(err => console.error("Batch enrichment failed:", err));
+            batches.push(toProcess.slice(i, i + batchSize));
         }
+
+        // Concurrency Control: limit to 3 parallel requests
+        const concurrency = 3;
+        let index = 0;
+
+        const processNext = async () => {
+            if (index >= batches.length) return;
+            const currentBatch = batches[index++];
+            const ids = currentBatch.map(r => r.id).join(',');
+
+            try {
+                const res = await fetch(`/api/reports?ids=${ids}&raw=false`);
+                const data = await res.json();
+
+                if (data.reports) {
+                    setReports(prev => prev.map(oldR => {
+                        const match = data.reports.find(nr => nr.id === oldR.id);
+                        return match ? { ...oldR, ...match } : oldR;
+                    }));
+
+                    setEnrichedIds(prev => {
+                        const next = new Set(prev);
+                        data.reports.forEach(r => next.add(r.id));
+                        return next;
+                    });
+
+                    setSyncProgress(prev => {
+                        const newCurrent = prev.current + data.reports.length;
+                        const elapsed = Date.now() - prev.startTime;
+                        const avgPerReport = elapsed / newCurrent;
+                        const remaining = prev.total - newCurrent;
+                        const etaSeconds = Math.ceil((remaining * avgPerReport) / 1000);
+
+                        return {
+                            ...prev,
+                            current: newCurrent,
+                            eta: etaSeconds > 0 ? etaSeconds : null,
+                            isSyncing: newCurrent < prev.total
+                        };
+                    });
+                }
+            } catch (err) {
+                console.error("Batch enrichment failed:", err);
+            }
+
+            // Trigger next batch in this "worker"
+            await processNext();
+        };
+
+        // Start workers
+        const workers = Array.from({ length: Math.min(concurrency, batches.length) }, () => processNext());
+        await Promise.all(workers);
     };
 
     // Recursive Pagination Fetcher
