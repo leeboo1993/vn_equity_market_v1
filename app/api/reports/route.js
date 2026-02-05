@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getRawReports, enrichReportsBatch } from '@/lib/data';
+import { getFullRawReports, enrichReportsBatch } from '@/lib/data';
 import { getStockInfoMap } from '@/lib/stockInfo';
 import { getPriceHistoryMap } from '@/lib/priceHistory';
 import rateLimit from '@/lib/rateLimit';
@@ -46,8 +46,8 @@ export async function GET(request) {
         const brokerParam = searchParams.get('broker'); // issued_company
         const sectorParam = searchParams.get('sector');
 
-        // 1. Get Raw Reports (Fast, no enrichment yet)
-        let reports = await getRawReports();
+        // 1. Get Raw Reports (FULL DATA now, as requested)
+        let reports = await getFullRawReports();
 
         // 2. Filter by Quarter(s)
         if (quartersParam && quartersParam !== 'all') {

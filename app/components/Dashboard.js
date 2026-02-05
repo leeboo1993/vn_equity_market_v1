@@ -345,7 +345,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
     // Recursive Pagination Fetcher (Optimized with Parallel Requests)
     const fetchReportsRecursively = async (quartersToLoad) => {
         setIsLoading(true);
-        const limit = 400; // Optimized to 400 (max safe size ~3.7MB < 4.5MB)
+        const limit = 200; // Reduced to 200 (Safe for FULL data ~3MB < 4.5MB)
         const qStr = quartersToLoad.join(',');
 
         try {
