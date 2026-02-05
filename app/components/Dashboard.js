@@ -401,7 +401,9 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                 const data = await res.json();
 
                 if (data.reports && data.reports.length > 0) {
-                    processedCount = data.reports.length;
+                    // Always count the entire batch as processed, even if some IDs were filtered out
+                    processedCount = currentBatch.length;
+
                     setReports(prev => prev.map(oldR => {
                         const match = data.reports.find(nr => nr.id === oldR.id);
                         return match ? { ...oldR, ...match } : oldR;
