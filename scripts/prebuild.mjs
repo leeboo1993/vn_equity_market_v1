@@ -90,6 +90,44 @@ async function main() {
                 }
             }
 
+            // Recalculate Recommendation based on Upside
+            // Logic: < -5% -> Sell, -5% to 15% -> Neutral, > 15% -> Buy
+            // We need price info for this, but prebuild runs on server without price history loaded?
+            // WAIT - 'getReports' loads raw data. We don't have price history here in prebuild.mjs easily unless we load it.
+            // Actually, for the THIN list (initial view), we usually rely on the recommendation from the report itself
+            // or we need to fetch the current price to calculate upside.
+            // If the user wants the recommendation to be DYNAMIC based on CURRENT upside, 
+            // the thin list must have the price info.
+
+            // However, looking at the previous 'optimize_reports.cjs', it didn't import price history.
+            // If I change it here, I need to fetch current price. 
+            // But the thin list is static JSON. If prices change, the recommendation in the static file becomes stale.
+            // The dynamic logic I added to lib/data.js handles the "enriched" view (background sync).
+
+            // For the initial static list, we might have to stick to the broker's original recommendation 
+            // OR fetch the latest price during build and bake it in.
+            // Let's rely on the dashboard to override it or Bake it in now.
+
+            // Let's bake it in using the recommendation FROM THE REPORT since we can't easily get live price in this script without more setup.
+            // BUT wait, the user said "recommendation is based on upside at call".
+            // "Upside at call" is (Target Price - Price At Call) / Price At Call.
+            // This is static! It doesn't change with current price. 
+            // Let's re-read: "the recommendation is based on upside at call"
+
+            // "upside at call"
+            // If so, we need 'price_at_call'. 
+            // In raw reports, do we have 'price_at_call' or 'upside_at_call'?
+            // 'rec.upside_at_call' is used in thin list.
+
+            let finalRec = rec.recommendation;
+            if (rec.upside_at_call !== undefined && rec.upside_at_call !== null) {
+                if (rec.upside_at_call > 15) finalRec = 'Buy';
+                else if (rec.upside_at_call < -5) finalRec = 'Sell';
+                else finalRec = 'Neutral';
+            } else if (!rec.target_price || rec.target_price === 0) {
+                finalRec = 'No Rating';
+            }
+
             // Thin Object
             thinList.push({
                 id: r.id,
