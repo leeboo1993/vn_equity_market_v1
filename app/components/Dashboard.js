@@ -696,6 +696,41 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
         }
     }, [filterPeriod, loadedQuarters, uniqueQuarters]);
 
+    // On-demand fetch for selected report details
+    useEffect(() => {
+        if (!selectedReportId) return;
+
+        const report = reports.find(r => r.id === selectedReportId);
+        // Check if report exists but lacks details (e.g. investment_thesis)
+        // We use 'investment_thesis' as a proxy for "is full details loaded"
+        if (report && !report.investment_thesis && !report.isLoadingDetails) {
+            console.log(`Fetching full details for ${report.info_of_report.ticker}...`);
+
+            // Mark as loading to prevent double fetch
+            setReports(prev => prev.map(r => r.id === selectedReportId ? { ...r, isLoadingDetails: true } : r));
+
+            fetch(`/api/reports?ids=${selectedReportId}&raw=false`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.reports && data.reports.length > 0) {
+                        const fullReport = data.reports[0];
+                        setReports(prev => prev.map(r =>
+                            r.id === selectedReportId ? { ...r, ...fullReport, isLoadingDetails: false } : r
+                        ));
+                        // Also update enrichedIds to unblock UI if needed
+                        setEnrichedIds(prev => new Set([...prev, selectedReportId]));
+                    } else {
+                        // Failed or empty, clear loading flag
+                        setReports(prev => prev.map(r => r.id === selectedReportId ? { ...r, isLoadingDetails: false } : r));
+                    }
+                })
+                .catch(err => {
+                    console.error("Failed to load report details:", err);
+                    setReports(prev => prev.map(r => r.id === selectedReportId ? { ...r, isLoadingDetails: false } : r));
+                });
+        }
+    }, [selectedReportId, reports]);
+
     const filteredReports = useMemo(() => {
         return reports.filter(r => {
             const mTicker = filterTicker === 'All' || r.info_of_report.ticker === filterTicker;
