@@ -64,29 +64,35 @@ const getPreviousQuarterLabel = (quarterLabel) => {
     return `Q${quarter} ${year}`;
 };
 
+const parseDateHelper = (dStr) => {
+    if (!dStr) return new Date(0);
+    const s = String(dStr).trim();
+    let y, m, d;
+    if (s.includes('-')) {
+        const parts = s.split('-');
+        y = parseInt(parts[0]);
+        m = parseInt(parts[1]) - 1;
+        d = parseInt(parts[2]);
+    } else if (s.length === 8) { // YYYYMMDD
+        y = parseInt(s.substring(0, 4));
+        m = parseInt(s.substring(4, 6)) - 1;
+        d = parseInt(s.substring(6, 8));
+    } else if (s.length === 6) { // YYMMDD
+        y = 2000 + parseInt(s.substring(0, 2));
+        m = parseInt(s.substring(2, 4)) - 1;
+        d = parseInt(s.substring(4, 6));
+    } else {
+        const dObj = new Date(s);
+        return isNaN(dObj.getTime()) ? new Date(0) : dObj;
+    }
+    return new Date(y, m, d);
+};
+
 const formatDate = (dateStr) => {
     if (!dateStr) return '-';
-    const s = String(dateStr);
-
-    // Support YYYYMMDD
-    if (s.length === 8) {
-        const y = s.substring(0, 4);
-        const m = s.substring(4, 6);
-        const d = s.substring(6, 8);
-        return `${d}/${m}/${y}`;
-    }
-
-    // Support YYMMDD
-    if (s.length === 6) {
-        const yy = s.substring(0, 2);
-        const mm = s.substring(2, 4);
-        const dd = s.substring(4, 6);
-        return `${dd}/${mm}/20${yy}`;
-    }
-
-    // Fallback to JS Date
-    const dObj = new Date(dateStr);
-    if (!isNaN(dObj.getTime())) {
+    // Use helper for standardized parsing
+    const dObj = parseDateHelper(dateStr);
+    if (!isNaN(dObj.getTime()) && dObj.getTime() !== 0) {
         const day = String(dObj.getDate()).padStart(2, '0');
         const month = String(dObj.getMonth() + 1).padStart(2, '0');
         const year = dObj.getFullYear();
@@ -1749,8 +1755,8 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                         let perfCall = r.recommendation?.performance_since_call;
 
                                         // Date parsing for performance logic
-                                        const dateStr = r.info_of_report.date_of_issue; // YYYY-MM-DD
-                                        const reportDate = new Date(dateStr);
+                                        const dateStr = r.info_of_report.date_of_issue; // YYYYMMDD or YYYY-MM-DD
+                                        const reportDate = parseDateHelper(dateStr);
                                         const now = new Date();
                                         const daysElapsed = (now - reportDate) / (1000 * 60 * 60 * 24);
 
@@ -2865,7 +2871,10 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                         <div className={`detail-tab-content ${activeTab === 'fin' ? 'active' : ''}`}>
                                             {/* Financial Forecast Table */}
                                             {selectedReport.forecast_table && (
-                                                <ForecastTable forecastData={selectedReport.forecast_table} reportDate={selectedReport.date} />
+                                                <ForecastTable
+                                                    forecastData={selectedReport.forecast_table}
+                                                    reportDate={formatDate(selectedReport.info_of_report?.date_of_issue)}
+                                                />
                                             )}
                                         </div>
 
