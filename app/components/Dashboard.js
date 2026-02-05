@@ -339,7 +339,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
     // Recursive Pagination Fetcher
     const fetchReportsRecursively = async (quartersToLoad) => {
         setIsLoading(true);
-        const limit = 300; // Increased to ~300 to reduce round trips (safe within 4.5MB)
+        const limit = 400; // Optimized to 400 (max safe size ~3.7MB < 4.5MB)
         let page = 1;
         let hasMore = true;
         let allNewReports = [];
