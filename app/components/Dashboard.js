@@ -380,7 +380,6 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
         const limit = 400; // Optimized to 400 (max safe size ~3.7MB < 4.5MB)
         let page = 1;
         let hasMore = true;
-        let allNewReports = [];
 
         try {
             while (hasMore) {
@@ -389,26 +388,32 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                 if (!res.ok) throw new Error('API fetch failed');
 
                 const data = await res.json();
-                if (data.reports) {
-                    allNewReports = [...allNewReports, ...data.reports];
+                const fetchedReports = data.reports || [];
+
+                if (fetchedReports.length > 0) {
+                    setReports(prev => {
+                        const existingIds = new Set(prev.map(r => r.id));
+                        const uniqueNew = fetchedReports.filter(r => !existingIds.has(r.id));
+
+                        if (uniqueNew.length > 0) {
+                            // Trigger background enrichment for this page immediately
+                            enrichReportsInBackground(uniqueNew);
+
+                            const updated = [...prev, ...uniqueNew].sort((a, b) =>
+                                b.info_of_report.date_of_issue.localeCompare(a.info_of_report.date_of_issue)
+                            );
+                            return updated;
+                        }
+                        return prev;
+                    });
                 }
 
                 hasMore = data.hasMore;
                 page++;
-            }
 
-            setReports(prev => {
-                const existingIds = new Set(prev.map(r => r.id));
-                const uniqueNew = allNewReports.filter(r => !existingIds.has(r.id));
-                // Trigger background enrichment for these new reports
-                if (uniqueNew.length > 0) {
-                    enrichReportsInBackground(uniqueNew);
-                }
-                // Sort descending by date
-                return [...prev, ...uniqueNew].sort((a, b) =>
-                    b.info_of_report.date_of_issue.localeCompare(a.info_of_report.date_of_issue)
-                );
-            });
+                // If first page is loaded, we can stop the overall "loading" spinner
+                if (page > 1) setIsLoading(false);
+            }
             setLoadedQuarters(prev => [...new Set([...prev, ...quartersToLoad])]);
         } catch (err) {
             console.error("Pagination fetch error:", err);
@@ -465,21 +470,6 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
         setHoveredCoverageRow(row);
     };
 
-    // Helper to format date from YYMMDD to DD/MM/YYYY
-    const formatDate = (dateValue) => {
-        if (!dateValue) return '-';
-        // Convert to string and pad to 6 digits if needed
-        const dateStr = String(dateValue).padStart(6, '0');
-        if (dateStr.length !== 6) return '-';
-
-        const yy = dateStr.substring(0, 2);
-        const mm = dateStr.substring(2, 4);
-        const dd = dateStr.substring(4, 6);
-
-        // Assume 20xx for years
-        const yyyy = '20' + yy;
-        return `${dd}/${mm}/${yyyy}`;
-    };
     const [sortConfig, setSortConfig] = useState({ key: 'date_of_issue', direction: 'desc' });
 
     // Reset selectedHistYear when report changes
@@ -643,18 +633,22 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                 const q = getQuarterFromDate(r.info_of_report.date_of_issue);
                 mPeriod = q && q.label === filterPeriod;
             }
-            // Target Price Filter strict
+            // Target Price Filter: Less strict for raw reports
             let mTarget = true;
             if (shouldFilterTargets) {
                 const tp = r.recommendation?.target_price;
                 const numericTp = Number(tp);
                 const hasTP = tp != null && !isNaN(numericTp) && numericTp > 0;
 
+                // For raw reports, price_now might be missing. We allow them if they have a TP.
                 const cp = r.recommendation?.price_now;
                 const numericCp = Number(cp);
                 const hasCP = cp != null && !isNaN(numericCp) && numericCp > 0;
 
-                mTarget = hasTP && hasCP;
+                // If it's enriched (has current price), then both must exist
+                // If it's raw (no current price yet), we show it if it has a target price
+                const isRaw = !enrichedIds.has(r.id);
+                mTarget = isRaw ? hasTP : (hasTP && hasCP);
             }
 
             return mTicker && mBroker && mSector && mPeriod && mTarget && isValidStock;
