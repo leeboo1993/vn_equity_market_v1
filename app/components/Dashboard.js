@@ -320,9 +320,9 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
             .catch(err => console.error("Failed to load stock info:", err));
     }, []);
 
-    // Get user session to check role
+    // Get user session to check role (admin only for debug info)
     const { data: session } = useSession();
-    const isAdmin = session?.user?.role === 'admin';
+    const isAdmin = session?.user?.role === 'admin' ? true : false;
 
     const [reports, setReports] = useState([]);
 
