@@ -66,14 +66,25 @@ const getPreviousQuarterLabel = (quarterLabel) => {
 
 const formatDate = (dateStr) => {
     if (!dateStr) return '-';
-    // Use string manipulation if already in YYMMDD to avoid timezone issues
-    if (String(dateStr).length === 6) {
-        const yy = dateStr.substring(0, 2);
-        const mm = dateStr.substring(2, 4);
-        const dd = dateStr.substring(4, 6);
+    const s = String(dateStr).trim();
+
+    // YYYYMMDD
+    if (s.length === 8) {
+        const y = s.substring(0, 4);
+        const m = s.substring(4, 6);
+        const d = s.substring(6, 8);
+        return `${d}/${m}/${y}`;
+    }
+
+    // YYMMDD
+    if (s.length === 6) {
+        const yy = s.substring(0, 2);
+        const mm = s.substring(2, 4);
+        const dd = s.substring(4, 6);
         return `${dd}/${mm}/20${yy}`;
     }
-    // If it's a full date string, use local time formatting
+
+    // If it's a full ISO date string, use local time formatting
     const d = new Date(dateStr);
     if (!isNaN(d.getTime())) {
         const day = String(d.getDate()).padStart(2, '0');

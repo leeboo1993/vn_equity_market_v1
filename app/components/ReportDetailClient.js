@@ -14,9 +14,20 @@ export default function ReportDetailClient({ report, allReports }) {
     // Helper to format date for ForecastTable
     const formattedDate = useMemo(() => {
         const d = report.info_of_report?.date_of_issue;
-        if (!d || String(d).length !== 6) return null;
-        const str = String(d);
-        return `${str.substring(4, 6)}/${str.substring(2, 4)}/20${str.substring(0, 2)}`;
+        if (!d) return null;
+        const s = String(d).trim();
+
+        // YYYYMMDD
+        if (s.length === 8) {
+            return `${s.substring(6, 8)}/${s.substring(4, 6)}/${s.substring(0, 4)}`;
+        }
+
+        // YYMMDD
+        if (s.length === 6) {
+            return `${s.substring(4, 6)}/${s.substring(2, 4)}/20${s.substring(0, 2)}`;
+        }
+
+        return null;
     }, [report.info_of_report?.date_of_issue]);
 
     const [activeTab, setActiveTab] = useState('details');
