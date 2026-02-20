@@ -49,3 +49,5 @@ next-env.d.ts
 
 # Protected server-side data
 /data/
+ssi_price_api/config.py
+ssi_price_api/

@@ -341,6 +341,11 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
     }, []);
 
     const [reports, setReports] = useState([]);
+    const [livePrices, setLivePrices] = useState({});
+
+    // Fetch live prices periodically or when uniqueTickers changes
+    // We defer the actual effect definition until uniqueTickers is defined below,
+    // but the state declaration goes here.
 
     // Initialize reports state only after validating against stock info (if possible), 
     // but initially we load propReports. We will re-filter when stockInfo loads.
@@ -641,6 +646,33 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
         // Fallback: simple heuristic filtering if stock info not yet ready
         return allTickers.filter(t => t && t.length === 3 && /^[A-Z]{3}$/.test(t)).sort();
     }, [reports, stockInfo]);
+
+    // Fetch Real-time Live Prices
+    useEffect(() => {
+        if (!shouldFetchData || uniqueTickers.length === 0) return;
+
+        const fetchLivePrices = async () => {
+            try {
+                // To avoid URL too long, fetch in batches of 50 or 100 if needed,
+                // but 200 tickers takes ~800 chars, so one request is fine for now.
+                const res = await fetch(`/api/live-prices?tickers=${uniqueTickers.join(',')}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.prices) {
+                        setLivePrices(prev => ({ ...prev, ...data.prices }));
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to fetch live prices:", err);
+            }
+        };
+
+        fetchLivePrices();
+
+        // Optional: refresh every 1 minute if user leaves dashboard open
+        const intervalId = setInterval(fetchLivePrices, 60000);
+        return () => clearInterval(intervalId);
+    }, [uniqueTickers, shouldFetchData]);
 
     const uniqueBrokers = useMemo(() => [...new Set(reports.map(r => r.info_of_report.issued_company))]
         .filter(b => b && b.length < 15) // Filter out messy data (long company names mistakenly in issuer field)
@@ -1797,17 +1829,27 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                         const now = new Date();
                                         const daysElapsed = (now - reportDate) / (1000 * 60 * 60 * 24);
 
-                                        // Dynamic calculation if perfCall is 0 or missing
-                                        if ((!perfCall || perfCall === 0) && r.recommendation?.target_price && r.recommendation?.upside_at_call != null && r.recommendation?.price_now) {
-                                            const tp = r.recommendation.target_price;
+                                        // --- Real-time Price Integration ---
+                                        const actualPriceNow = livePrices[r.info_of_report.ticker]?.price || r.recommendation?.price_now;
+                                        const isLive = !!livePrices[r.info_of_report.ticker];
+
+                                        // Dynamic calculation if perfCall is 0 or missing, using actualPriceNow
+                                        if ((!perfCall || perfCall === 0) && r.recommendation?.target_price && r.recommendation?.upside_at_call != null && actualPriceNow) {
+                                            const tpVal = r.recommendation.target_price;
                                             const upsideCall = r.recommendation.upside_at_call / 100; // Assuming it's in percentage e.g., 41.8
                                             // price_at_call = TP / (1 + upside)
-                                            const priceAtCall = tp / (1 + upsideCall);
+                                            const priceAtCall = tpVal / (1 + upsideCall);
                                             if (priceAtCall > 0) {
-                                                const perf = (r.recommendation.price_now - priceAtCall) / priceAtCall * 100;
+                                                const perf = (actualPriceNow - priceAtCall) / priceAtCall * 100;
                                                 perfCall = perf;
                                             }
                                         }
+
+                                        let actualUpsideNow = r.recommendation?.upside_now;
+                                        if (hasTP && actualPriceNow && tp && tp !== '-' && tp !== 0 && tp !== '0') {
+                                            actualUpsideNow = ((tp - actualPriceNow) / actualPriceNow) * 100;
+                                        }
+                                        // -----------------------------------
 
                                         // For periods not yet completed, show "Since Call"
                                         const val1m = (daysElapsed >= 30 && r.recommendation?.return_1m != null) ? r.recommendation.return_1m : perfCall;
@@ -1835,16 +1877,18 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                 <td style={{ textAlign: 'right' }} className="text-gray-300">
                                                     {r.recommendation?.target_price?.toLocaleString() || '-'}
                                                 </td>
-                                                {/* Price (Call) Removed */}
-                                                <td style={{ textAlign: 'right' }} className="text-blue-400 font-medium">{r.recommendation?.price_now?.toLocaleString() || '-'}</td>
+                                                <td style={{ textAlign: 'right' }} className="text-blue-400 font-medium whitespace-nowrap">
+                                                    {actualPriceNow?.toLocaleString() || '-'}
+                                                    {isLive && <span className="text-[8px] ml-1 text-green-400 opacity-70" title="Live SSI Data">●</span>}
+                                                </td>
                                                 <td style={{ textAlign: 'right' }}>
                                                     {r.recommendation?.upside_at_call != null
                                                         ? safeToFixed(r.recommendation.upside_at_call, 1) + '%'
                                                         : '-'}
                                                 </td>
                                                 <td style={{ textAlign: 'right' }}>
-                                                    {r.recommendation?.upside_now != null
-                                                        ? r.recommendation.upside_now.toFixed(1) + '%'
+                                                    {actualUpsideNow != null
+                                                        ? actualUpsideNow.toFixed(1) + '%'
                                                         : '-'}
                                                 </td>
                                                 <td style={{ textAlign: 'right' }}>

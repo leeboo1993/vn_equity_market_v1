@@ -1,0 +1,62 @@
+name: Daily Model Run
+
+on:
+  schedule:
+    # Run at 9:00 UTC (4:00 PM Vietnam Time)
+    - cron: '0 9 * * *'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  run-model:
+    runs-on: ubuntu-latest
+    
+    env:
+      R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: Install dependencies
+      run: |
+        pip install -r new_model/requirements.txt
+        
+    - name: Run Daily Pipeline
+      run: |
+        # Ensure scripts are executable
+        chmod +x new_model/run_daily_pipeline.sh
+        
+        # We might need to adjust run_daily_pipeline.sh to be CI friendly
+        # But for now, let's run the core python script directly as the shell script does sync/etc which might be complex
+        # Our goal is to run export_web_json.py (which runs forecast, flows, broker view)
+        
+        # But wait, we need DATA first!
+        # The cloud runner has NO data.
+        # It needs to sync FROM R2 first.
+        
+        # Verify utils_r2.py exists (we created it)
+        ls -l new_model/utils_r2.py
+        
+        # Run Data Sync (We need a script to DOWNLOAD data, not just upload)
+        # smart_sync_r2_data.py is perfect for this!
+        python new_model/scripts/sync/smart_sync_r2_data.py
+        
+        # Run the Export (Generation)
+        # This runs model inference and saves json/txt
+        # AND uploads the result to R2
+        python new_model/scripts/production/export_web_json.py
+        
+    - name: Upload Logs (Optional)
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: model-logs
+        path: new_model/reports/

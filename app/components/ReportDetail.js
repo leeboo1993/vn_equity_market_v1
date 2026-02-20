@@ -1,8 +1,30 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ForecastTable from './ForecastTable';
 
 export default function ReportDetail({ report }) {
     const [activeTab, setActiveTab] = useState('recommendation');
+    const [livePrice, setLivePrice] = useState(null);
+
+    useEffect(() => {
+        if (!report) return;
+        setLivePrice(null);
+
+        const fetchLivePrice = async () => {
+            try {
+                const res = await fetch(`/api/live-prices?tickers=${report.info_of_report.ticker}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.prices && data.prices[report.info_of_report.ticker]) {
+                        setLivePrice(data.prices[report.info_of_report.ticker].price);
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to fetch live price in ReportDetail", err);
+            }
+        };
+
+        fetchLivePrice();
+    }, [report]);
 
     if (!report) {
         return (
@@ -54,7 +76,7 @@ export default function ReportDetail({ report }) {
 
             {/* Scrollable Content */}
             <div className="panel-content flex-1 overflow-y-auto">
-                {activeTab === 'recommendation' && <RecommendationView report={report} recommendationColor={recommendationColor} recommendationText={recommendationText} />}
+                {activeTab === 'recommendation' && <RecommendationView report={report} recommendationColor={recommendationColor} recommendationText={recommendationText} livePrice={livePrice} />}
                 {activeTab === 'investment' && <InvestmentView report={report} />}
                 {activeTab === 'financials' && <FinancialView report={report} />}
             </div>
@@ -73,14 +95,29 @@ function TabButton({ label, isActive, onClick }) {
     );
 }
 
-function RecommendationView({ report, recommendationColor, recommendationText }) {
+function RecommendationView({ report, recommendationColor, recommendationText, livePrice }) {
+    const displayPrice = livePrice || report.recommendation?.current_price || report.recommendation?.price_now;
+    const tp = report.recommendation?.target_price;
+    let displayUpside = report.recommendation?.upside;
+
+    if (livePrice && tp && tp !== '-' && tp !== 0 && tp !== '0') {
+        displayUpside = ((tp - livePrice) / livePrice * 100).toFixed(1);
+    } else if (displayUpside != null) {
+        displayUpside = Number(displayUpside).toFixed(1);
+    }
+
+    const isLive = !!livePrice;
+
     return (
         <div className="space-y-6">
             {/* Key Stats Grid */}
             <div className="grid grid-cols-2 gap-3">
-                <StatBox label="Target Price" value={report.recommendation?.target_price?.toLocaleString() ?? '-'} />
-                <StatBox label="Upside" value={report.recommendation?.upside ? `+${report.recommendation.upside}%` : '-'} valueColor="text-green" />
-                <StatBox label="Current Price" value={report.recommendation?.current_price?.toLocaleString() ?? '-'} />
+                <StatBox label="Target Price" value={tp?.toLocaleString() ?? '-'} />
+                <StatBox label="Upside" value={displayUpside ? `${displayUpside > 0 ? '+' : ''}${displayUpside}%` : '-'} valueColor="text-green" />
+                <StatBox
+                    label={<>Current Price {isLive && <span className="text-[8px] text-green-400 opacity-70 ml-1" title="Live SSI Data">● Live</span>}</>}
+                    value={displayPrice?.toLocaleString() ?? '-'}
+                />
                 <StatBox label="Method" value={report.recommendation?.valuation_method || 'N/A'} />
             </div>
 
@@ -92,8 +129,8 @@ function RecommendationView({ report, recommendationColor, recommendationText })
                 <table className="w-full text-[11px]">
                     <tbody>
                         <Row label="Rating" value={recommendationText} valueClass={recommendationColor} />
-                        <Row label="Target Price" value={report.recommendation?.target_price?.toLocaleString() ?? '-'} />
-                        <Row label="Upside" value={report.recommendation?.upside ? `+${report.recommendation.upside}%` : '-'} valueClass="text-green" />
+                        <Row label="Target Price" value={tp?.toLocaleString() ?? '-'} />
+                        <Row label="Upside" value={displayUpside ? `${displayUpside > 0 ? '+' : ''}${displayUpside}%` : '-'} valueClass="text-green" />
                         <Row label="Dividend Yield" value={report.recommendation?.dividend_yield ? `${report.recommendation.dividend_yield}%` : '-'} />
                     </tbody>
                 </table>
