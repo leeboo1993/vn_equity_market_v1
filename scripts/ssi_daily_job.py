@@ -42,20 +42,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 # --- Configuration ---
-# Fallback to ssi_price_api.config if exists
-fallback_consumer_id = ""
-fallback_consumer_secret = ""
-try:
-    sys.path.append(os.path.join(os.path.dirname(__file__), '../ssi_price_api'))
-    import config as ssi_fallback_config
-    fallback_consumer_id = getattr(ssi_fallback_config, 'consumerID', "")
-    fallback_consumer_secret = getattr(ssi_fallback_config, 'consumerSecret', "")
-except ImportError:
-    pass
-
-CONSUMER_ID = os.environ.get("SSI_CONSUMER_ID", fallback_consumer_id)
-CONSUMER_SECRET = os.environ.get("SSI_CONSUMER_SECRET", fallback_consumer_secret)
-PRIVATE_KEY_PATH = os.environ.get("SSI_PRIVATE_KEY_PATH", "ssi_price_api/private_key.pem")
+CONSUMER_ID = os.environ.get("SSI_CONSUMER_ID")
+CONSUMER_SECRET = os.environ.get("SSI_CONSUMER_SECRET")
 
 # Cloudflare R2 Config
 R2_BUCKET = os.environ.get("R2_BUCKET", "broker-data")
@@ -67,15 +55,9 @@ class SSIConfig:
     def __init__(self):
         self.consumerID = CONSUMER_ID
         self.consumerSecret = CONSUMER_SECRET
-        self.private_key = None
         self.url = 'https://fc-data.ssi.com.vn/'
         self.stream_url = 'https://fc-datahub.ssi.com.vn/'
         self.auth_type = 'Bearer'
-        
-        # Load private key if path exists
-        if PRIVATE_KEY_PATH and os.path.exists(PRIVATE_KEY_PATH):
-             with open(PRIVATE_KEY_PATH, 'r') as f:
-                 self.private_key = f.read()
 
 def get_ssi_client():
     if not CONSUMER_ID or not CONSUMER_SECRET:
