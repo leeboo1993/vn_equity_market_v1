@@ -126,13 +126,23 @@ const formatTarget = (target) => {
     return formatNumber(str);
 };
 
-// Format a number string with commas
-const formatNumber = (numStr) => {
-    if (!numStr) return '';
+// Format a number string with commas or handle numbers directly
+const formatNumber = (val) => {
+    if (val === null || val === undefined) return '';
+    if (typeof val === 'number') {
+        // Keep 2 decimal places for non-integers (like VNINDEX 1270.35)
+        return val.toLocaleString('en-US', {
+            minimumFractionDigits: val % 1 !== 0 ? 2 : 0,
+            maximumFractionDigits: 2
+        });
+    }
+
+    // For original string targets
+    const str = String(val);
     // Remove existing formatting (dots, commas, spaces)
-    const cleaned = numStr.replace(/[,.\s]/g, '');
+    const cleaned = str.replace(/[,.\s]/g, '');
     const num = parseInt(cleaned);
-    if (isNaN(num)) return numStr;
+    if (isNaN(num)) return str;
     return num.toLocaleString('en-US');
 };
 
@@ -343,6 +353,33 @@ export default function DailyTrackingPage() {
             .sort((a, b) => b.localeCompare(a)); // Descending
     }, [allReports]);
 
+    // Store VNINDEX prices for heatmap T+1 calculation
+    const [vnindexPrices, setVnindexPrices] = useState({});
+
+    // Fetch VNINDEX history for the displayed dates
+    useEffect(() => {
+        if (uniqueDates.length === 0) return;
+
+        // Fetch up to 15 recent dates to have enough for T+1 comparison
+        const datesToFetch = uniqueDates.slice(0, 15).join(',');
+
+        fetch(`/api/vnindex-history?dates=${datesToFetch}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.prices) {
+                    const priceMap = {};
+                    Object.keys(data.prices).forEach(key => {
+                        const datePart = key.split('_')[1];
+                        if (datePart && data.prices[key].priceAtCall) {
+                            priceMap[datePart] = data.prices[key].priceAtCall;
+                        }
+                    });
+                    setVnindexPrices(priceMap);
+                }
+            })
+            .catch(err => console.error("Failed to fetch VNINDEX history:", err));
+    }, [uniqueDates]);
+
     // Set default selected date to latest
     // Derived active date (matches useEffect logic but clean)
     const activeDate = useMemo(() => {
@@ -448,21 +485,15 @@ export default function DailyTrackingPage() {
         const actuals = {};
         dates.forEach(date => {
             const idx = uniqueDates.indexOf(date);
-            // Current Date Close
-            let currentClose = null;
-            // Try to find current date report close
-            const currentReports = allReports.filter(r => r.info_of_report?.date_of_issue === date);
-            // Heuristic: check if any report has vnindex_close. If multiple, take average or first? First.
-            const currentWithClose = currentReports.find(r => r.market_view?.vnindex_close);
-            if (currentWithClose) currentClose = currentWithClose.market_view.vnindex_close;
+
+            // Current Date Close directly from new vnindexPrices state
+            const currentClose = vnindexPrices[date] || null;
 
             // Next Date Close (T+1)
             let nextClose = null;
             if (idx > 0) {
                 const nextDate = uniqueDates[idx - 1];
-                const nextReports = allReports.filter(r => r.info_of_report?.date_of_issue === nextDate);
-                const nextWithClose = nextReports.find(r => r.market_view?.vnindex_close);
-                if (nextWithClose) nextClose = nextWithClose.market_view.vnindex_close;
+                nextClose = vnindexPrices[nextDate] || null;
             }
 
             if (nextClose) {
@@ -486,9 +517,78 @@ export default function DailyTrackingPage() {
             }
         });
 
-        return { brokers: activeBrokers, dates, data: heatmap, actuals };
+        // 3. Build Summary & Accuracy data
+        const summary = {};
+        const accuracy = {};
 
-    }, [allReports, uniqueBrokers, uniqueDates]);
+        dates.forEach(date => {
+            let pos = 0, neu = 0, neg = 0;
+            let total = 0;
+
+            // Tally sentiments
+            activeBrokers.forEach(broker => {
+                const rawSentiment = heatmap[broker][date]?.sentiment;
+                if (!rawSentiment) return;
+
+                const sentiment = rawSentiment.toLowerCase();
+                if (sentiment === 'positive') pos++;
+                else if (sentiment === 'neutral') neu++;
+                else if (sentiment === 'negative') neg++;
+
+                total++;
+            });
+
+            if (total > 0) {
+                // Determine dominant sentiment
+                let dominant = 'NEUTRAL';
+                let maxCount = neu;
+
+                if (pos > maxCount) { dominant = 'POSITIVE'; maxCount = pos; }
+                if (neg > maxCount) { dominant = 'NEGATIVE'; maxCount = neg; }
+                // Tie breaker: if positive == negative, default to neutral
+                if (pos === neg && pos > neu) { dominant = 'NEUTRAL'; }
+
+                const percent = Math.round((maxCount / total) * 100);
+
+                summary[date] = {
+                    pos, neu, neg,
+                    total,
+                    dominant,
+                    percent
+                };
+
+                // Calculate Accuracy if VNI (+1) data exists
+                const actual = actuals[date];
+                if (actual && actual.hasData) {
+                    const ret = actual.returnVal;
+                    let isCorrect = false;
+
+                    if (dominant === 'POSITIVE' && ret > 0.25) isCorrect = true;
+                    else if (dominant === 'NEGATIVE' && ret < -0.25) isCorrect = true;
+                    else if (dominant === 'NEUTRAL' && ret >= -0.25 && ret <= 0.25) isCorrect = true;
+
+                    accuracy[date] = {
+                        evaluated: true,
+                        isCorrect
+                    };
+                } else {
+                    accuracy[date] = { evaluated: false };
+                }
+            } else {
+                summary[date] = null;
+                accuracy[date] = { evaluated: false };
+            }
+        });
+
+        return {
+            dates,
+            brokers: activeBrokers,
+            data: heatmap,
+            summary,
+            accuracy,
+            actuals
+        };
+    }, [uniqueDates, uniqueBrokers, allReports, vnindexPrices]);
 
 
     // Get stock recommendations (from ALL reports, filtered by date range and broker)
@@ -944,11 +1044,56 @@ export default function DailyTrackingPage() {
                                                 </tr>
                                             ))}
 
+                                            {/* Summary Row */}
+                                            <tr className="summary-row" style={{ borderTop: '2px solid rgba(255,255,255,0.2)' }}>
+                                                <td className="broker-cell" style={{ color: '#fff', borderRight: '1px solid rgba(255,255,255,0.1)', lineHeight: '1.2' }}>
+                                                    Summary
+                                                </td>
+                                                {sentimentHeatmap.dates.map(d => {
+                                                    const data = sentimentHeatmap.summary[d];
+                                                    const accData = sentimentHeatmap.accuracy[d];
+
+                                                    if (!data) return <td key={`sum-${d}`} className="heatmap-cell" style={{ color: '#888' }}>-</td>;
+
+                                                    // Determine Background Color based on Accuracy
+                                                    let bgColor = 'transparent';
+                                                    let textColor = '#fff';
+                                                    let dimTextColor = 'rgba(255,255,255,0.8)';
+                                                    let domColor = '#ccc'; // Default color for text if not colored bg
+
+                                                    if (accData && accData.evaluated) {
+                                                        bgColor = accData.isCorrect ? '#00ff7f' : '#ff4444';
+                                                        textColor = '#000'; // black text for better contrast on green/red
+                                                        dimTextColor = 'rgba(0,0,0,0.7)';
+                                                        domColor = '#000';
+                                                    } else {
+                                                        // If not evaluated (no T+1 data yet), just color the text
+                                                        if (data.dominant === 'POSITIVE') domColor = '#00ff7f';
+                                                        if (data.dominant === 'NEGATIVE') domColor = '#ff4444';
+                                                    }
+
+                                                    return (
+                                                        <td key={`sum-${d}`} className="heatmap-cell" style={{
+                                                            fontSize: '11px',
+                                                            verticalAlign: 'middle',
+                                                            lineHeight: '1.2',
+                                                            backgroundColor: bgColor,
+                                                            color: textColor
+                                                        }}>
+                                                            <div style={{ color: dimTextColor }}>{data.pos}/{data.neu}/{data.neg}</div>
+                                                            <div style={{ color: domColor, fontWeight: 'bold', fontSize: '10px' }}>
+                                                                {data.dominant.charAt(0) + data.dominant.slice(1).toLowerCase()} ({data.percent}%)
+                                                            </div>
+                                                        </td>
+                                                    );
+                                                })}
+                                            </tr>
+
                                             {/* Spacer Row */}
                                             <tr style={{ height: '10px' }}><td colSpan={sentimentHeatmap.dates.length + 1}></td></tr>
 
                                             {/* Comparison Row: VNINDEX T+1 (At Bottom) */}
-                                            <tr className="comparison-row" style={{ borderTop: '2px solid rgba(255,255,255,0.2)' }}>
+                                            <tr className="comparison-row" style={{ borderTop: '2px dotted rgba(255,255,255,0.2)' }}>
                                                 <td className="broker-cell" style={{ color: '#fff', borderRight: '1px solid rgba(255,255,255,0.1)', lineHeight: '1.2' }}>
                                                     VNI (+1)
                                                 </td>
@@ -989,7 +1134,8 @@ export default function DailyTrackingPage() {
                                             </tr>
                                         </tbody>
                                     </table>
-                                    <div style={{ fontSize: '11px', color: '#888', marginTop: '8px', textAlign: 'right', fontStyle: 'italic' }}>
+                                    <div style={{ fontSize: '8px', color: '#888', marginTop: '8px', textAlign: 'left', fontStyle: 'normal' }}>
+                                        * Summary tally is: Positive/Neutral/Negative. Accuracy is evaluated by comparing the Dominant sentiment to the VNI (+1) return.<br />
                                         * VNI (+1) Performance: Green (&gt; +0.25%), Red (&lt; -0.25%), Neutral (+/- 0.25%)
                                     </div>
                                 </>

@@ -1,0 +1,1152 @@
+2026-02-21 06:52:06,326 | INFO |   ✅ AAA:quarter 52 rows | 140 cols | 2013→2025
+2026-02-21 06:52:18,120 | INFO | ============================================================
+2026-02-21 06:52:18,120 | INFO | FULL MARKET EXTRACTION v2 — 1 workers
+2026-02-21 06:52:18,120 | INFO |   Period filter: all
+2026-02-21 06:52:18,120 | INFO |   Max periods kept: All History
+2026-02-21 06:52:18,466 | INFO | Total symbols matched: 1738
+2026-02-21 06:52:18,466 | INFO | Checkpoint: 0 symbol:period pairs already done
+2026-02-21 06:52:18,466 | INFO | Tickers to process: 1738
+2026-02-21 06:52:27,587 | WARNING |     [A32:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x16ddb5790 state=finished raised KeyError>]. Retrying after 2.9s...
+2026-02-21 06:52:37,742 | WARNING |     [A32:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x16ddb7860 state=finished raised KeyError>]. Retrying after 5.9s...
+2026-02-21 06:52:57,568 | WARNING |   SKIP A32:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x16ddb5040 state=finished raised KeyError>]
+2026-02-21 06:53:10,201 | INFO |   ✅ A32:year 9 rows | 103 cols | 2016→2024
+2026-02-21 06:53:10,202 | INFO | [1/1738 | 0.1%] Done: A32
+2026-02-21 06:53:23,431 | INFO |   ✅ AAA:quarter 52 rows | 140 cols | 2013→2025
+2026-02-21 06:53:37,469 | INFO |   ✅ AAA:year 13 rows | 140 cols | 2013→2025
+2026-02-21 06:53:37,470 | INFO | [2/1738 | 0.1%] Done: AAA
+2026-02-21 06:53:49,451 | INFO |   ✅ AAH:quarter 9 rows | 120 cols | 2023→2025
+2026-02-21 06:54:02,978 | INFO |   ✅ AAH:year 6 rows | 122 cols | 2020→2025
+2026-02-21 06:54:02,979 | INFO | [3/1738 | 0.2%] Done: AAH
+2026-02-21 06:54:15,339 | INFO |   ✅ AAM:quarter 52 rows | 129 cols | 2013→2025
+2026-02-21 06:54:28,352 | INFO |   ✅ AAM:year 13 rows | 128 cols | 2013→2025
+2026-02-21 06:54:28,353 | INFO | [4/1738 | 0.2%] Done: AAM
+2026-02-21 06:54:41,532 | INFO |   ✅ AAS:quarter 36 rows | 112 cols | 2015→2025
+2026-02-21 06:54:54,736 | INFO |   ✅ AAS:year 13 rows | 117 cols | 2013→2025
+2026-02-21 06:54:54,737 | INFO | [5/1738 | 0.3%] Done: AAS
+2026-02-21 06:55:07,465 | INFO |   ✅ AAT:quarter 30 rows | 133 cols | 2018→2025
+2026-02-21 06:55:20,963 | INFO |   ✅ AAT:year 12 rows | 133 cols | 2014→2025
+2026-02-21 06:55:20,964 | INFO | [6/1738 | 0.3%] Done: AAT
+2026-02-21 06:55:34,591 | INFO |   ✅ AAV:quarter 36 rows | 131 cols | 2017→2025
+2026-02-21 06:55:47,707 | INFO |   ✅ AAV:year 12 rows | 132 cols | 2014→2025
+2026-02-21 06:55:47,708 | INFO | [7/1738 | 0.4%] Done: AAV
+2026-02-21 06:56:01,236 | INFO |   ✅ ABB:quarter 50 rows | 107 cols | 2013→2025
+2026-02-21 06:56:13,674 | INFO |   ✅ ABB:year 13 rows | 104 cols | 2013→2025
+2026-02-21 06:56:13,674 | INFO | [8/1738 | 0.5%] Done: ABB
+2026-02-21 06:56:26,733 | INFO |   ✅ ABC:quarter 40 rows | 131 cols | 2016→2025
+2026-02-21 06:56:39,400 | INFO |   ✅ ABC:year 13 rows | 136 cols | 2013→2025
+2026-02-21 06:56:39,400 | INFO | [9/1738 | 0.5%] Done: ABC
+2026-02-21 06:56:52,381 | INFO |   ✅ ABI:quarter 50 rows | 106 cols | 2013→2025
+2026-02-21 06:57:05,831 | INFO |   ✅ ABI:year 14 rows | 99 cols | 2010→2025
+2026-02-21 06:57:05,832 | INFO | [10/1738 | 0.6%] Done: ABI
+2026-02-21 06:57:19,773 | INFO |   ✅ ABR:quarter 25 rows | 116 cols | 2019→2025
+2026-02-21 06:57:32,970 | INFO |   ✅ ABR:year 11 rows | 131 cols | 2015→2025
+2026-02-21 06:57:32,971 | INFO | [11/1738 | 0.6%] Done: ABR
+2026-02-21 06:57:45,099 | INFO |   ✅ ABS:quarter 28 rows | 110 cols | 2019→2025
+2026-02-21 06:57:58,526 | INFO |   ✅ ABS:year 10 rows | 127 cols | 2016→2025
+2026-02-21 06:57:58,527 | INFO | [12/1738 | 0.7%] Done: ABS
+2026-02-21 06:58:10,957 | INFO |   ✅ ABT:quarter 52 rows | 129 cols | 2013→2025
+2026-02-21 06:58:23,019 | INFO |   ✅ ABT:year 13 rows | 127 cols | 2013→2025
+2026-02-21 06:58:23,020 | INFO | [13/1738 | 0.7%] Done: ABT
+2026-02-21 06:58:35,952 | INFO |   ✅ ABW:quarter 46 rows | 118 cols | 2013→2025
+2026-02-21 06:58:48,893 | INFO |   ✅ ABW:year 12 rows | 117 cols | 2013→2025
+2026-02-21 06:58:48,893 | INFO | [14/1738 | 0.8%] Done: ABW
+2026-02-21 06:59:02,093 | INFO |   ✅ ACB:quarter 53 rows | 110 cols | 2008→2025
+2026-02-21 06:59:14,187 | INFO |   ✅ ACB:year 15 rows | 106 cols | 2010→2025
+2026-02-21 06:59:14,187 | INFO | [15/1738 | 0.9%] Done: ACB
+2026-02-21 06:59:27,780 | INFO |   ✅ ACC:quarter 52 rows | 132 cols | 2013→2025
+2026-02-21 06:59:40,183 | INFO |   ✅ ACC:year 13 rows | 129 cols | 2013→2025
+2026-02-21 06:59:40,184 | INFO | [16/1738 | 0.9%] Done: ACC
+2026-02-21 06:59:52,846 | INFO |   ✅ ACE:quarter 1 rows | 60 cols | 2015→2015
+2026-02-21 07:00:05,952 | INFO |   ✅ ACE:year 12 rows | 122 cols | 2013→2024
+2026-02-21 07:00:05,953 | INFO | [17/1738 | 1.0%] Done: ACE
+2026-02-21 07:00:19,156 | INFO |   ✅ ACG:quarter 31 rows | 133 cols | 2018→2025
+2026-02-21 07:00:32,417 | INFO |   ✅ ACG:year 9 rows | 133 cols | 2017→2025
+2026-02-21 07:00:32,417 | INFO | [18/1738 | 1.0%] Done: ACG
+2026-02-21 07:00:45,437 | INFO |   ✅ ACL:quarter 52 rows | 128 cols | 2013→2025
+2026-02-21 07:00:58,203 | INFO |   ✅ ACL:year 13 rows | 126 cols | 2013→2025
+2026-02-21 07:00:58,203 | INFO | [19/1738 | 1.1%] Done: ACL
+2026-02-21 07:01:09,643 | INFO |   ✅ ACM:quarter 40 rows | 107 cols | 2015→2025
+2026-02-21 07:01:22,208 | INFO |   ✅ ACM:year 12 rows | 106 cols | 2013→2024
+2026-02-21 07:01:22,209 | INFO | [20/1738 | 1.2%] Done: ACM
+2026-02-21 07:01:30,881 | WARNING |     [ACS:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x16db8e270 state=finished raised KeyError>]. Retrying after 2.7s...
+2026-02-21 07:01:44,432 | WARNING |     [ACS:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x16db8ce00 state=finished raised KeyError>]. Retrying after 9.3s...
+2026-02-21 07:02:00,804 | WARNING |   SKIP ACS:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x16db8d910 state=finished raised KeyError>]
+2026-02-21 07:02:13,934 | INFO |   ✅ ACS:year 11 rows | 130 cols | 2013→2024
+2026-02-21 07:02:13,934 | INFO | [21/1738 | 1.2%] Done: ACS
+2026-02-21 07:02:26,809 | INFO |   ✅ ACV:quarter 40 rows | 134 cols | 2016→2025
+2026-02-21 07:02:39,626 | INFO |   ✅ ACV:year 13 rows | 137 cols | 2013→2025
+2026-02-21 07:02:39,626 | INFO | [22/1738 | 1.3%] Done: ACV
+2026-02-21 07:02:53,023 | INFO |   ✅ ADC:quarter 52 rows | 123 cols | 2013→2025
+2026-02-21 07:03:06,296 | INFO |   ✅ ADC:year 13 rows | 124 cols | 2013→2025
+2026-02-21 07:03:06,297 | INFO | [23/1738 | 1.3%] Done: ADC
+2026-02-21 07:03:20,007 | INFO |   ✅ ADG:quarter 22 rows | 132 cols | 2020→2025
+2026-02-21 07:03:32,432 | INFO |   ✅ ADG:year 9 rows | 130 cols | 2017→2025
+2026-02-21 07:03:32,433 | INFO | [24/1738 | 1.4%] Done: ADG
+2026-02-21 07:03:44,511 | INFO |   ✅ ADP:quarter 37 rows | 113 cols | 2016→2025
+2026-02-21 07:03:56,246 | INFO |   ✅ ADP:year 13 rows | 116 cols | 2013→2025
+2026-02-21 07:03:56,246 | INFO | [25/1738 | 1.4%] Done: ADP
+2026-02-21 07:04:08,913 | INFO |   ✅ ADS:quarter 40 rows | 135 cols | 2016→2025
+2026-02-21 07:04:21,624 | INFO |   ✅ ADS:year 13 rows | 134 cols | 2013→2025
+2026-02-21 07:04:21,778 | INFO |   💾 Flushed 50 frames → chunk_0000.parquet (1,236 rows)
+2026-02-21 07:04:21,779 | INFO | [26/1738 | 1.5%] Done: ADS
+2026-02-21 07:04:34,828 | INFO |   ✅ AFX:quarter 50 rows | 131 cols | 2013→2025
+2026-02-21 07:04:47,517 | INFO |   ✅ AFX:year 13 rows | 128 cols | 2013→2025
+2026-02-21 07:04:47,518 | INFO | [27/1738 | 1.6%] Done: AFX
+2026-02-21 07:04:59,896 | INFO |   ✅ AG1:quarter 1 rows | 107 cols | 2016→2016
+2026-02-21 07:05:13,306 | INFO |   ✅ AG1:year 9 rows | 119 cols | 2016→2024
+2026-02-21 07:05:13,306 | INFO | [28/1738 | 1.6%] Done: AG1
+2026-02-21 07:05:26,338 | INFO |   ✅ AGE:quarter 14 rows | 115 cols | 2019→2022
+2026-02-21 07:05:39,314 | INFO |   ✅ AGE:year 5 rows | 115 cols | 2017→2021
+2026-02-21 07:05:39,315 | INFO | [29/1738 | 1.7%] Done: AGE
+2026-02-21 07:05:51,898 | INFO |   ✅ AGF:quarter 52 rows | 132 cols | 2013→2025
+2026-02-21 07:06:04,762 | INFO |   ✅ AGF:year 13 rows | 131 cols | 2013→2025
+2026-02-21 07:06:04,763 | INFO | [30/1738 | 1.7%] Done: AGF
+2026-02-21 07:06:17,235 | INFO |   ✅ AGG:quarter 27 rows | 131 cols | 2019→2025
+2026-02-21 07:06:30,258 | INFO |   ✅ AGG:year 10 rows | 131 cols | 2016→2025
+2026-02-21 07:06:30,259 | INFO | [31/1738 | 1.8%] Done: AGG
+2026-02-21 07:06:44,446 | INFO |   ✅ AGM:quarter 52 rows | 133 cols | 2013→2025
+2026-02-21 07:06:58,052 | INFO |   ✅ AGM:year 13 rows | 133 cols | 2013→2025
+2026-02-21 07:06:58,052 | INFO | [32/1738 | 1.8%] Done: AGM
+2026-02-21 07:07:10,966 | INFO |   ✅ AGP:quarter 34 rows | 127 cols | 2017→2025
+2026-02-21 07:07:24,694 | INFO |   ✅ AGP:year 13 rows | 129 cols | 2013→2025
+2026-02-21 07:07:24,694 | INFO | [33/1738 | 1.9%] Done: AGP
+2026-02-21 07:07:37,025 | INFO |   ✅ AGR:quarter 52 rows | 126 cols | 2013→2025
+2026-02-21 07:07:50,383 | INFO |   ✅ AGR:year 13 rows | 124 cols | 2013→2025
+2026-02-21 07:07:50,384 | INFO | [34/1738 | 2.0%] Done: AGR
+2026-02-21 07:07:59,038 | WARNING |     [AGX:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x16dbe86b0 state=finished raised KeyError>]. Retrying after 2.7s...
+2026-02-21 07:08:11,810 | WARNING |     [AGX:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x16dbea4e0 state=finished raised KeyError>]. Retrying after 8.5s...
+2026-02-21 07:08:35,491 | WARNING |   SKIP AGX:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x16dbeb440 state=finished raised KeyError>]
+2026-02-21 07:08:48,795 | INFO |   ✅ AGX:year 12 rows | 126 cols | 2013→2024
+2026-02-21 07:08:48,795 | INFO | [35/1738 | 2.0%] Done: AGX
+2026-02-21 07:09:02,218 | INFO |   ✅ AIC:quarter 45 rows | 99 cols | 2014→2025
+2026-02-21 07:09:13,968 | INFO |   ✅ AIC:year 13 rows | 96 cols | 2013→2025
+2026-02-21 07:09:13,969 | INFO | [36/1738 | 2.1%] Done: AIC
+2026-02-21 07:09:27,895 | INFO |   ✅ AIG:quarter 27 rows | 135 cols | 2019→2025
+2026-02-21 07:09:41,605 | INFO |   ✅ AIG:year 8 rows | 134 cols | 2018→2025
+2026-02-21 07:09:41,606 | INFO | [37/1738 | 2.1%] Done: AIG
+2026-02-21 07:09:54,371 | INFO |   ✅ ALC:quarter 19 rows | 125 cols | 2016→2025
+2026-02-21 07:10:07,400 | INFO |   ✅ ALC:year 9 rows | 129 cols | 2013→2025
+2026-02-21 07:10:07,401 | INFO | [38/1738 | 2.2%] Done: ALC
+2026-02-21 07:10:19,951 | INFO |   ✅ ALT:quarter 52 rows | 137 cols | 2013→2025
+2026-02-21 07:10:32,391 | INFO |   ✅ ALT:year 13 rows | 135 cols | 2013→2025
+2026-02-21 07:10:32,392 | INFO | [39/1738 | 2.2%] Done: ALT
+2026-02-21 07:10:44,640 | INFO |   ✅ ALV:quarter 23 rows | 127 cols | 2013→2019
+2026-02-21 07:10:58,684 | INFO |   ✅ ALV:year 11 rows | 126 cols | 2013→2024
+2026-02-21 07:10:58,684 | INFO | [40/1738 | 2.3%] Done: ALV
+2026-02-21 07:11:12,757 | INFO |   ✅ AMC:quarter 52 rows | 109 cols | 2013→2025
+2026-02-21 07:11:25,464 | INFO |   ✅ AMC:year 13 rows | 122 cols | 2013→2025
+2026-02-21 07:11:25,465 | INFO | [41/1738 | 2.4%] Done: AMC
+2026-02-21 07:11:37,138 | INFO |   ✅ AMD:quarter 38 rows | 138 cols | 2014→2023
+2026-02-21 07:11:50,501 | INFO |   ✅ AMD:year 10 rows | 135 cols | 2013→2022
+2026-02-21 07:11:50,502 | INFO | [42/1738 | 2.4%] Done: AMD
+2026-02-21 07:12:04,190 | INFO |   ✅ AME:quarter 51 rows | 132 cols | 2013→2025
+2026-02-21 07:12:17,415 | INFO |   ✅ AME:year 13 rows | 129 cols | 2013→2025
+2026-02-21 07:12:17,416 | INFO | [43/1738 | 2.5%] Done: AME
+2026-02-21 07:12:28,978 | INFO |   ✅ AMP:quarter 15 rows | 116 cols | 2017→2025
+2026-02-21 07:12:41,655 | INFO |   ✅ AMP:year 13 rows | 128 cols | 2013→2025
+2026-02-21 07:12:41,656 | INFO | [44/1738 | 2.5%] Done: AMP
+2026-02-21 07:12:54,674 | INFO |   ✅ AMS:quarter 40 rows | 132 cols | 2016→2025
+2026-02-21 07:13:07,694 | INFO |   ✅ AMS:year 13 rows | 134 cols | 2013→2025
+2026-02-21 07:13:07,695 | INFO | [45/1738 | 2.6%] Done: AMS
+2026-02-21 07:13:20,818 | INFO |   ✅ AMV:quarter 52 rows | 134 cols | 2013→2025
+2026-02-21 07:13:33,948 | INFO |   ✅ AMV:year 13 rows | 133 cols | 2013→2025
+2026-02-21 07:13:33,948 | INFO | [46/1738 | 2.6%] Done: AMV
+2026-02-21 07:13:46,543 | INFO |   ✅ ANT:quarter 8 rows | 125 cols | 2024→2025
+2026-02-21 07:13:59,127 | INFO |   ✅ ANT:year 13 rows | 132 cols | 2013→2025
+2026-02-21 07:13:59,128 | INFO | [47/1738 | 2.7%] Done: ANT
+2026-02-21 07:14:12,659 | INFO |   ✅ ANV:quarter 54 rows | 122 cols | 2010→2025
+2026-02-21 07:14:25,335 | INFO |   ✅ ANV:year 13 rows | 135 cols | 2013→2025
+2026-02-21 07:14:25,335 | INFO | [48/1738 | 2.8%] Done: ANV
+2026-02-21 07:14:38,183 | INFO |   ✅ APC:quarter 52 rows | 131 cols | 2013→2025
+2026-02-21 07:14:52,210 | INFO |   ✅ APC:year 13 rows | 127 cols | 2013→2025
+2026-02-21 07:14:52,211 | INFO | [49/1738 | 2.8%] Done: APC
+2026-02-21 07:15:04,721 | INFO |   ✅ APF:quarter 34 rows | 133 cols | 2016→2025
+2026-02-21 07:15:17,507 | INFO |   ✅ APF:year 13 rows | 137 cols | 2013→2025
+2026-02-21 07:15:17,507 | INFO | [50/1738 | 2.9%] Done: APF
+2026-02-21 07:15:30,193 | INFO |   ✅ APG:quarter 52 rows | 124 cols | 2013→2025
+2026-02-21 07:15:42,672 | INFO |   ✅ APG:year 13 rows | 119 cols | 2013→2025
+2026-02-21 07:15:42,673 | INFO | [51/1738 | 2.9%] Done: APG
+2026-02-21 07:15:54,863 | INFO |   ✅ APH:quarter 24 rows | 135 cols | 2020→2025
+2026-02-21 07:16:07,630 | INFO |   ✅ APH:year 8 rows | 136 cols | 2018→2025
+2026-02-21 07:16:07,793 | INFO |   💾 Flushed 51 frames → chunk_0001.parquet (1,223 rows)
+2026-02-21 07:16:07,795 | INFO | [52/1738 | 3.0%] Done: APH
+2026-02-21 07:16:21,067 | INFO |   ✅ API:quarter 52 rows | 134 cols | 2013→2025
+2026-02-21 07:16:33,623 | INFO |   ✅ API:year 13 rows | 135 cols | 2013→2025
+2026-02-21 07:16:33,624 | INFO | [53/1738 | 3.0%] Done: API
+2026-02-21 07:16:42,219 | WARNING |     [APL:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x16db57110 state=finished raised KeyError>]. Retrying after 2.6s...
+2026-02-21 07:16:54,034 | WARNING |     [APL:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x16db54950 state=finished raised KeyError>]. Retrying after 7.6s...
+2026-02-21 07:17:11,013 | WARNING |   SKIP APL:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x16db55b50 state=finished raised KeyError>]
+2026-02-21 07:17:23,978 | INFO |   ✅ APL:year 11 rows | 114 cols | 2014→2024
+2026-02-21 07:17:23,979 | INFO | [54/1738 | 3.1%] Done: APL
+2026-02-21 07:17:36,967 | INFO |   ✅ APP:quarter 39 rows | 125 cols | 2013→2023
+2026-02-21 07:17:50,172 | INFO |   ✅ APP:year 12 rows | 123 cols | 2013→2024
+2026-02-21 07:17:50,173 | INFO | [55/1738 | 3.2%] Done: APP
+2026-02-21 07:18:03,704 | INFO |   ✅ APS:quarter 52 rows | 118 cols | 2013→2025
+2026-02-21 07:18:16,809 | INFO |   ✅ APS:year 13 rows | 117 cols | 2013→2025
+2026-02-21 07:18:16,809 | INFO | [56/1738 | 3.2%] Done: APS
+2026-02-21 07:18:24,976 | WARNING |     [APT:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x16fe7a5a0 state=finished raised KeyError>]. Retrying after 2.1s...
+2026-02-21 07:18:38,414 | WARNING |     [APT:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x16fe79280 state=finished raised KeyError>]. Retrying after 9.2s...
+2026-02-21 07:19:02,040 | WARNING |   SKIP APT:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x16fe7bb90 state=finished raised KeyError>]
+2026-02-21 07:19:14,785 | INFO |   ✅ APT:year 12 rows | 102 cols | 2013→2024
+2026-02-21 07:19:14,786 | INFO | [57/1738 | 3.3%] Done: APT
+2026-02-21 07:19:26,901 | INFO |   ✅ ARM:quarter 52 rows | 121 cols | 2013→2025
+2026-02-21 07:19:38,951 | INFO |   ✅ ARM:year 13 rows | 120 cols | 2013→2025
+2026-02-21 07:19:38,952 | INFO | [58/1738 | 3.3%] Done: ARM
+2026-02-21 07:19:51,276 | INFO |   ✅ ART:quarter 52 rows | 99 cols | 2013→2025
+2026-02-21 07:20:02,600 | INFO |   ✅ ART:year 13 rows | 92 cols | 2013→2025
+2026-02-21 07:20:02,600 | INFO | [59/1738 | 3.4%] Done: ART
+2026-02-21 07:20:15,127 | INFO |   ✅ ASA:quarter 22 rows | 124 cols | 2013→2018
+2026-02-21 07:20:28,090 | INFO |   ✅ ASA:year 8 rows | 123 cols | 2013→2020
+2026-02-21 07:20:28,091 | INFO | [60/1738 | 3.5%] Done: ASA
+2026-02-21 07:20:40,757 | INFO |   ✅ ASG:quarter 30 rows | 135 cols | 2018→2025
+2026-02-21 07:20:53,424 | INFO |   ✅ ASG:year 8 rows | 136 cols | 2018→2025
+2026-02-21 07:20:53,425 | INFO | [61/1738 | 3.5%] Done: ASG
+2026-02-21 07:21:05,907 | INFO |   ✅ ASM:quarter 52 rows | 141 cols | 2013→2025
+2026-02-21 07:21:18,110 | INFO |   ✅ ASM:year 13 rows | 139 cols | 2013→2025
+2026-02-21 07:21:18,111 | INFO | [62/1738 | 3.6%] Done: ASM
+2026-02-21 07:21:30,359 | INFO |   ✅ ASP:quarter 52 rows | 137 cols | 2013→2025
+2026-02-21 07:21:41,992 | INFO |   ✅ ASP:year 13 rows | 137 cols | 2013→2025
+2026-02-21 07:21:41,993 | INFO | [63/1738 | 3.6%] Done: ASP
+2026-02-21 07:21:55,667 | INFO |   ✅ AST:quarter 35 rows | 130 cols | 2017→2025
+2026-02-21 07:22:09,594 | INFO |   ✅ AST:year 11 rows | 129 cols | 2015→2025
+2026-02-21 07:22:09,595 | INFO | [64/1738 | 3.7%] Done: AST
+2026-02-21 07:22:22,387 | INFO |   ✅ ATA:quarter 17 rows | 122 cols | 2013→2017
+2026-02-21 07:22:35,081 | INFO |   ✅ ATA:year 12 rows | 120 cols | 2013→2024
+2026-02-21 07:22:35,082 | INFO | [65/1738 | 3.7%] Done: ATA
+2026-02-21 07:22:47,557 | INFO |   ✅ ATB:quarter 34 rows | 100 cols | 2017→2025
+2026-02-21 07:22:59,204 | INFO |   ✅ ATB:year 10 rows | 105 cols | 2015→2024
+2026-02-21 07:22:59,204 | INFO | [66/1738 | 3.8%] Done: ATB
+2026-02-21 07:23:11,575 | INFO |   ✅ ATG:quarter 38 rows | 122 cols | 2016→2025
+2026-02-21 07:23:23,627 | INFO |   ✅ ATG:year 11 rows | 117 cols | 2014→2024
+2026-02-21 07:23:23,629 | INFO | [67/1738 | 3.9%] Done: ATG
+2026-02-21 07:23:35,579 | INFO |   ✅ ATS:quarter 40 rows | 117 cols | 2016→2025
+2026-02-21 07:23:48,811 | INFO |   ✅ ATS:year 13 rows | 117 cols | 2013→2025
+2026-02-21 07:23:48,811 | INFO | [68/1738 | 3.9%] Done: ATS
+2026-02-21 07:24:01,477 | INFO |   ✅ AUM:quarter 15 rows | 106 cols | 2013→2017
+2026-02-21 07:24:14,900 | INFO |   ✅ AUM:year 10 rows | 109 cols | 2013→2022
+2026-02-21 07:24:14,901 | INFO | [69/1738 | 4.0%] Done: AUM
+2026-02-21 07:24:27,374 | INFO |   ✅ AVC:quarter 35 rows | 123 cols | 2017→2025
+2026-02-21 07:24:41,243 | INFO |   ✅ AVC:year 12 rows | 121 cols | 2014→2025
+2026-02-21 07:24:41,243 | INFO | [70/1738 | 4.0%] Done: AVC
+2026-02-21 07:24:54,099 | INFO |   ✅ AVF:quarter 29 rows | 125 cols | 2013→2020
+2026-02-21 07:25:07,223 | INFO |   ✅ AVF:year 7 rows | 124 cols | 2013→2019
+2026-02-21 07:25:07,224 | INFO | [71/1738 | 4.1%] Done: AVF
+2026-02-21 07:25:20,243 | INFO |   ✅ AVG:quarter 9 rows | 119 cols | 2023→2025
+2026-02-21 07:25:32,492 | INFO |   ✅ AVG:year 4 rows | 119 cols | 2022→2025
+2026-02-21 07:25:32,492 | INFO | [72/1738 | 4.1%] Done: AVG
+2026-02-21 07:25:45,697 | INFO |   ✅ B82:quarter 22 rows | 108 cols | 2013→2018
+2026-02-21 07:25:57,660 | INFO |   ✅ B82:year 5 rows | 111 cols | 2013→2017
+2026-02-21 07:25:57,661 | INFO | [73/1738 | 4.2%] Done: B82
+2026-02-21 07:26:10,313 | INFO |   ✅ BAB:quarter 40 rows | 105 cols | 2016→2025
+2026-02-21 07:26:22,117 | INFO |   ✅ BAB:year 13 rows | 104 cols | 2013→2025
+2026-02-21 07:26:22,118 | INFO | [74/1738 | 4.3%] Done: BAB
+2026-02-21 07:26:34,968 | INFO |   ✅ BAF:quarter 19 rows | 133 cols | 2021→2025
+2026-02-21 07:26:47,079 | INFO |   ✅ BAF:year 6 rows | 133 cols | 2020→2025
+2026-02-21 07:26:47,079 | INFO | [75/1738 | 4.3%] Done: BAF
+2026-02-21 07:26:59,403 | INFO |   ✅ BAL:quarter 3 rows | 101 cols | 2016→2017
+2026-02-21 07:27:12,207 | INFO |   ✅ BAL:year 12 rows | 116 cols | 2013→2024
+2026-02-21 07:27:12,208 | INFO | [76/1738 | 4.4%] Done: BAL
+2026-02-21 07:27:25,457 | INFO |   ✅ BAX:quarter 39 rows | 120 cols | 2015→2025
+2026-02-21 07:27:38,028 | INFO |   ✅ BAX:year 13 rows | 123 cols | 2013→2025
+2026-02-21 07:27:38,029 | INFO | [77/1738 | 4.4%] Done: BAX
+2026-02-21 07:27:51,023 | INFO |   ✅ BBC:quarter 51 rows | 136 cols | 2013→2025
+2026-02-21 07:28:02,786 | INFO |   ✅ BBC:year 12 rows | 133 cols | 2013→2024
+2026-02-21 07:28:02,905 | INFO |   💾 Flushed 50 frames → chunk_0002.parquet (1,109 rows)
+2026-02-21 07:28:02,906 | INFO | [78/1738 | 4.5%] Done: BBC
+2026-02-21 07:28:11,560 | WARNING |     [BBH:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x16c8c28a0 state=finished raised KeyError>]. Retrying after 2.6s...
+2026-02-21 07:28:25,612 | WARNING |     [BBH:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x16db5fb60 state=finished raised KeyError>]. Retrying after 9.8s...
+2026-02-21 07:28:48,606 | WARNING |   SKIP BBH:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x16db5da60 state=finished raised KeyError>]
+2026-02-21 07:29:01,926 | INFO |   ✅ BBH:year 6 rows | 99 cols | 2018→2024
+2026-02-21 07:29:01,927 | INFO | [79/1738 | 4.5%] Done: BBH
+2026-02-21 07:29:15,465 | INFO |   ✅ BBM:quarter 4 rows | 94 cols | 2013→2017
+2026-02-21 07:29:27,449 | INFO |   ✅ BBM:year 11 rows | 115 cols | 2013→2024
+2026-02-21 07:29:27,449 | INFO | [80/1738 | 4.6%] Done: BBM
+2026-02-21 07:29:41,528 | INFO |   ✅ BBS:quarter 53 rows | 123 cols | 2008→2025
+2026-02-21 07:29:54,397 | INFO |   ✅ BBS:year 13 rows | 120 cols | 2013→2025
+2026-02-21 07:29:54,398 | INFO | [81/1738 | 4.7%] Done: BBS
+2026-02-21 07:30:07,413 | INFO |   ✅ BBT:quarter 1 rows | 90 cols | 2025→2025
+2026-02-21 07:30:19,992 | INFO |   ✅ BBT:year 13 rows | 129 cols | 2013→2025
+2026-02-21 07:30:19,993 | INFO | [82/1738 | 4.7%] Done: BBT
+2026-02-21 07:30:33,294 | INFO |   ✅ BCA:quarter 20 rows | 106 cols | 2021→2025
+2026-02-21 07:30:47,062 | INFO |   ✅ BCA:year 6 rows | 118 cols | 2020→2025
+2026-02-21 07:30:47,062 | INFO | [83/1738 | 4.8%] Done: BCA
+2026-02-21 07:31:00,349 | INFO |   ✅ BCB:quarter 1 rows | 62 cols | 2018→2018
+2026-02-21 07:31:12,228 | INFO |   ✅ BCB:year 9 rows | 116 cols | 2015→2024
+2026-02-21 07:31:12,228 | INFO | [84/1738 | 4.8%] Done: BCB
+2026-02-21 07:31:25,696 | INFO |   ✅ BCC:quarter 52 rows | 130 cols | 2013→2025
+2026-02-21 07:31:38,228 | INFO |   ✅ BCC:year 13 rows | 127 cols | 2013→2025
+2026-02-21 07:31:38,228 | INFO | [85/1738 | 4.9%] Done: BCC
+2026-02-21 07:31:51,139 | INFO |   ✅ BCE:quarter 52 rows | 128 cols | 2013→2025
+2026-02-21 07:32:03,406 | INFO |   ✅ BCE:year 13 rows | 126 cols | 2013→2025
+2026-02-21 07:32:03,407 | INFO | [86/1738 | 4.9%] Done: BCE
+2026-02-21 07:32:17,442 | INFO |   ✅ BCF:quarter 31 rows | 108 cols | 2017→2025
+2026-02-21 07:32:30,944 | INFO |   ✅ BCF:year 13 rows | 123 cols | 2013→2025
+2026-02-21 07:32:30,945 | INFO | [87/1738 | 5.0%] Done: BCF
+2026-02-21 07:32:44,203 | INFO |   ✅ BCG:quarter 39 rows | 139 cols | 2015→2024
+2026-02-21 07:32:57,085 | INFO |   ✅ BCG:year 12 rows | 139 cols | 2013→2024
+2026-02-21 07:32:57,086 | INFO | [88/1738 | 5.1%] Done: BCG
+2026-02-21 07:33:10,285 | INFO |   ✅ BCM:quarter 32 rows | 134 cols | 2018→2025
+2026-02-21 07:33:22,065 | INFO |   ✅ BCM:year 13 rows | 138 cols | 2013→2025
+2026-02-21 07:33:22,066 | INFO | [89/1738 | 5.1%] Done: BCM
+2026-02-21 07:33:30,784 | WARNING |     [BCO:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x16db647a0 state=finished raised KeyError>]. Retrying after 2.7s...
+2026-02-21 07:33:41,149 | WARNING |     [BCO:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x16db641d0 state=finished raised KeyError>]. Retrying after 6.0s...
+2026-02-21 07:33:55,835 | WARNING |   SKIP BCO:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x16db4fc20 state=finished raised KeyError>]
+2026-02-21 07:34:08,164 | INFO |   ✅ BCO:year 5 rows | 123 cols | 2016→2023
+2026-02-21 07:34:08,165 | INFO | [90/1738 | 5.2%] Done: BCO
+2026-02-21 07:34:16,279 | WARNING |     [BCP:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x16dd3a570 state=finished raised KeyError>]. Retrying after 2.1s...
+2026-02-21 07:34:26,312 | WARNING |     [BCP:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x16dd3aae0 state=finished raised KeyError>]. Retrying after 5.6s...
+2026-02-21 07:34:49,839 | WARNING |   SKIP BCP:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x16dd38260 state=finished raised KeyError>]
+2026-02-21 07:35:02,388 | INFO |   ✅ BCP:year 12 rows | 126 cols | 2013→2024
+2026-02-21 07:35:02,388 | INFO | [91/1738 | 5.2%] Done: BCP
+2026-02-21 07:35:15,153 | INFO |   ✅ BCR:quarter 7 rows | 125 cols | 2023→2024
+2026-02-21 07:35:27,774 | INFO |   ✅ BCR:year 4 rows | 129 cols | 2021→2024
+2026-02-21 07:35:27,775 | INFO | [92/1738 | 5.3%] Done: BCR
+2026-02-21 07:35:36,074 | WARNING |     [BCV:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x16dd50a70 state=finished raised KeyError>]. Retrying after 2.3s...
+2026-02-21 07:35:49,316 | WARNING |     [BCV:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x16dd50a40 state=finished raised KeyError>]. Retrying after 9.0s...
+2026-02-21 07:36:06,381 | WARNING |   SKIP BCV:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x16db5e8a0 state=finished raised KeyError>]
+2026-02-21 07:36:19,629 | INFO |   ✅ BCV:year 6 rows | 108 cols | 2019→2024
+2026-02-21 07:36:19,629 | INFO | [93/1738 | 5.4%] Done: BCV
+2026-02-21 07:36:33,228 | INFO |   ✅ BDB:quarter 50 rows | 106 cols | 2013→2025
+2026-02-21 07:36:45,849 | INFO |   ✅ BDB:year 12 rows | 104 cols | 2013→2024
+2026-02-21 07:36:45,849 | INFO | [94/1738 | 5.4%] Done: BDB
+2026-02-21 07:36:57,981 | INFO |   ✅ BDG:quarter 40 rows | 133 cols | 2016→2025
+2026-02-21 07:37:11,217 | INFO |   ✅ BDG:year 13 rows | 134 cols | 2013→2025
+2026-02-21 07:37:11,218 | INFO | [95/1738 | 5.5%] Done: BDG
+2026-02-21 07:37:24,062 | INFO |   ✅ BDT:quarter 36 rows | 131 cols | 2017→2025
+2026-02-21 07:37:37,055 | INFO |   ✅ BDT:year 11 rows | 129 cols | 2015→2025
+2026-02-21 07:37:37,056 | INFO | [96/1738 | 5.5%] Done: BDT
+2026-02-21 07:37:50,575 | INFO |   ✅ BDW:quarter 43 rows | 107 cols | 2015→2025
+2026-02-21 07:38:04,080 | INFO |   ✅ BDW:year 12 rows | 108 cols | 2013→2025
+2026-02-21 07:38:04,081 | INFO | [97/1738 | 5.6%] Done: BDW
+2026-02-21 07:38:17,645 | INFO |   ✅ BED:quarter 52 rows | 120 cols | 2013→2025
+2026-02-21 07:38:30,934 | INFO |   ✅ BED:year 13 rows | 120 cols | 2013→2025
+2026-02-21 07:38:30,935 | INFO | [98/1738 | 5.6%] Done: BED
+2026-02-21 07:38:43,632 | INFO |   ✅ BEL:quarter 2 rows | 66 cols | 2017→2017
+2026-02-21 07:38:55,691 | INFO |   ✅ BEL:year 12 rows | 111 cols | 2013→2024
+2026-02-21 07:38:55,692 | INFO | [99/1738 | 5.7%] Done: BEL
+2026-02-21 07:39:09,320 | INFO |   ✅ BFC:quarter 45 rows | 132 cols | 2014→2025
+2026-02-21 07:39:22,717 | INFO |   ✅ BFC:year 13 rows | 133 cols | 2013→2025
+2026-02-21 07:39:22,718 | INFO | [100/1738 | 5.8%] Done: BFC
+2026-02-21 07:39:35,594 | INFO |   ✅ BGE:quarter 7 rows | 128 cols | 2024→2025
+2026-02-21 07:39:47,955 | INFO |   ✅ BGE:year 3 rows | 130 cols | 2022→2024
+2026-02-21 07:39:47,956 | INFO | [101/1738 | 5.8%] Done: BGE
+2026-02-21 07:40:00,934 | INFO |   ✅ BGW:quarter 36 rows | 105 cols | 2017→2025
+2026-02-21 07:40:13,367 | INFO |   ✅ BGW:year 12 rows | 108 cols | 2013→2025
+2026-02-21 07:40:13,368 | INFO | [102/1738 | 5.9%] Done: BGW
+2026-02-21 07:40:27,125 | INFO |   ✅ BHA:quarter 36 rows | 111 cols | 2017→2025
+2026-02-21 07:40:39,694 | INFO |   ✅ BHA:year 11 rows | 112 cols | 2015→2025
+2026-02-21 07:40:39,695 | INFO | [103/1738 | 5.9%] Done: BHA
+2026-02-21 07:40:52,300 | INFO |   ✅ BHC:quarter 12 rows | 116 cols | 2013→2024
+2026-02-21 07:41:04,988 | INFO |   ✅ BHC:year 12 rows | 114 cols | 2013→2024
+2026-02-21 07:41:04,989 | INFO | [104/1738 | 6.0%] Done: BHC
+2026-02-21 07:41:19,614 | INFO |   ✅ BHG:quarter 1 rows | 67 cols | 2017→2017
+2026-02-21 07:41:32,457 | INFO |   ✅ BHG:year 9 rows | 108 cols | 2016→2024
+2026-02-21 07:41:32,509 | INFO |   💾 Flushed 50 frames → chunk_0003.parquet (934 rows)
+2026-02-21 07:41:32,509 | INFO | [105/1738 | 6.0%] Done: BHG
+2026-02-21 07:41:40,879 | WARNING |     [BHH:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x157f76930 state=finished raised KeyError>]. Retrying after 2.4s...
+2026-02-21 07:41:50,884 | WARNING |     [BHH:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x16ddbea50 state=finished raised KeyError>]. Retrying after 5.7s...
+2026-02-21 12:13:21,227 | INFO | ============================================================
+2026-02-21 12:13:21,227 | INFO | FULL MARKET EXTRACTION v2 — 1 workers
+2026-02-21 12:13:21,227 | INFO |   Period filter: all
+2026-02-21 12:13:21,227 | INFO |   Max periods kept: All History
+2026-02-21 12:13:21,689 | INFO | Total symbols matched: 1738
+2026-02-21 12:13:21,689 | INFO | Checkpoint: 210 symbol:period pairs already done
+2026-02-21 12:13:21,690 | INFO | Tickers to process: 1633
+2026-02-21 12:13:29,817 | WARNING |     [BHH:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f27ea10 state=finished raised KeyError>]. Retrying after 2.1s...
+2026-02-21 12:13:40,564 | WARNING |     [BHH:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f27f2d0 state=finished raised KeyError>]. Retrying after 6.4s...
+2026-02-21 12:14:02,675 | WARNING |   SKIP BHH:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f27c3d0 state=finished raised KeyError>]
+2026-02-21 12:14:10,968 | WARNING |     [BHH:year] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f28b110 state=finished raised KeyError>]. Retrying after 2.2s...
+2026-02-21 12:14:24,631 | WARNING |     [BHH:year] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f289bd0 state=finished raised KeyError>]. Retrying after 9.4s...
+2026-02-21 12:14:43,994 | WARNING |   SKIP BHH:year — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f28a990 state=finished raised KeyError>]
+2026-02-21 12:14:43,996 | INFO | [1/1633 | 0.1%] Done: BHH
+2026-02-21 12:14:56,415 | INFO |   ✅ BHI:quarter 12 rows | 98 cols | 2023→2025
+2026-02-21 12:15:10,242 | INFO |   ✅ BHI:year 11 rows | 101 cols | 2013→2025
+2026-02-21 12:15:10,244 | INFO | [2/1633 | 0.1%] Done: BHI
+2026-02-21 12:15:23,141 | INFO |   ✅ BHK:quarter 1 rows | 59 cols | 2020→2020
+2026-02-21 12:15:35,878 | INFO |   ✅ BHK:year 10 rows | 103 cols | 2016→2025
+2026-02-21 12:15:35,879 | INFO | [3/1633 | 0.2%] Done: BHK
+2026-02-21 12:15:50,144 | INFO |   ✅ BHN:quarter 39 rows | 135 cols | 2016→2025
+2026-02-21 12:16:02,836 | INFO |   ✅ BHN:year 13 rows | 138 cols | 2013→2025
+2026-02-21 12:16:02,837 | INFO | [4/1633 | 0.2%] Done: BHN
+2026-02-21 12:16:16,031 | INFO |   ✅ BHP:quarter 3 rows | 86 cols | 2013→2013
+2026-02-21 12:16:30,279 | INFO |   ✅ BHP:year 12 rows | 125 cols | 2013→2024
+2026-02-21 12:16:30,279 | INFO | [5/1633 | 0.3%] Done: BHP
+2026-02-21 12:16:43,827 | INFO |   ✅ BHT:quarter 21 rows | 99 cols | 2013→2018
+2026-02-21 12:16:56,253 | INFO |   ✅ BHT:year 10 rows | 119 cols | 2013→2022
+2026-02-21 12:16:56,254 | INFO | [6/1633 | 0.4%] Done: BHT
+2026-02-21 12:17:09,952 | INFO |   ✅ BIC:quarter 52 rows | 126 cols | 2013→2025
+2026-02-21 12:17:23,472 | INFO |   ✅ BIC:year 13 rows | 121 cols | 2013→2025
+2026-02-21 12:17:23,474 | INFO | [7/1633 | 0.4%] Done: BIC
+2026-02-21 12:17:37,812 | INFO |   ✅ BID:quarter 52 rows | 115 cols | 2013→2025
+2026-02-21 12:17:50,921 | INFO |   ✅ BID:year 13 rows | 111 cols | 2013→2025
+2026-02-21 12:17:50,922 | INFO | [8/1633 | 0.5%] Done: BID
+2026-02-21 12:18:03,685 | INFO |   ✅ BIG:quarter 4 rows | 111 cols | 2025→2025
+2026-02-21 12:18:17,644 | INFO |   ✅ BIG:year 5 rows | 120 cols | 2021→2025
+2026-02-21 12:18:17,645 | INFO | [9/1633 | 0.6%] Done: BIG
+2026-02-21 12:18:30,951 | INFO |   ✅ BII:quarter 41 rows | 132 cols | 2014→2024
+2026-02-21 12:18:44,377 | INFO |   ✅ BII:year 11 rows | 129 cols | 2013→2023
+2026-02-21 12:18:44,379 | INFO | [10/1633 | 0.6%] Done: BII
+2026-02-21 12:18:53,277 | WARNING |     [BIO:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f4e0610 state=finished raised KeyError>]. Retrying after 2.9s...
+2026-02-21 12:19:03,308 | WARNING |     [BIO:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f4b76d0 state=finished raised KeyError>]. Retrying after 5.8s...
+2026-02-21 12:19:21,708 | WARNING |   SKIP BIO:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f638610 state=finished raised KeyError>]
+2026-02-21 12:19:34,879 | INFO |   ✅ BIO:year 11 rows | 121 cols | 2013→2024
+2026-02-21 12:19:34,881 | INFO | [11/1633 | 0.7%] Done: BIO
+2026-02-21 12:19:47,655 | INFO |   ✅ BKC:quarter 52 rows | 129 cols | 2013→2025
+2026-02-21 12:20:00,857 | INFO |   ✅ BKC:year 13 rows | 129 cols | 2013→2025
+2026-02-21 12:20:00,858 | INFO | [12/1633 | 0.7%] Done: BKC
+2026-02-21 12:20:14,627 | INFO |   ✅ BKG:quarter 23 rows | 125 cols | 2020→2025
+2026-02-21 12:20:28,151 | INFO |   ✅ BKG:year 9 rows | 125 cols | 2017→2025
+2026-02-21 12:20:28,152 | INFO | [13/1633 | 0.8%] Done: BKG
+2026-02-21 12:20:36,188 | WARNING |     [BKH:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f410d10 state=finished raised KeyError>]. Retrying after 2.1s...
+2026-02-21 12:20:50,049 | WARNING |     [BKH:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f4485d0 state=finished raised KeyError>]. Retrying after 9.6s...
+2026-02-21 12:21:11,704 | WARNING |   SKIP BKH:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f627cd0 state=finished raised KeyError>]
+2026-02-21 12:21:24,244 | INFO |   ✅ BKH:year 9 rows | 107 cols | 2014→2022
+2026-02-21 12:21:24,245 | INFO | [14/1633 | 0.9%] Done: BKH
+2026-02-21 12:21:37,786 | INFO |   ✅ BLF:quarter 46 rows | 110 cols | 2013→2024
+2026-02-21 12:21:51,136 | INFO |   ✅ BLF:year 12 rows | 111 cols | 2013→2024
+2026-02-21 12:21:51,137 | INFO | [15/1633 | 0.9%] Done: BLF
+2026-02-21 12:22:07,577 | INFO |   ✅ BLI:quarter 41 rows | 94 cols | 2015→2025
+2026-02-21 12:22:27,752 | INFO |   ✅ BLI:year 13 rows | 94 cols | 2013→2025
+2026-02-21 12:22:27,753 | INFO | [16/1633 | 1.0%] Done: BLI
+2026-02-21 12:22:36,763 | WARNING |     [BLN:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f27ffd0 state=finished raised KeyError>]. Retrying after 2.4s...
+2026-02-21 12:22:49,826 | WARNING |     [BLN:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f4b2310 state=finished raised KeyError>]. Retrying after 8.2s...
+2026-02-21 12:23:10,760 | WARNING |   SKIP BLN:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f4d4750 state=finished raised KeyError>]
+2026-02-21 12:23:27,305 | INFO |   ✅ BLN:year 9 rows | 114 cols | 2016→2024
+2026-02-21 12:23:27,306 | INFO | [17/1633 | 1.0%] Done: BLN
+2026-02-21 12:23:36,546 | WARNING |     [BLT:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f45b610 state=finished raised KeyError>]. Retrying after 2.3s...
+2026-02-21 12:23:49,918 | WARNING |     [BLT:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f44e050 state=finished raised KeyError>]. Retrying after 8.7s...
+2026-02-21 12:24:09,834 | WARNING |   SKIP BLT:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f422b10 state=finished raised KeyError>]
+2026-02-21 12:24:27,414 | INFO |   ✅ BLT:year 11 rows | 104 cols | 2013→2024
+2026-02-21 12:24:27,415 | INFO | [18/1633 | 1.1%] Done: BLT
+2026-02-21 12:24:36,948 | WARNING |     [BLU:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f65bc90 state=finished raised KeyError>]. Retrying after 2.9s...
+2026-02-21 12:24:50,106 | WARNING |     [BLU:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f65a7d0 state=finished raised KeyError>]. Retrying after 8.4s...
+2026-02-21 12:25:05,877 | WARNING |   SKIP BLU:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f6aded0 state=finished raised KeyError>]
+2026-02-21 12:25:14,863 | WARNING |     [BLU:year] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f6ac690 state=finished raised KeyError>]. Retrying after 2.3s...
+2026-02-21 12:25:26,056 | WARNING |     [BLU:year] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f415190 state=finished raised KeyError>]. Retrying after 6.7s...
+2026-02-21 12:25:41,116 | WARNING |   SKIP BLU:year — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f416a10 state=finished raised KeyError>]
+2026-02-21 12:25:41,119 | INFO | [19/1633 | 1.2%] Done: BLU
+2026-02-21 12:25:57,203 | INFO |   ✅ BLW:quarter 6 rows | 95 cols | 2018→2019
+2026-02-21 12:26:11,013 | INFO |   ✅ BLW:year 10 rows | 111 cols | 2014→2023
+2026-02-21 12:26:11,013 | INFO | [20/1633 | 1.2%] Done: BLW
+2026-02-21 12:26:24,892 | INFO |   ✅ BMC:quarter 52 rows | 120 cols | 2013→2025
+2026-02-21 12:26:37,405 | INFO |   ✅ BMC:year 13 rows | 118 cols | 2013→2025
+2026-02-21 12:26:37,407 | INFO | [21/1633 | 1.3%] Done: BMC
+2026-02-21 12:26:46,270 | WARNING |     [BMD:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f4e2490 state=finished raised KeyError>]. Retrying after 2.9s...
+2026-02-21 12:26:55,753 | WARNING |     [BMD:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f4e0dd0 state=finished raised KeyError>]. Retrying after 5.2s...
+2026-02-21 12:27:13,881 | WARNING |   SKIP BMD:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f420810 state=finished raised KeyError>]
+2026-02-21 12:27:26,943 | INFO |   ✅ BMD:year 9 rows | 102 cols | 2016→2024
+2026-02-21 12:27:26,944 | INFO | [22/1633 | 1.3%] Done: BMD
+2026-02-21 12:27:39,634 | INFO |   ✅ BMF:quarter 12 rows | 124 cols | 2017→2025
+2026-02-21 12:27:53,670 | INFO |   ✅ BMF:year 9 rows | 127 cols | 2016→2024
+2026-02-21 12:27:53,671 | INFO | [23/1633 | 1.4%] Done: BMF
+2026-02-21 12:28:02,533 | WARNING |     [BMG:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f44f990 state=finished raised KeyError>]. Retrying after 2.9s...
+2026-02-21 12:28:13,013 | WARNING |     [BMG:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f626050 state=finished raised KeyError>]. Retrying after 6.1s...
+2026-02-21 12:28:28,521 | WARNING |   SKIP BMG:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f625e10 state=finished raised KeyError>]
+2026-02-21 12:28:40,778 | INFO |   ✅ BMG:year 10 rows | 123 cols | 2016→2025
+2026-02-21 12:28:40,778 | INFO | [24/1633 | 1.5%] Done: BMG
+2026-02-21 12:28:54,402 | INFO |   ✅ BMI:quarter 52 rows | 126 cols | 2013→2025
+2026-02-21 12:29:07,237 | INFO |   ✅ BMI:year 13 rows | 117 cols | 2013→2025
+2026-02-21 12:29:07,237 | INFO | [25/1633 | 1.5%] Done: BMI
+2026-02-21 12:29:20,507 | INFO |   ✅ BMJ:quarter 16 rows | 125 cols | 2022→2025
+2026-02-21 12:29:33,628 | INFO |   ✅ BMJ:year 13 rows | 130 cols | 2013→2025
+2026-02-21 12:29:33,632 | INFO | [26/1633 | 1.6%] Done: BMJ
+2026-02-21 12:29:41,625 | WARNING |     [BMK:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f4e0dd0 state=finished raised KeyError>]. Retrying after 2.0s...
+2026-02-21 12:29:56,052 | WARNING |     [BMK:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f639750 state=finished raised KeyError>]. Retrying after 9.8s...
+2026-02-21 12:30:18,349 | WARNING |   SKIP BMK:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f63a0d0 state=finished raised KeyError>]
+2026-02-21 12:30:27,254 | WARNING |     [BMK:year] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f6243d0 state=finished raised KeyError>]. Retrying after 2.7s...
+2026-02-21 12:30:37,798 | WARNING |     [BMK:year] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f448450 state=finished raised KeyError>]. Retrying after 6.3s...
+2026-02-21 12:30:58,468 | WARNING |   SKIP BMK:year — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f638150 state=finished raised KeyError>]
+2026-02-21 12:30:58,471 | INFO | [27/1633 | 1.7%] Done: BMK
+2026-02-21 12:31:10,986 | INFO |   ✅ BMN:quarter 1 rows | 64 cols | 2016→2016
+2026-02-21 12:31:23,543 | INFO |   ✅ BMN:year 11 rows | 116 cols | 2014→2024
+2026-02-21 12:31:23,544 | INFO | [28/1633 | 1.7%] Done: BMN
+2026-02-21 12:31:36,815 | INFO |   ✅ BMP:quarter 52 rows | 132 cols | 2013→2025
+2026-02-21 12:31:49,545 | INFO |   ✅ BMP:year 13 rows | 129 cols | 2013→2025
+2026-02-21 12:31:49,546 | INFO | [29/1633 | 1.8%] Done: BMP
+2026-02-21 12:32:04,073 | INFO |   ✅ BMS:quarter 55 rows | 120 cols | 2010→2025
+2026-02-21 12:32:17,082 | INFO |   ✅ BMS:year 18 rows | 121 cols | 2008→2025
+2026-02-21 12:32:17,083 | INFO | [30/1633 | 1.8%] Done: BMS
+2026-02-21 12:32:29,770 | INFO |   ✅ BMV:quarter 34 rows | 118 cols | 2017→2025
+2026-02-21 12:32:43,560 | INFO |   ✅ BMV:year 13 rows | 122 cols | 2013→2025
+2026-02-21 12:32:43,906 | INFO |   💾 Flushed 50 frames → chunk_0004.parquet (984 rows)
+2026-02-21 12:32:43,907 | INFO | [31/1633 | 1.9%] Done: BMV
+2026-02-21 12:32:56,809 | INFO |   ✅ BNA:quarter 23 rows | 131 cols | 2020→2025
+2026-02-21 12:33:08,693 | INFO |   ✅ BNA:year 9 rows | 132 cols | 2017→2025
+2026-02-21 12:33:08,694 | INFO | [32/1633 | 2.0%] Done: BNA
+2026-02-21 12:33:22,934 | INFO |   ✅ BNW:quarter 34 rows | 121 cols | 2017→2025
+2026-02-21 12:33:36,020 | INFO |   ✅ BNW:year 12 rows | 126 cols | 2013→2025
+2026-02-21 12:33:36,021 | INFO | [33/1633 | 2.0%] Done: BNW
+2026-02-21 12:33:49,024 | INFO |   ✅ BOT:quarter 28 rows | 100 cols | 2019→2025
+2026-02-21 12:34:01,817 | INFO |   ✅ BOT:year 7 rows | 98 cols | 2019→2025
+2026-02-21 12:34:01,817 | INFO | [34/1633 | 2.1%] Done: BOT
+2026-02-21 12:34:15,725 | INFO |   ✅ BPC:quarter 52 rows | 117 cols | 2013→2025
+2026-02-21 12:34:28,174 | INFO |   ✅ BPC:year 13 rows | 116 cols | 2013→2025
+2026-02-21 12:34:28,176 | INFO | [35/1633 | 2.1%] Done: BPC
+2026-02-21 12:34:29,847 | WARNING |   SKIP BPW:quarter — 'NoneType' object is not subscriptable
+2026-02-21 12:34:31,514 | WARNING |   SKIP BPW:year — 'NoneType' object is not subscriptable
+2026-02-21 12:34:31,516 | INFO | [36/1633 | 2.2%] Done: BPW
+2026-02-21 12:34:44,540 | INFO |   ✅ BQB:quarter 23 rows | 117 cols | 2017→2024
+2026-02-21 12:34:56,752 | INFO |   ✅ BQB:year 12 rows | 122 cols | 2013→2024
+2026-02-21 12:34:56,753 | INFO | [37/1633 | 2.3%] Done: BQB
+2026-02-21 12:35:10,336 | INFO |   ✅ BQP:quarter 2 rows | 92 cols | 2025→2025
+2026-02-21 12:35:19,233 | WARNING |     [BQP:year] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x30625cc90 state=finished raised KeyError>]. Retrying after 3.0s...
+2026-02-21 12:35:31,538 | WARNING |     [BQP:year] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x30625c750 state=finished raised KeyError>]. Retrying after 8.1s...
+2026-02-21 12:35:49,140 | WARNING |   SKIP BQP:year — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17fe05650 state=finished raised KeyError>]
+2026-02-21 12:35:49,144 | INFO | [38/1633 | 2.3%] Done: BQP
+2026-02-21 12:36:01,855 | INFO |   ✅ BRC:quarter 52 rows | 128 cols | 2013→2025
+2026-02-21 12:36:13,619 | INFO |   ✅ BRC:year 13 rows | 128 cols | 2013→2025
+2026-02-21 12:36:13,620 | INFO | [39/1633 | 2.4%] Done: BRC
+2026-02-21 12:36:26,896 | INFO |   ✅ BRR:quarter 37 rows | 110 cols | 2016→2025
+2026-02-21 12:36:39,100 | INFO |   ✅ BRR:year 13 rows | 114 cols | 2013→2025
+2026-02-21 12:36:39,101 | INFO | [40/1633 | 2.4%] Done: BRR
+2026-02-21 12:36:52,221 | INFO |   ✅ BRS:quarter 4 rows | 68 cols | 2015→2016
+2026-02-21 12:37:04,071 | INFO |   ✅ BRS:year 12 rows | 102 cols | 2013→2024
+2026-02-21 12:37:04,071 | INFO | [41/1633 | 2.5%] Done: BRS
+2026-02-21 12:37:17,391 | INFO |   ✅ BSA:quarter 44 rows | 121 cols | 2015→2025
+2026-02-21 12:37:29,118 | INFO |   ✅ BSA:year 13 rows | 122 cols | 2013→2025
+2026-02-21 12:37:29,119 | INFO | [42/1633 | 2.6%] Done: BSA
+2026-02-21 12:37:41,174 | INFO |   ✅ BSC:quarter 51 rows | 113 cols | 2013→2025
+2026-02-21 12:37:53,963 | INFO |   ✅ BSC:year 12 rows | 126 cols | 2013→2024
+2026-02-21 12:37:53,964 | INFO | [43/1633 | 2.6%] Done: BSC
+2026-02-21 12:38:02,280 | WARNING |     [BSD:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x30604ca10 state=finished raised KeyError>]. Retrying after 2.3s...
+2026-02-21 12:38:12,044 | WARNING |     [BSD:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x30606f510 state=finished raised KeyError>]. Retrying after 5.5s...
+2026-02-21 12:38:32,274 | WARNING |   SKIP BSD:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f480d90 state=finished raised KeyError>]
+2026-02-21 12:38:45,033 | INFO |   ✅ BSD:year 12 rows | 125 cols | 2013→2024
+2026-02-21 12:38:45,033 | INFO | [44/1633 | 2.7%] Done: BSD
+2026-02-21 12:38:58,306 | INFO |   ✅ BSG:quarter 37 rows | 120 cols | 2016→2025
+2026-02-21 12:39:11,256 | INFO |   ✅ BSG:year 12 rows | 123 cols | 2014→2025
+2026-02-21 12:39:11,257 | INFO | [45/1633 | 2.8%] Done: BSG
+2026-02-21 12:39:23,043 | INFO |   ✅ BSH:quarter 32 rows | 127 cols | 2018→2025
+2026-02-21 12:39:37,105 | INFO |   ✅ BSH:year 10 rows | 122 cols | 2016→2025
+2026-02-21 12:39:37,106 | INFO | [46/1633 | 2.8%] Done: BSH
+2026-02-21 12:39:50,491 | INFO |   ✅ BSI:quarter 52 rows | 128 cols | 2013→2025
+2026-02-21 12:40:03,645 | INFO |   ✅ BSI:year 13 rows | 125 cols | 2013→2025
+2026-02-21 12:40:03,647 | INFO | [47/1633 | 2.9%] Done: BSI
+2026-02-21 12:40:17,265 | INFO |   ✅ BSL:quarter 39 rows | 124 cols | 2016→2025
+2026-02-21 12:40:30,680 | INFO |   ✅ BSL:year 13 rows | 123 cols | 2013→2025
+2026-02-21 12:40:30,681 | INFO | [48/1633 | 2.9%] Done: BSL
+2026-02-21 12:40:43,487 | INFO |   ✅ BSP:quarter 39 rows | 118 cols | 2016→2025
+2026-02-21 12:40:56,786 | INFO |   ✅ BSP:year 13 rows | 117 cols | 2013→2025
+2026-02-21 12:40:56,787 | INFO | [49/1633 | 3.0%] Done: BSP
+2026-02-21 12:41:09,504 | INFO |   ✅ BSQ:quarter 49 rows | 126 cols | 2013→2025
+2026-02-21 12:41:22,637 | INFO |   ✅ BSQ:year 13 rows | 124 cols | 2013→2025
+2026-02-21 12:41:22,638 | INFO | [50/1633 | 3.1%] Done: BSQ
+2026-02-21 12:41:36,422 | INFO |   ✅ BSR:quarter 33 rows | 125 cols | 2017→2025
+2026-02-21 12:41:48,937 | INFO |   ✅ BSR:year 13 rows | 134 cols | 2013→2025
+2026-02-21 12:41:48,938 | INFO | [51/1633 | 3.1%] Done: BSR
+2026-02-21 12:42:01,912 | INFO |   ✅ BST:quarter 51 rows | 114 cols | 2009→2025
+2026-02-21 12:42:14,393 | INFO |   ✅ BST:year 12 rows | 111 cols | 2013→2024
+2026-02-21 12:42:14,394 | INFO | [52/1633 | 3.2%] Done: BST
+2026-02-21 12:42:23,328 | WARNING |     [BT1:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f4bcd10 state=finished raised KeyError>]. Retrying after 2.7s...
+2026-02-21 12:42:34,854 | WARNING |     [BT1:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f4bead0 state=finished raised KeyError>]. Retrying after 7.2s...
+2026-02-21 12:42:52,401 | WARNING |   SKIP BT1:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f486190 state=finished raised KeyError>]
+2026-02-21 12:43:06,478 | INFO |   ✅ BT1:year 12 rows | 106 cols | 2013→2024
+2026-02-21 12:43:06,479 | INFO | [53/1633 | 3.2%] Done: BT1
+2026-02-21 12:43:18,570 | INFO |   ✅ BT6:quarter 25 rows | 120 cols | 2013→2025
+2026-02-21 12:43:31,619 | INFO |   ✅ BT6:year 10 rows | 136 cols | 2013→2025
+2026-02-21 12:43:31,620 | INFO | [54/1633 | 3.3%] Done: BT6
+2026-02-21 12:43:45,277 | INFO |   ✅ BTB:quarter 11 rows | 114 cols | 2016→2019
+2026-02-21 12:43:59,066 | INFO |   ✅ BTB:year 12 rows | 118 cols | 2013→2024
+2026-02-21 12:43:59,067 | INFO | [55/1633 | 3.4%] Done: BTB
+2026-02-21 12:44:11,904 | INFO |   ✅ BTD:quarter 5 rows | 122 cols | 2017→2019
+2026-02-21 12:44:25,544 | INFO |   ✅ BTD:year 12 rows | 132 cols | 2013→2024
+2026-02-21 12:44:25,544 | INFO | [56/1633 | 3.4%] Done: BTD
+2026-02-21 12:44:37,898 | INFO |   ✅ BTG:quarter 6 rows | 88 cols | 2013→2019
+2026-02-21 12:44:50,909 | INFO |   ✅ BTG:year 12 rows | 106 cols | 2013→2024
+2026-02-21 12:44:50,910 | INFO | [57/1633 | 3.5%] Done: BTG
+2026-02-21 12:45:02,922 | INFO |   ✅ BTH:quarter 38 rows | 112 cols | 2008→2025
+2026-02-21 12:45:14,951 | INFO |   ✅ BTH:year 13 rows | 110 cols | 2013→2025
+2026-02-21 12:45:14,952 | INFO | [58/1633 | 3.6%] Done: BTH
+2026-02-21 12:45:23,330 | WARNING |     [BTN:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f6c0210 state=finished raised KeyError>]. Retrying after 2.4s...
+2026-02-21 12:45:35,752 | WARNING |     [BTN:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f6c0510 state=finished raised KeyError>]. Retrying after 8.2s...
+2026-02-21 12:45:54,331 | WARNING |   SKIP BTN:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x16d09bd90 state=finished raised KeyError>]
+2026-02-21 12:46:06,742 | INFO |   ✅ BTN:year 10 rows | 104 cols | 2015→2024
+2026-02-21 12:46:07,073 | INFO |   💾 Flushed 50 frames → chunk_0005.parquet (1,075 rows)
+2026-02-21 12:46:07,073 | INFO | [59/1633 | 3.6%] Done: BTN
+2026-02-21 12:46:20,000 | INFO |   ✅ BTP:quarter 52 rows | 125 cols | 2013→2025
+2026-02-21 12:46:32,507 | INFO |   ✅ BTP:year 13 rows | 125 cols | 2013→2025
+2026-02-21 12:46:32,508 | INFO | [60/1633 | 3.7%] Done: BTP
+2026-02-21 12:46:45,549 | INFO |   ✅ BTS:quarter 52 rows | 123 cols | 2013→2025
+2026-02-21 12:46:58,325 | INFO |   ✅ BTS:year 13 rows | 122 cols | 2013→2025
+2026-02-21 12:46:58,326 | INFO | [61/1633 | 3.7%] Done: BTS
+2026-02-21 12:47:12,919 | INFO |   ✅ BTT:quarter 52 rows | 137 cols | 2013→2025
+2026-02-21 12:47:25,891 | INFO |   ✅ BTT:year 13 rows | 137 cols | 2013→2025
+2026-02-21 12:47:25,892 | INFO | [62/1633 | 3.8%] Done: BTT
+2026-02-21 12:47:38,582 | INFO |   ✅ BTU:quarter 2 rows | 59 cols | 2016→2016
+2026-02-21 12:47:51,241 | INFO |   ✅ BTU:year 11 rows | 115 cols | 2014→2024
+2026-02-21 12:47:51,242 | INFO | [63/1633 | 3.9%] Done: BTU
+2026-02-21 12:48:03,463 | INFO |   ✅ BTV:quarter 35 rows | 131 cols | 2017→2025
+2026-02-21 12:48:15,098 | INFO |   ✅ BTV:year 13 rows | 133 cols | 2013→2025
+2026-02-21 12:48:15,100 | INFO | [64/1633 | 3.9%] Done: BTV
+2026-02-21 12:48:28,581 | INFO |   ✅ BTW:quarter 34 rows | 120 cols | 2017→2025
+2026-02-21 12:48:41,646 | INFO |   ✅ BTW:year 13 rows | 122 cols | 2013→2025
+2026-02-21 12:48:41,646 | INFO | [65/1633 | 4.0%] Done: BTW
+2026-02-21 12:48:49,967 | WARNING |     [BUD:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f749d50 state=finished raised KeyError>]. Retrying after 2.4s...
+2026-02-21 12:49:00,218 | WARNING |     [BUD:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17fcc90d0 state=finished raised KeyError>]. Retrying after 5.9s...
+2026-02-21 12:49:17,186 | WARNING |   SKIP BUD:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17fc06e50 state=finished raised KeyError>]
+2026-02-21 12:49:29,715 | INFO |   ✅ BUD:year 1 rows | 115 cols | 2019→2019
+2026-02-21 12:49:29,716 | INFO | [66/1633 | 4.0%] Done: BUD
+2026-02-21 12:49:42,653 | INFO |   ✅ BVB:quarter 44 rows | 102 cols | 2013→2025
+2026-02-21 12:49:54,808 | INFO |   ✅ BVB:year 13 rows | 98 cols | 2013→2025
+2026-02-21 12:49:54,809 | INFO | [67/1633 | 4.1%] Done: BVB
+2026-02-21 12:50:07,812 | INFO |   ✅ BVG:quarter 10 rows | 108 cols | 2013→2015
+2026-02-21 12:50:21,204 | INFO |   ✅ BVG:year 11 rows | 132 cols | 2013→2024
+2026-02-21 12:50:21,205 | INFO | [68/1633 | 4.2%] Done: BVG
+2026-02-21 12:50:34,882 | INFO |   ✅ BVH:quarter 52 rows | 130 cols | 2013→2025
+2026-02-21 12:50:47,813 | INFO |   ✅ BVH:year 13 rows | 124 cols | 2013→2025
+2026-02-21 12:50:47,814 | INFO | [69/1633 | 4.2%] Done: BVH
+2026-02-21 12:51:00,562 | INFO |   ✅ BVL:quarter 20 rows | 128 cols | 2021→2025
+2026-02-21 12:51:13,242 | INFO |   ✅ BVL:year 7 rows | 129 cols | 2019→2025
+2026-02-21 12:51:13,243 | INFO | [70/1633 | 4.3%] Done: BVL
+2026-02-21 12:51:22,286 | WARNING |     [BVN:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f47ec50 state=finished raised KeyError>]. Retrying after 2.9s...
+2026-02-21 12:51:34,067 | WARNING |     [BVN:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x306310050 state=finished raised KeyError>]. Retrying after 7.6s...
+2026-02-21 12:51:52,173 | WARNING |   SKIP BVN:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x306311a10 state=finished raised KeyError>]
+2026-02-21 12:52:04,734 | INFO |   ✅ BVN:year 12 rows | 118 cols | 2013→2024
+2026-02-21 12:52:04,735 | INFO | [71/1633 | 4.3%] Done: BVN
+2026-02-21 12:52:17,318 | INFO |   ✅ BVS:quarter 52 rows | 108 cols | 2013→2025
+2026-02-21 12:52:30,542 | INFO |   ✅ BVS:year 13 rows | 103 cols | 2013→2025
+2026-02-21 12:52:30,543 | INFO | [72/1633 | 4.4%] Done: BVS
+2026-02-21 12:52:39,120 | WARNING |     [BWA:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x3062af510 state=finished raised KeyError>]. Retrying after 2.6s...
+2026-02-21 12:52:52,996 | WARNING |     [BWA:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x3062e25d0 state=finished raised KeyError>]. Retrying after 9.4s...
+2026-02-21 12:53:16,662 | WARNING |   SKIP BWA:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x306231e10 state=finished raised KeyError>]
+2026-02-21 12:53:29,430 | INFO |   ✅ BWA:year 11 rows | 122 cols | 2013→2024
+2026-02-21 12:53:29,431 | INFO | [73/1633 | 4.5%] Done: BWA
+2026-02-21 12:53:42,848 | INFO |   ✅ BWE:quarter 37 rows | 136 cols | 2016→2025
+2026-02-21 12:53:55,882 | INFO |   ✅ BWE:year 13 rows | 137 cols | 2013→2025
+2026-02-21 12:53:55,883 | INFO | [74/1633 | 4.5%] Done: BWE
+2026-02-21 12:54:08,651 | INFO |   ✅ BWS:quarter 39 rows | 126 cols | 2016→2025
+2026-02-21 12:54:21,645 | INFO |   ✅ BWS:year 13 rows | 123 cols | 2013→2025
+2026-02-21 12:54:21,646 | INFO | [75/1633 | 4.6%] Done: BWS
+2026-02-21 12:54:34,772 | INFO |   ✅ BXH:quarter 52 rows | 105 cols | 2013→2025
+2026-02-21 12:54:47,337 | INFO |   ✅ BXH:year 13 rows | 120 cols | 2013→2025
+2026-02-21 12:54:47,339 | INFO | [76/1633 | 4.7%] Done: BXH
+2026-02-21 12:54:49,063 | WARNING |   SKIP BXT:quarter — 'NoneType' object is not subscriptable
+2026-02-21 12:54:50,729 | WARNING |   SKIP BXT:year — 'NoneType' object is not subscriptable
+2026-02-21 12:54:50,731 | INFO | [77/1633 | 4.7%] Done: BXT
+2026-02-21 12:54:59,419 | WARNING |     [C12:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x3062cbc50 state=finished raised KeyError>]. Retrying after 2.7s...
+2026-02-21 12:55:08,779 | WARNING |     [C12:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x3062327d0 state=finished raised KeyError>]. Retrying after 5.1s...
+2026-02-21 12:55:23,675 | WARNING |   SKIP C12:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x30604cc50 state=finished raised KeyError>]
+2026-02-21 12:55:36,920 | INFO |   ✅ C12:year 6 rows | 106 cols | 2013→2018
+2026-02-21 12:55:36,921 | INFO | [78/1633 | 4.8%] Done: C12
+2026-02-21 12:55:49,354 | INFO |   ✅ C21:quarter 52 rows | 140 cols | 2013→2025
+2026-02-21 12:56:03,365 | INFO |   ✅ C21:year 13 rows | 139 cols | 2013→2025
+2026-02-21 12:56:03,366 | INFO | [79/1633 | 4.8%] Done: C21
+2026-02-21 12:56:11,975 | WARNING |     [C22:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f4a22d0 state=finished raised KeyError>]. Retrying after 2.6s...
+2026-02-21 12:56:25,324 | WARNING |     [C22:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f458990 state=finished raised KeyError>]. Retrying after 9.1s...
+2026-02-21 12:56:46,141 | WARNING |   SKIP C22:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f44ff50 state=finished raised KeyError>]
+2026-02-21 12:56:58,429 | INFO |   ✅ C22:year 10 rows | 102 cols | 2015→2024
+2026-02-21 12:56:58,430 | INFO | [80/1633 | 4.9%] Done: C22
+2026-02-21 12:57:11,563 | INFO |   ✅ C32:quarter 52 rows | 131 cols | 2013→2025
+2026-02-21 12:57:24,746 | INFO |   ✅ C32:year 13 rows | 131 cols | 2013→2025
+2026-02-21 12:57:24,747 | INFO | [81/1633 | 5.0%] Done: C32
+2026-02-21 12:57:37,232 | INFO |   ✅ C47:quarter 52 rows | 122 cols | 2013→2025
+2026-02-21 12:57:49,715 | INFO |   ✅ C47:year 13 rows | 131 cols | 2013→2025
+2026-02-21 12:57:49,716 | INFO | [82/1633 | 5.0%] Done: C47
+2026-02-21 12:58:02,376 | INFO |   ✅ C4G:quarter 36 rows | 119 cols | 2016→2025
+2026-02-21 12:58:14,630 | INFO |   ✅ C4G:year 12 rows | 136 cols | 2014→2025
+2026-02-21 12:58:14,631 | INFO | [83/1633 | 5.1%] Done: C4G
+2026-02-21 12:58:26,513 | INFO |   ✅ C69:quarter 36 rows | 134 cols | 2017→2025
+2026-02-21 12:58:40,378 | INFO |   ✅ C69:year 11 rows | 133 cols | 2015→2025
+2026-02-21 12:58:40,379 | INFO | [84/1633 | 5.1%] Done: C69
+2026-02-21 12:58:54,406 | INFO |   ✅ C92:quarter 37 rows | 109 cols | 2013→2022
+2026-02-21 12:59:06,960 | INFO |   ✅ C92:year 12 rows | 110 cols | 2013→2024
+2026-02-21 12:59:06,961 | INFO | [85/1633 | 5.2%] Done: C92
+2026-02-21 12:59:20,932 | INFO |   ✅ CAB:quarter 25 rows | 131 cols | 2018→2024
+2026-02-21 12:59:34,138 | INFO |   ✅ CAB:year 9 rows | 130 cols | 2014→2023
+2026-02-21 12:59:34,139 | INFO | [86/1633 | 5.3%] Done: CAB
+2026-02-21 12:59:46,981 | INFO |   ✅ CAD:quarter 39 rows | 105 cols | 2013→2025
+2026-02-21 13:00:00,956 | INFO |   ✅ CAD:year 13 rows | 105 cols | 2013→2025
+2026-02-21 13:00:00,958 | INFO | [87/1633 | 5.3%] Done: CAD
+2026-02-21 13:00:13,883 | INFO |   ✅ CAG:quarter 41 rows | 106 cols | 2015→2025
+2026-02-21 13:00:26,560 | INFO |   ✅ CAG:year 13 rows | 122 cols | 2013→2025
+2026-02-21 13:00:26,781 | INFO |   💾 Flushed 51 frames → chunk_0006.parquet (1,224 rows)
+2026-02-21 13:00:26,782 | INFO | [88/1633 | 5.4%] Done: CAG
+2026-02-21 13:00:39,688 | INFO |   ✅ CAN:quarter 53 rows | 129 cols | 2008→2025
+2026-02-21 13:00:52,312 | INFO |   ✅ CAN:year 13 rows | 124 cols | 2013→2025
+2026-02-21 13:00:52,312 | INFO | [89/1633 | 5.5%] Done: CAN
+2026-02-21 13:01:05,553 | INFO |   ✅ CAP:quarter 52 rows | 126 cols | 2008→2025
+2026-02-21 13:01:18,535 | INFO |   ✅ CAP:year 12 rows | 122 cols | 2013→2024
+2026-02-21 13:01:18,536 | INFO | [90/1633 | 5.5%] Done: CAP
+2026-02-21 13:01:30,610 | INFO |   ✅ CAR:quarter 7 rows | 107 cols | 2024→2025
+2026-02-21 13:01:43,838 | INFO |   ✅ CAR:year 4 rows | 106 cols | 2022→2025
+2026-02-21 13:01:43,840 | INFO | [91/1633 | 5.6%] Done: CAR
+2026-02-21 13:01:51,956 | WARNING |     [CAT:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f47b8d0 state=finished raised KeyError>]. Retrying after 2.0s...
+2026-02-21 13:02:04,002 | WARNING |     [CAT:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f478f50 state=finished raised KeyError>]. Retrying after 7.7s...
+2026-02-21 13:02:21,854 | WARNING |   SKIP CAT:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f436850 state=finished raised KeyError>]
+2026-02-21 13:02:34,504 | INFO |   ✅ CAT:year 12 rows | 129 cols | 2013→2024
+2026-02-21 13:02:34,506 | INFO | [92/1633 | 5.6%] Done: CAT
+2026-02-21 13:02:47,420 | INFO |   ✅ CAV:quarter 45 rows | 134 cols | 2013→2024
+2026-02-21 13:03:00,732 | INFO |   ✅ CAV:year 11 rows | 132 cols | 2013→2023
+2026-02-21 13:03:00,733 | INFO | [93/1633 | 5.7%] Done: CAV
+2026-02-21 13:03:13,711 | INFO |   ✅ CBI:quarter 34 rows | 114 cols | 2017→2025
+2026-02-21 13:03:26,302 | INFO |   ✅ CBI:year 13 rows | 116 cols | 2013→2025
+2026-02-21 13:03:26,303 | INFO | [94/1633 | 5.8%] Done: CBI
+2026-02-21 13:03:34,755 | WARNING |     [CBS:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17feaf490 state=finished raised KeyError>]. Retrying after 2.3s...
+2026-02-21 13:03:44,158 | WARNING |     [CBS:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f435750 state=finished raised KeyError>]. Retrying after 5.1s...
+2026-02-21 13:04:00,621 | WARNING |   SKIP CBS:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17fd837d0 state=finished raised KeyError>]
+2026-02-21 13:04:14,250 | INFO |   ✅ CBS:year 7 rows | 79 cols | 2015→2021
+2026-02-21 13:04:14,251 | INFO | [95/1633 | 5.8%] Done: CBS
+2026-02-21 13:04:26,841 | INFO |   ✅ CC1:quarter 36 rows | 135 cols | 2017→2025
+2026-02-21 13:04:40,532 | INFO |   ✅ CC1:year 13 rows | 138 cols | 2013→2025
+2026-02-21 13:04:40,533 | INFO | [96/1633 | 5.9%] Done: CC1
+2026-02-21 13:04:53,852 | INFO |   ✅ CC4:quarter 22 rows | 130 cols | 2017→2025
+2026-02-21 13:05:07,225 | INFO |   ✅ CC4:year 12 rows | 137 cols | 2013→2024
+2026-02-21 13:05:07,226 | INFO | [97/1633 | 5.9%] Done: CC4
+2026-02-21 13:05:19,769 | INFO |   ✅ CCA:quarter 26 rows | 107 cols | 2019→2025
+2026-02-21 13:05:32,855 | INFO |   ✅ CCA:year 12 rows | 111 cols | 2013→2025
+2026-02-21 13:05:32,856 | INFO | [98/1633 | 6.0%] Done: CCA
+2026-02-21 13:05:46,959 | INFO |   ✅ CCC:quarter 11 rows | 118 cols | 2023→2025
+2026-02-21 13:06:00,963 | INFO |   ✅ CCC:year 3 rows | 118 cols | 2023→2025
+2026-02-21 13:06:00,964 | INFO | [99/1633 | 6.1%] Done: CCC
+2026-02-21 13:06:13,549 | INFO |   ✅ CCI:quarter 52 rows | 116 cols | 2013→2025
+2026-02-21 13:06:25,979 | INFO |   ✅ CCI:year 13 rows | 115 cols | 2013→2025
+2026-02-21 13:06:25,980 | INFO | [100/1633 | 6.1%] Done: CCI
+2026-02-21 13:06:39,046 | INFO |   ✅ CCL:quarter 52 rows | 118 cols | 2013→2025
+2026-02-21 13:06:52,017 | INFO |   ✅ CCL:year 13 rows | 117 cols | 2013→2025
+2026-02-21 13:06:52,018 | INFO | [101/1633 | 6.2%] Done: CCL
+2026-02-21 13:07:04,563 | INFO |   ✅ CCM:quarter 24 rows | 119 cols | 2013→2018
+2026-02-21 13:07:18,044 | INFO |   ✅ CCM:year 12 rows | 119 cols | 2013→2024
+2026-02-21 13:07:18,045 | INFO | [102/1633 | 6.2%] Done: CCM
+2026-02-21 13:07:30,989 | INFO |   ✅ CCP:quarter 15 rows | 114 cols | 2015→2025
+2026-02-21 13:07:44,123 | INFO |   ✅ CCP:year 12 rows | 117 cols | 2013→2024
+2026-02-21 13:07:44,124 | INFO | [103/1633 | 6.3%] Done: CCP
+2026-02-21 13:07:56,953 | INFO |   ✅ CCR:quarter 41 rows | 131 cols | 2015→2025
+2026-02-21 13:08:09,073 | INFO |   ✅ CCR:year 13 rows | 130 cols | 2013→2025
+2026-02-21 13:08:09,074 | INFO | [104/1633 | 6.4%] Done: CCR
+2026-02-21 13:08:17,101 | WARNING |     [CCS:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f685050 state=finished raised KeyError>]. Retrying after 2.0s...
+2026-02-21 13:08:29,619 | WARNING |     [CCS:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x3062e2890 state=finished raised KeyError>]. Retrying after 8.1s...
+2026-02-21 13:08:49,801 | WARNING |   SKIP CCS:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f71d810 state=finished raised KeyError>]
+2026-02-21 13:09:02,196 | INFO |   ✅ CCS:year 10 rows | 121 cols | 2013→2024
+2026-02-21 13:09:02,197 | INFO | [105/1633 | 6.4%] Done: CCS
+2026-02-21 13:09:14,426 | INFO |   ✅ CCT:quarter 37 rows | 121 cols | 2014→2025
+2026-02-21 13:09:27,377 | INFO |   ✅ CCT:year 11 rows | 120 cols | 2015→2025
+2026-02-21 13:09:27,378 | INFO | [106/1633 | 6.5%] Done: CCT
+2026-02-21 13:09:35,541 | WARNING |     [CCV:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17fae55d0 state=finished raised KeyError>]. Retrying after 2.1s...
+2026-02-21 13:09:49,277 | WARNING |     [CCV:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f4dc750 state=finished raised KeyError>]. Retrying after 9.4s...
+2026-02-21 13:10:08,098 | WARNING |   SKIP CCV:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f4179d0 state=finished raised KeyError>]
+2026-02-21 13:10:21,009 | INFO |   ✅ CCV:year 12 rows | 124 cols | 2013→2024
+2026-02-21 13:10:21,010 | INFO | [107/1633 | 6.6%] Done: CCV
+2026-02-21 13:10:33,720 | INFO |   ✅ CDC:quarter 54 rows | 137 cols | 2008→2025
+2026-02-21 13:10:45,974 | INFO |   ✅ CDC:year 13 rows | 135 cols | 2013→2025
+2026-02-21 13:10:45,976 | INFO | [108/1633 | 6.6%] Done: CDC
+2026-02-21 13:10:58,871 | INFO |   ✅ CDG:quarter 10 rows | 108 cols | 2018→2021
+2026-02-21 13:11:10,765 | INFO |   ✅ CDG:year 11 rows | 129 cols | 2014→2024
+2026-02-21 13:11:10,766 | INFO | [109/1633 | 6.7%] Done: CDG
+2026-02-21 13:11:18,931 | WARNING |     [CDH:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f4bc590 state=finished raised KeyError>]. Retrying after 2.2s...
+2026-02-21 13:11:31,151 | WARNING |     [CDH:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17fe240d0 state=finished raised KeyError>]. Retrying after 7.9s...
+2026-02-21 13:11:52,065 | WARNING |   SKIP CDH:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f47ac10 state=finished raised KeyError>]
+2026-02-21 13:12:05,226 | INFO |   ✅ CDH:year 9 rows | 104 cols | 2016→2024
+2026-02-21 13:12:05,228 | INFO | [110/1633 | 6.7%] Done: CDH
+2026-02-21 13:12:18,907 | INFO |   ✅ CDN:quarter 44 rows | 134 cols | 2015→2025
+2026-02-21 13:12:32,493 | INFO |   ✅ CDN:year 13 rows | 134 cols | 2013→2025
+2026-02-21 13:12:32,503 | INFO | [111/1633 | 6.8%] Done: CDN
+2026-02-21 13:12:44,359 | INFO |   ✅ CDO:quarter 44 rows | 124 cols | 2015→2025
+2026-02-21 13:12:56,703 | INFO |   ✅ CDO:year 13 rows | 122 cols | 2013→2025
+2026-02-21 13:12:56,703 | INFO | [112/1633 | 6.9%] Done: CDO
+2026-02-21 13:13:10,274 | INFO |   ✅ CDP:quarter 32 rows | 131 cols | 2017→2025
+2026-02-21 13:13:23,968 | INFO |   ✅ CDP:year 12 rows | 129 cols | 2013→2025
+2026-02-21 13:13:23,969 | INFO | [113/1633 | 6.9%] Done: CDP
+2026-02-21 13:13:32,102 | WARNING |     [CDR:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17fe6bf50 state=finished raised KeyError>]. Retrying after 2.1s...
+2026-02-21 13:13:46,050 | WARNING |     [CDR:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f61f290 state=finished raised KeyError>]. Retrying after 9.7s...
+2026-02-21 13:14:09,323 | WARNING |   SKIP CDR:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f47c850 state=finished raised KeyError>]
+2026-02-21 13:14:22,203 | INFO |   ✅ CDR:year 12 rows | 126 cols | 2013→2024
+2026-02-21 13:14:22,207 | INFO | [114/1633 | 7.0%] Done: CDR
+2026-02-21 13:14:30,339 | WARNING |     [CE1:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f42b250 state=finished raised KeyError>]. Retrying after 2.1s...
+2026-02-21 13:14:44,465 | WARNING |     [CE1:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f666b50 state=finished raised KeyError>]. Retrying after 9.9s...
+2026-02-21 13:15:01,487 | WARNING |   SKIP CE1:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f665c10 state=finished raised KeyError>]
+2026-02-21 13:15:13,792 | INFO |   ✅ CE1:year 11 rows | 114 cols | 2013→2023
+2026-02-21 13:15:13,793 | INFO | [115/1633 | 7.0%] Done: CE1
+2026-02-21 13:15:25,972 | INFO |   ✅ CEE:quarter 21 rows | 133 cols | 2017→2022
+2026-02-21 13:15:38,150 | INFO |   ✅ CEE:year 8 rows | 135 cols | 2014→2021
+2026-02-21 13:15:38,151 | INFO | [116/1633 | 7.1%] Done: CEE
+2026-02-21 13:15:46,946 | WARNING |     [CEG:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f686890 state=finished raised KeyError>]. Retrying after 2.9s...
+2026-02-21 13:16:01,046 | WARNING |     [CEG:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f684990 state=finished raised KeyError>]. Retrying after 9.7s...
+2026-02-21 13:16:23,604 | WARNING |   SKIP CEG:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f4cb210 state=finished raised KeyError>]
+2026-02-21 13:16:36,943 | INFO |   ✅ CEG:year 11 rows | 135 cols | 2013→2023
+2026-02-21 13:16:37,021 | INFO |   💾 Flushed 50 frames → chunk_0007.parquet (1,033 rows)
+2026-02-21 13:16:37,023 | INFO | [117/1633 | 7.2%] Done: CEG
+2026-02-21 13:16:51,074 | INFO |   ✅ CEN:quarter 15 rows | 114 cols | 2021→2025
+2026-02-21 13:17:03,167 | INFO |   ✅ CEN:year 10 rows | 123 cols | 2016→2025
+2026-02-21 13:17:03,168 | INFO | [118/1633 | 7.2%] Done: CEN
+2026-02-21 13:17:16,227 | INFO |   ✅ CEO:quarter 47 rows | 136 cols | 2014→2025
+2026-02-21 13:17:29,293 | INFO |   ✅ CEO:year 13 rows | 136 cols | 2013→2025
+2026-02-21 13:17:29,294 | INFO | [119/1633 | 7.3%] Done: CEO
+2026-02-21 13:17:41,877 | INFO |   ✅ CET:quarter 34 rows | 125 cols | 2017→2025
+2026-02-21 13:17:55,979 | INFO |   ✅ CET:year 11 rows | 124 cols | 2015→2025
+2026-02-21 13:17:55,980 | INFO | [120/1633 | 7.3%] Done: CET
+2026-02-21 13:18:04,205 | WARNING |     [CFM:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x3062d6890 state=finished raised KeyError>]. Retrying after 2.1s...
+2026-02-21 13:18:18,362 | WARNING |     [CFM:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f4c1a10 state=finished raised KeyError>]. Retrying after 9.9s...
+2026-02-21 13:18:39,003 | WARNING |   SKIP CFM:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f4c37d0 state=finished raised KeyError>]
+2026-02-21 13:18:52,088 | INFO |   ✅ CFM:year 7 rows | 122 cols | 2017→2024
+2026-02-21 13:18:52,090 | INFO | [121/1633 | 7.4%] Done: CFM
+2026-02-21 13:19:04,999 | INFO |   ✅ CFV:quarter 22 rows | 104 cols | 2020→2025
+2026-02-21 13:19:18,351 | INFO |   ✅ CFV:year 12 rows | 124 cols | 2013→2025
+2026-02-21 13:19:18,353 | INFO | [122/1633 | 7.5%] Done: CFV
+2026-02-21 13:19:27,145 | WARNING |     [CGL:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f431810 state=finished raised KeyError>]. Retrying after 2.8s...
+2026-02-21 13:19:38,222 | WARNING |     [CGL:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17fe4cb10 state=finished raised KeyError>]. Retrying after 6.9s...
+2026-02-21 13:20:01,644 | WARNING |   SKIP CGL:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17fe4f510 state=finished raised KeyError>]
+2026-02-21 13:20:13,542 | INFO |   ✅ CGL:year 8 rows | 125 cols | 2014→2021
+2026-02-21 13:20:13,543 | INFO | [123/1633 | 7.5%] Done: CGL
+2026-02-21 13:20:22,167 | WARNING |     [CGV:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x16d2d0e90 state=finished raised KeyError>]. Retrying after 2.4s...
+2026-02-21 13:20:34,718 | WARNING |     [CGV:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f421390 state=finished raised KeyError>]. Retrying after 8.3s...
+2026-02-21 13:20:54,330 | WARNING |   SKIP CGV:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f423b10 state=finished raised KeyError>]
+2026-02-21 13:21:07,370 | INFO |   ✅ CGV:year 11 rows | 122 cols | 2013→2024
+2026-02-21 13:21:07,372 | INFO | [124/1633 | 7.6%] Done: CGV
+2026-02-21 13:21:15,597 | WARNING |     [CH5:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17fc81810 state=finished raised KeyError>]. Retrying after 2.3s...
+2026-02-21 13:21:25,142 | WARNING |     [CH5:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17fc83850 state=finished raised KeyError>]. Retrying after 5.3s...
+2026-02-21 13:21:45,528 | WARNING |   SKIP CH5:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f431890 state=finished raised KeyError>]
+2026-02-21 13:21:58,128 | INFO |   ✅ CH5:year 12 rows | 118 cols | 2013→2024
+2026-02-21 13:21:58,131 | INFO | [125/1633 | 7.7%] Done: CH5
+2026-02-21 13:22:06,456 | WARNING |     [CHC:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f739710 state=finished raised KeyError>]. Retrying after 2.4s...
+2026-02-21 13:22:17,960 | WARNING |     [CHC:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f49bd10 state=finished raised KeyError>]. Retrying after 7.2s...
+2026-02-21 13:22:42,082 | WARNING |   SKIP CHC:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f4995d0 state=finished raised KeyError>]
+2026-02-21 13:22:54,224 | INFO |   ✅ CHC:year 12 rows | 117 cols | 2013→2024
+2026-02-21 13:22:54,225 | INFO | [126/1633 | 7.7%] Done: CHC
+2026-02-21 13:23:07,084 | INFO |   ✅ CHP:quarter 52 rows | 108 cols | 2013→2025
+2026-02-21 13:23:19,092 | INFO |   ✅ CHP:year 13 rows | 121 cols | 2013→2025
+2026-02-21 13:23:19,093 | INFO | [127/1633 | 7.8%] Done: CHP
+2026-02-21 13:23:32,470 | INFO |   ✅ CHS:quarter 39 rows | 98 cols | 2015→2025
+2026-02-21 13:23:45,151 | INFO |   ✅ CHS:year 13 rows | 98 cols | 2013→2025
+2026-02-21 13:23:45,153 | INFO | [128/1633 | 7.8%] Done: CHS
+2026-02-21 13:23:53,567 | WARNING |     [CI5:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17fc072d0 state=finished raised KeyError>]. Retrying after 2.4s...
+2026-02-21 13:24:07,277 | WARNING |     [CI5:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f433a50 state=finished raised KeyError>]. Retrying after 9.5s...
+2026-02-21 13:24:29,563 | WARNING |   SKIP CI5:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17feff4d0 state=finished raised KeyError>]
+2026-02-21 13:24:42,433 | INFO |   ✅ CI5:year 12 rows | 123 cols | 2013→2024
+2026-02-21 13:24:42,434 | INFO | [129/1633 | 7.9%] Done: CI5
+2026-02-21 13:24:55,761 | INFO |   ✅ CIA:quarter 35 rows | 135 cols | 2017→2025
+2026-02-21 13:25:08,186 | INFO |   ✅ CIA:year 13 rows | 134 cols | 2013→2025
+2026-02-21 13:25:08,187 | INFO | [130/1633 | 8.0%] Done: CIA
+2026-02-21 13:25:21,208 | INFO |   ✅ CID:quarter 14 rows | 103 cols | 2008→2016
+2026-02-21 13:25:33,498 | INFO |   ✅ CID:year 12 rows | 108 cols | 2013→2024
+2026-02-21 13:25:33,498 | INFO | [131/1633 | 8.0%] Done: CID
+2026-02-21 13:25:46,390 | INFO |   ✅ CIG:quarter 52 rows | 133 cols | 2013→2025
+2026-02-21 13:25:58,901 | INFO |   ✅ CIG:year 13 rows | 129 cols | 2013→2025
+2026-02-21 13:25:58,903 | INFO | [132/1633 | 8.1%] Done: CIG
+2026-02-21 13:26:13,061 | INFO |   ✅ CII:quarter 52 rows | 141 cols | 2013→2025
+2026-02-21 13:26:25,170 | INFO |   ✅ CII:year 13 rows | 140 cols | 2013→2025
+2026-02-21 13:26:25,172 | INFO | [133/1633 | 8.1%] Done: CII
+2026-02-21 13:26:33,350 | WARNING |     [CIP:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17fb9b310 state=finished raised KeyError>]. Retrying after 2.2s...
+2026-02-21 13:26:46,221 | WARNING |     [CIP:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f27f1d0 state=finished raised KeyError>]. Retrying after 8.6s...
+2026-02-21 13:27:02,657 | WARNING |   SKIP CIP:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f6a6dd0 state=finished raised KeyError>]
+2026-02-21 13:27:15,303 | INFO |   ✅ CIP:year 12 rows | 125 cols | 2013→2024
+2026-02-21 13:27:15,303 | INFO | [134/1633 | 8.2%] Done: CIP
+2026-02-21 13:27:28,685 | INFO |   ✅ CJC:quarter 54 rows | 115 cols | 2008→2025
+2026-02-21 13:27:41,954 | INFO |   ✅ CJC:year 13 rows | 115 cols | 2013→2025
+2026-02-21 13:27:41,955 | INFO | [135/1633 | 8.3%] Done: CJC
+2026-02-21 13:27:50,399 | WARNING |     [CK8:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x3062c8610 state=finished raised KeyError>]. Retrying after 2.4s...
+2026-02-21 13:27:59,885 | WARNING |     [CK8:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f4e0150 state=finished raised KeyError>]. Retrying after 5.3s...
+2026-02-21 13:28:16,054 | WARNING |   SKIP CK8:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f6803d0 state=finished raised KeyError>]
+2026-02-21 13:28:28,708 | INFO |   ✅ CK8:year 6 rows | 102 cols | 2013→2024
+2026-02-21 13:28:28,709 | INFO | [136/1633 | 8.3%] Done: CK8
+2026-02-21 13:28:37,549 | WARNING |     [CKA:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17fd9b190 state=finished raised KeyError>]. Retrying after 2.8s...
+2026-02-21 13:28:51,762 | WARNING |     [CKA:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17fd98890 state=finished raised KeyError>]. Retrying after 9.8s...
+2026-02-21 13:29:11,152 | WARNING |   SKIP CKA:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f602ed0 state=finished raised KeyError>]
+2026-02-21 13:29:24,375 | INFO |   ✅ CKA:year 9 rows | 126 cols | 2016→2024
+2026-02-21 13:29:24,376 | INFO | [137/1633 | 8.4%] Done: CKA
+2026-02-21 13:29:36,973 | INFO |   ✅ CKD:quarter 44 rows | 126 cols | 2015→2025
+2026-02-21 13:29:49,764 | INFO |   ✅ CKD:year 12 rows | 121 cols | 2014→2025
+2026-02-21 13:29:49,765 | INFO | [138/1633 | 8.5%] Done: CKD
+2026-02-21 13:30:02,159 | INFO |   ✅ CKG:quarter 40 rows | 135 cols | 2015→2025
+2026-02-21 13:30:14,797 | INFO |   ✅ CKG:year 13 rows | 133 cols | 2013→2025
+2026-02-21 13:30:14,799 | INFO | [139/1633 | 8.5%] Done: CKG
+2026-02-21 13:30:27,889 | INFO |   ✅ CKV:quarter 52 rows | 112 cols | 2013→2025
+2026-02-21 13:30:39,255 | INFO |   ✅ CKV:year 13 rows | 113 cols | 2013→2025
+2026-02-21 13:30:39,256 | INFO | [140/1633 | 8.6%] Done: CKV
+2026-02-21 13:30:52,938 | INFO |   ✅ CLC:quarter 52 rows | 126 cols | 2013→2025
+2026-02-21 13:31:05,897 | INFO |   ✅ CLC:year 13 rows | 125 cols | 2013→2025
+2026-02-21 13:31:05,898 | INFO | [141/1633 | 8.6%] Done: CLC
+2026-02-21 13:31:19,099 | INFO |   ✅ CLG:quarter 29 rows | 134 cols | 2013→2020
+2026-02-21 13:31:31,806 | INFO |   ✅ CLG:year 7 rows | 134 cols | 2013→2019
+2026-02-21 13:31:31,807 | INFO | [142/1633 | 8.7%] Done: CLG
+2026-02-21 13:31:43,996 | INFO |   ✅ CLH:quarter 40 rows | 121 cols | 2016→2025
+2026-02-21 13:31:59,273 | INFO |   ✅ CLH:year 13 rows | 122 cols | 2013→2025
+2026-02-21 13:31:59,276 | INFO | [143/1633 | 8.8%] Done: CLH
+2026-02-21 13:32:13,864 | INFO |   ✅ CLL:quarter 52 rows | 129 cols | 2013→2025
+2026-02-21 13:32:26,654 | INFO |   ✅ CLL:year 13 rows | 128 cols | 2013→2025
+2026-02-21 13:32:26,655 | INFO | [144/1633 | 8.8%] Done: CLL
+2026-02-21 13:32:39,351 | INFO |   ✅ CLM:quarter 42 rows | 122 cols | 2015→2025
+2026-02-21 13:32:52,587 | INFO |   ✅ CLM:year 13 rows | 122 cols | 2013→2025
+2026-02-21 13:32:52,589 | INFO | [145/1633 | 8.9%] Done: CLM
+2026-02-21 13:33:05,000 | INFO |   ✅ CLW:quarter 52 rows | 126 cols | 2013→2025
+2026-02-21 13:33:18,127 | INFO |   ✅ CLW:year 13 rows | 123 cols | 2013→2025
+2026-02-21 13:33:18,128 | INFO | [146/1633 | 8.9%] Done: CLW
+2026-02-21 13:33:31,339 | INFO |   ✅ CLX:quarter 38 rows | 131 cols | 2015→2025
+2026-02-21 13:33:43,918 | INFO |   ✅ CLX:year 13 rows | 134 cols | 2013→2025
+2026-02-21 13:33:44,018 | INFO |   💾 Flushed 51 frames → chunk_0008.parquet (1,205 rows)
+2026-02-21 13:33:44,018 | INFO | [147/1633 | 9.0%] Done: CLX
+2026-02-21 13:33:58,114 | INFO |   ✅ CMC:quarter 53 rows | 112 cols | 2008→2025
+2026-02-21 13:34:10,255 | INFO |   ✅ CMC:year 13 rows | 112 cols | 2013→2025
+2026-02-21 13:34:10,256 | INFO | [148/1633 | 9.1%] Done: CMC
+2026-02-21 13:34:23,148 | INFO |   ✅ CMD:quarter 40 rows | 125 cols | 2015→2025
+2026-02-21 13:34:35,706 | INFO |   ✅ CMD:year 13 rows | 127 cols | 2013→2025
+2026-02-21 13:34:35,707 | INFO | [149/1633 | 9.1%] Done: CMD
+2026-02-21 13:34:49,580 | INFO |   ✅ CMF:quarter 35 rows | 120 cols | 2015→2025
+2026-02-21 13:35:02,980 | INFO |   ✅ CMF:year 13 rows | 124 cols | 2013→2025
+2026-02-21 13:35:02,981 | INFO | [150/1633 | 9.2%] Done: CMF
+2026-02-21 13:35:15,870 | INFO |   ✅ CMG:quarter 52 rows | 140 cols | 2013→2025
+2026-02-21 13:35:28,254 | INFO |   ✅ CMG:year 13 rows | 139 cols | 2013→2025
+2026-02-21 13:35:28,255 | INFO | [151/1633 | 9.2%] Done: CMG
+2026-02-21 13:35:41,789 | INFO |   ✅ CMI:quarter 51 rows | 115 cols | 2013→2025
+2026-02-21 13:35:54,525 | INFO |   ✅ CMI:year 13 rows | 125 cols | 2013→2025
+2026-02-21 13:35:54,528 | INFO | [152/1633 | 9.3%] Done: CMI
+2026-02-21 13:36:02,936 | WARNING |     [CMK:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17fc84710 state=finished raised KeyError>]. Retrying after 2.5s...
+2026-02-21 13:36:15,267 | WARNING |     [CMK:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17fc87550 state=finished raised KeyError>]. Retrying after 8.1s...
+2026-02-21 13:36:37,525 | WARNING |   SKIP CMK:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f4deb90 state=finished raised KeyError>]
+2026-02-21 13:36:50,736 | INFO |   ✅ CMK:year 12 rows | 116 cols | 2013→2024
+2026-02-21 13:36:50,737 | INFO | [153/1633 | 9.4%] Done: CMK
+2026-02-21 13:37:04,147 | INFO |   ✅ CMM:quarter 14 rows | 110 cols | 2022→2025
+2026-02-21 13:37:16,776 | INFO |   ✅ CMM:year 5 rows | 127 cols | 2021→2025
+2026-02-21 13:37:16,777 | INFO | [154/1633 | 9.4%] Done: CMM
+2026-02-21 13:37:29,158 | INFO |   ✅ CMN:quarter 5 rows | 99 cols | 2017→2025
+2026-02-21 13:37:42,794 | INFO |   ✅ CMN:year 12 rows | 124 cols | 2013→2024
+2026-02-21 13:37:42,795 | INFO | [155/1633 | 9.5%] Done: CMN
+2026-02-21 13:37:56,220 | INFO |   ✅ CMP:quarter 40 rows | 120 cols | 2016→2025
+2026-02-21 13:38:08,703 | INFO |   ✅ CMP:year 12 rows | 122 cols | 2013→2025
+2026-02-21 13:38:08,705 | INFO | [156/1633 | 9.6%] Done: CMP
+2026-02-21 13:38:22,176 | INFO |   ✅ CMS:quarter 52 rows | 124 cols | 2013→2025
+2026-02-21 13:38:35,750 | INFO |   ✅ CMS:year 13 rows | 133 cols | 2013→2025
+2026-02-21 13:38:35,752 | INFO | [157/1633 | 9.6%] Done: CMS
+2026-02-21 13:38:49,483 | INFO |   ✅ CMT:quarter 24 rows | 123 cols | 2013→2018
+2026-02-21 13:39:02,812 | INFO |   ✅ CMT:year 12 rows | 125 cols | 2013→2024
+2026-02-21 13:39:02,813 | INFO | [158/1633 | 9.7%] Done: CMT
+2026-02-21 13:39:16,114 | INFO |   ✅ CMV:quarter 52 rows | 130 cols | 2013→2025
+2026-02-21 13:39:29,500 | INFO |   ✅ CMV:year 13 rows | 130 cols | 2013→2025
+2026-02-21 13:39:29,501 | INFO | [159/1633 | 9.7%] Done: CMV
+2026-02-21 13:39:43,230 | INFO |   ✅ CMW:quarter 37 rows | 105 cols | 2015→2025
+2026-02-21 13:39:56,396 | INFO |   ✅ CMW:year 10 rows | 105 cols | 2016→2025
+2026-02-21 13:39:56,397 | INFO | [160/1633 | 9.8%] Done: CMW
+2026-02-21 13:40:09,352 | INFO |   ✅ CMX:quarter 52 rows | 121 cols | 2013→2025
+2026-02-21 13:40:21,033 | INFO |   ✅ CMX:year 13 rows | 133 cols | 2013→2025
+2026-02-21 13:40:21,034 | INFO | [161/1633 | 9.9%] Done: CMX
+2026-02-21 13:40:29,832 | WARNING |     [CNA:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x306310f50 state=finished raised KeyError>]. Retrying after 2.7s...
+2026-02-21 13:40:42,674 | WARNING |     [CNA:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f28b1d0 state=finished raised KeyError>]. Retrying after 8.4s...
+2026-02-21 13:41:05,713 | WARNING |   SKIP CNA:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17fe99090 state=finished raised KeyError>]
+2026-02-21 13:41:19,092 | INFO |   ✅ CNA:year 5 rows | 117 cols | 2020→2024
+2026-02-21 13:41:19,093 | INFO | [162/1633 | 9.9%] Done: CNA
+2026-02-21 13:41:27,408 | WARNING |     [CNC:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17fae6950 state=finished raised KeyError>]. Retrying after 2.3s...
+2026-02-21 13:41:40,630 | WARNING |     [CNC:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17fee2f50 state=finished raised KeyError>]. Retrying after 9.0s...
+2026-02-21 13:41:59,392 | WARNING |   SKIP CNC:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f47a210 state=finished raised KeyError>]
+2026-02-21 13:42:12,906 | INFO |   ✅ CNC:year 12 rows | 119 cols | 2013→2024
+2026-02-21 13:42:12,908 | INFO | [163/1633 | 10.0%] Done: CNC
+2026-02-21 13:42:25,517 | INFO |   ✅ CNG:quarter 52 rows | 129 cols | 2013→2025
+2026-02-21 13:42:38,684 | INFO |   ✅ CNG:year 13 rows | 127 cols | 2013→2025
+2026-02-21 13:42:38,685 | INFO | [164/1633 | 10.0%] Done: CNG
+2026-02-21 13:42:46,980 | WARNING |     [CNN:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17fc87550 state=finished raised KeyError>]. Retrying after 2.3s...
+2026-02-21 13:43:00,837 | WARNING |     [CNN:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f4503d0 state=finished raised KeyError>]. Retrying after 9.6s...
+2026-02-21 13:43:20,983 | WARNING |   SKIP CNN:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f452610 state=finished raised KeyError>]
+2026-02-21 13:43:34,176 | INFO |   ✅ CNN:year 12 rows | 127 cols | 2013→2024
+2026-02-21 13:43:34,177 | INFO | [165/1633 | 10.1%] Done: CNN
+2026-02-21 13:43:47,179 | INFO |   ✅ CNT:quarter 24 rows | 134 cols | 2013→2025
+2026-02-21 13:44:00,632 | INFO |   ✅ CNT:year 13 rows | 137 cols | 2013→2025
+2026-02-21 13:44:00,632 | INFO | [166/1633 | 10.2%] Done: CNT
+2026-02-21 13:44:14,797 | INFO |   ✅ COM:quarter 52 rows | 124 cols | 2013→2025
+2026-02-21 13:44:27,648 | INFO |   ✅ COM:year 13 rows | 123 cols | 2013→2025
+2026-02-21 13:44:27,650 | INFO | [167/1633 | 10.2%] Done: COM
+2026-02-21 13:44:41,038 | INFO |   ✅ CPA:quarter 25 rows | 116 cols | 2019→2025
+2026-02-21 13:44:54,152 | INFO |   ✅ CPA:year 13 rows | 123 cols | 2013→2025
+2026-02-21 13:44:54,153 | INFO | [168/1633 | 10.3%] Done: CPA
+2026-02-21 13:45:07,911 | INFO |   ✅ CPC:quarter 52 rows | 106 cols | 2013→2025
+2026-02-21 13:45:20,690 | INFO |   ✅ CPC:year 13 rows | 107 cols | 2013→2025
+2026-02-21 13:45:20,691 | INFO | [169/1633 | 10.3%] Done: CPC
+2026-02-21 13:45:33,384 | INFO |   ✅ CPH:quarter 2 rows | 83 cols | 2016→2016
+2026-02-21 13:45:46,712 | INFO |   ✅ CPH:year 10 rows | 117 cols | 2015→2024
+2026-02-21 13:45:46,713 | INFO | [170/1633 | 10.4%] Done: CPH
+2026-02-21 13:45:59,921 | INFO |   ✅ CPI:quarter 41 rows | 119 cols | 2015→2025
+2026-02-21 13:46:13,447 | INFO |   ✅ CPI:year 12 rows | 121 cols | 2013→2025
+2026-02-21 13:46:13,448 | INFO | [171/1633 | 10.5%] Done: CPI
+2026-02-21 13:46:26,304 | INFO |   ✅ CQN:quarter 42 rows | 104 cols | 2015→2025
+2026-02-21 13:46:39,296 | INFO |   ✅ CQN:year 12 rows | 107 cols | 2014→2025
+2026-02-21 13:46:39,297 | INFO | [172/1633 | 10.5%] Done: CQN
+2026-02-21 13:46:51,564 | INFO |   ✅ CQT:quarter 36 rows | 113 cols | 2017→2025
+2026-02-21 13:47:03,567 | INFO |   ✅ CQT:year 12 rows | 114 cols | 2014→2025
+2026-02-21 13:47:03,568 | INFO | [173/1633 | 10.6%] Done: CQT
+2026-02-21 13:47:16,386 | INFO |   ✅ CRC:quarter 36 rows | 133 cols | 2017→2025
+2026-02-21 13:47:29,073 | INFO |   ✅ CRC:year 11 rows | 132 cols | 2015→2025
+2026-02-21 13:47:29,196 | INFO |   💾 Flushed 50 frames → chunk_0009.parquet (1,187 rows)
+2026-02-21 13:47:29,198 | INFO | [174/1633 | 10.7%] Done: CRC
+2026-02-21 13:47:42,997 | INFO |   ✅ CRE:quarter 32 rows | 130 cols | 2017→2025
+2026-02-21 13:47:56,398 | INFO |   ✅ CRE:year 10 rows | 131 cols | 2016→2025
+2026-02-21 13:47:56,399 | INFO | [175/1633 | 10.7%] Done: CRE
+2026-02-21 13:48:10,603 | INFO |   ✅ CRV:quarter 18 rows | 123 cols | 2021→2025
+2026-02-21 13:48:22,634 | INFO |   ✅ CRV:year 4 rows | 123 cols | 2022→2025
+2026-02-21 13:48:22,636 | INFO | [176/1633 | 10.8%] Done: CRV
+2026-02-21 13:48:35,560 | INFO |   ✅ CSC:quarter 52 rows | 134 cols | 2013→2025
+2026-02-21 13:48:47,803 | INFO |   ✅ CSC:year 13 rows | 136 cols | 2013→2025
+2026-02-21 13:48:47,804 | INFO | [177/1633 | 10.8%] Done: CSC
+2026-02-21 13:49:00,279 | INFO |   ✅ CSI:quarter 52 rows | 113 cols | 2013→2025
+2026-02-21 13:49:13,727 | INFO |   ✅ CSI:year 13 rows | 107 cols | 2013→2025
+2026-02-21 13:49:13,728 | INFO | [178/1633 | 10.9%] Done: CSI
+2026-02-21 13:49:26,429 | INFO |   ✅ CSM:quarter 52 rows | 129 cols | 2013→2025
+2026-02-21 13:49:38,890 | INFO |   ✅ CSM:year 13 rows | 129 cols | 2013→2025
+2026-02-21 13:49:38,890 | INFO | [179/1633 | 11.0%] Done: CSM
+2026-02-21 13:49:52,402 | INFO |   ✅ CST:quarter 27 rows | 117 cols | 2019→2025
+2026-02-21 13:50:04,779 | INFO |   ✅ CST:year 7 rows | 117 cols | 2019→2025
+2026-02-21 13:50:04,780 | INFO | [180/1633 | 11.0%] Done: CST
+2026-02-21 13:50:18,127 | INFO |   ✅ CSV:quarter 46 rows | 128 cols | 2014→2025
+2026-02-21 13:50:30,130 | INFO |   ✅ CSV:year 13 rows | 128 cols | 2013→2025
+2026-02-21 13:50:30,130 | INFO | [181/1633 | 11.1%] Done: CSV
+2026-02-21 13:50:38,878 | WARNING |     [CT3:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f28a5d0 state=finished raised KeyError>]. Retrying after 2.7s...
+2026-02-21 13:50:53,170 | WARNING |     [CT3:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f289dd0 state=finished raised KeyError>]. Retrying after 10.0s...
+2026-02-21 13:51:12,079 | WARNING |   SKIP CT3:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f289f10 state=finished raised KeyError>]
+2026-02-21 13:51:25,415 | INFO |   ✅ CT3:year 12 rows | 129 cols | 2013→2024
+2026-02-21 13:51:25,416 | INFO | [182/1633 | 11.1%] Done: CT3
+2026-02-21 13:51:27,120 | WARNING |   SKIP CT5:quarter — 'NoneType' object is not subscriptable
+2026-02-21 13:51:28,775 | WARNING |   SKIP CT5:year — 'NoneType' object is not subscriptable
+2026-02-21 13:51:28,778 | INFO | [183/1633 | 11.2%] Done: CT5
+2026-02-21 13:51:42,807 | INFO |   ✅ CT6:quarter 46 rows | 112 cols | 2013→2025
+2026-02-21 13:51:54,869 | INFO |   ✅ CT6:year 12 rows | 123 cols | 2013→2024
+2026-02-21 13:51:54,870 | INFO | [184/1633 | 11.3%] Done: CT6
+2026-02-21 13:52:09,649 | INFO |   ✅ CTA:quarter 20 rows | 106 cols | 2013→2017
+2026-02-21 13:52:21,775 | INFO |   ✅ CTA:year 5 rows | 124 cols | 2013→2017
+2026-02-21 13:52:21,776 | INFO | [185/1633 | 11.3%] Done: CTA
+2026-02-21 13:52:35,566 | INFO |   ✅ CTB:quarter 54 rows | 129 cols | 2008→2025
+2026-02-21 13:52:48,554 | INFO |   ✅ CTB:year 13 rows | 126 cols | 2013→2025
+2026-02-21 13:52:48,555 | INFO | [186/1633 | 11.4%] Done: CTB
+2026-02-21 13:53:02,085 | INFO |   ✅ CTC:quarter 48 rows | 123 cols | 2013→2024
+2026-02-21 13:53:14,212 | INFO |   ✅ CTC:year 12 rows | 133 cols | 2013→2024
+2026-02-21 13:53:14,214 | INFO | [187/1633 | 11.5%] Done: CTC
+2026-02-21 13:53:27,570 | INFO |   ✅ CTD:quarter 52 rows | 139 cols | 2013→2025
+2026-02-21 13:53:40,140 | INFO |   ✅ CTD:year 13 rows | 138 cols | 2013→2025
+2026-02-21 13:53:40,141 | INFO | [188/1633 | 11.5%] Done: CTD
+2026-02-21 13:53:54,732 | INFO |   ✅ CTF:quarter 37 rows | 131 cols | 2016→2025
+2026-02-21 13:54:07,705 | INFO |   ✅ CTF:year 12 rows | 131 cols | 2014→2025
+2026-02-21 13:54:07,706 | INFO | [189/1633 | 11.6%] Done: CTF
+2026-02-21 13:54:20,099 | INFO |   ✅ CTG:quarter 55 rows | 112 cols | 2009→2025
+2026-02-21 13:54:32,673 | INFO |   ✅ CTG:year 13 rows | 109 cols | 2013→2025
+2026-02-21 13:54:32,676 | INFO | [190/1633 | 11.6%] Done: CTG
+2026-02-21 13:54:45,257 | INFO |   ✅ CTI:quarter 52 rows | 136 cols | 2013→2025
+2026-02-21 13:54:58,889 | INFO |   ✅ CTI:year 13 rows | 136 cols | 2013→2025
+2026-02-21 13:54:58,891 | INFO | [191/1633 | 11.7%] Done: CTI
+2026-02-21 13:55:11,473 | INFO |   ✅ CTN:quarter 14 rows | 104 cols | 2008→2016
+2026-02-21 13:55:24,156 | INFO |   ✅ CTN:year 4 rows | 124 cols | 2013→2016
+2026-02-21 13:55:24,157 | INFO | [192/1633 | 11.8%] Done: CTN
+2026-02-21 13:55:37,600 | INFO |   ✅ CTP:quarter 40 rows | 125 cols | 2016→2025
+2026-02-21 13:55:50,563 | INFO |   ✅ CTP:year 12 rows | 126 cols | 2014→2025
+2026-02-21 13:55:50,567 | INFO | [193/1633 | 11.8%] Done: CTP
+2026-02-21 13:56:04,343 | INFO |   ✅ CTR:quarter 52 rows | 126 cols | 2013→2025
+2026-02-21 13:56:17,094 | INFO |   ✅ CTR:year 13 rows | 126 cols | 2013→2025
+2026-02-21 13:56:17,096 | INFO | [194/1633 | 11.9%] Done: CTR
+2026-02-21 13:56:29,794 | INFO |   ✅ CTS:quarter 52 rows | 129 cols | 2013→2025
+2026-02-21 13:56:42,788 | INFO |   ✅ CTS:year 13 rows | 126 cols | 2013→2025
+2026-02-21 13:56:42,790 | INFO | [195/1633 | 11.9%] Done: CTS
+2026-02-21 13:56:55,910 | INFO |   ✅ CTT:quarter 45 rows | 122 cols | 2014→2025
+2026-02-21 13:57:07,982 | INFO |   ✅ CTT:year 13 rows | 120 cols | 2013→2025
+2026-02-21 13:57:07,984 | INFO | [196/1633 | 12.0%] Done: CTT
+2026-02-21 13:57:21,615 | INFO |   ✅ CTW:quarter 40 rows | 126 cols | 2016→2025
+2026-02-21 13:57:34,940 | INFO |   ✅ CTW:year 12 rows | 131 cols | 2014→2025
+2026-02-21 13:57:34,941 | INFO | [197/1633 | 12.1%] Done: CTW
+2026-02-21 13:57:47,815 | INFO |   ✅ CTX:quarter 52 rows | 137 cols | 2013→2025
+2026-02-21 13:58:01,253 | INFO |   ✅ CTX:year 13 rows | 133 cols | 2013→2025
+2026-02-21 13:58:01,254 | INFO | [198/1633 | 12.1%] Done: CTX
+2026-02-21 13:58:14,388 | INFO |   ✅ CVN:quarter 53 rows | 128 cols | 2010→2025
+2026-02-21 13:58:27,261 | INFO |   ✅ CVN:year 13 rows | 131 cols | 2013→2025
+2026-02-21 13:58:27,262 | INFO | [199/1633 | 12.2%] Done: CVN
+2026-02-21 13:58:35,999 | WARNING |     [CVP:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f458b90 state=finished raised KeyError>]. Retrying after 2.7s...
+2026-02-21 13:58:46,412 | WARNING |     [CVP:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f683d10 state=finished raised KeyError>]. Retrying after 6.2s...
+2026-02-21 13:59:06,177 | WARNING |   SKIP CVP:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f6aea10 state=finished raised KeyError>]
+2026-02-21 13:59:18,220 | INFO |   ✅ CVP:year 2 rows | 97 cols | 2021→2022
+2026-02-21 13:59:18,222 | INFO | [200/1633 | 12.2%] Done: CVP
+2026-02-21 13:59:32,020 | INFO |   ✅ CVT:quarter 52 rows | 130 cols | 2013→2025
+2026-02-21 13:59:44,622 | INFO |   ✅ CVT:year 13 rows | 128 cols | 2013→2025
+2026-02-21 13:59:44,868 | INFO |   💾 Flushed 50 frames → chunk_0010.parquet (1,329 rows)
+2026-02-21 13:59:44,869 | INFO | [201/1633 | 12.3%] Done: CVT
+2026-02-21 13:59:58,906 | INFO |   ✅ CX8:quarter 52 rows | 109 cols | 2013→2025
+2026-02-21 14:00:12,399 | INFO |   ✅ CX8:year 13 rows | 106 cols | 2013→2025
+2026-02-21 14:00:12,400 | INFO | [202/1633 | 12.4%] Done: CX8
+2026-02-21 14:00:24,163 | INFO |   ✅ CYC:quarter 22 rows | 112 cols | 2013→2018
+2026-02-21 14:00:37,081 | INFO |   ✅ CYC:year 12 rows | 115 cols | 2013→2024
+2026-02-21 14:00:37,083 | INFO | [203/1633 | 12.4%] Done: CYC
+2026-02-21 14:00:49,324 | INFO |   ✅ D11:quarter 52 rows | 126 cols | 2013→2025
+2026-02-21 14:01:03,291 | INFO |   ✅ D11:year 13 rows | 124 cols | 2013→2025
+2026-02-21 14:01:03,292 | INFO | [204/1633 | 12.5%] Done: D11
+2026-02-21 14:01:11,497 | WARNING |     [D17:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x3060c7810 state=finished raised KeyError>]. Retrying after 2.2s...
+2026-02-21 14:01:21,447 | WARNING |     [D17:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x3060c5cd0 state=finished raised KeyError>]. Retrying after 5.5s...
+2026-02-21 14:01:39,800 | WARNING |   SKIP D17:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17fe702d0 state=finished raised KeyError>]
+2026-02-21 14:01:52,771 | INFO |   ✅ D17:year 2 rows | 95 cols | 2022→2023
+2026-02-21 14:01:52,773 | INFO | [205/1633 | 12.6%] Done: D17
+2026-02-21 14:02:06,317 | INFO |   ✅ D2D:quarter 52 rows | 133 cols | 2013→2025
+2026-02-21 14:02:19,104 | INFO |   ✅ D2D:year 13 rows | 129 cols | 2013→2025
+2026-02-21 14:02:19,105 | INFO | [206/1633 | 12.6%] Done: D2D
+2026-02-21 14:02:32,850 | INFO |   ✅ DAC:quarter 14 rows | 118 cols | 2008→2022
+2026-02-21 14:02:45,030 | INFO |   ✅ DAC:year 13 rows | 117 cols | 2013→2025
+2026-02-21 14:02:45,030 | INFO | [207/1633 | 12.7%] Done: DAC
+2026-02-21 14:02:57,546 | INFO |   ✅ DAD:quarter 52 rows | 111 cols | 2013→2025
+2026-02-21 14:03:11,201 | INFO |   ✅ DAD:year 13 rows | 109 cols | 2013→2025
+2026-02-21 14:03:11,203 | INFO | [208/1633 | 12.7%] Done: DAD
+2026-02-21 14:03:24,636 | INFO |   ✅ DAE:quarter 53 rows | 117 cols | 2008→2025
+2026-02-21 14:03:38,267 | INFO |   ✅ DAE:year 13 rows | 111 cols | 2013→2025
+2026-02-21 14:03:38,268 | INFO | [209/1633 | 12.8%] Done: DAE
+2026-02-21 14:03:52,499 | INFO |   ✅ DAG:quarter 47 rows | 133 cols | 2013→2024
+2026-02-21 14:04:05,545 | INFO |   ✅ DAG:year 11 rows | 130 cols | 2013→2023
+2026-02-21 14:04:05,546 | INFO | [210/1633 | 12.9%] Done: DAG
+2026-02-21 14:04:18,642 | INFO |   ✅ DAH:quarter 39 rows | 130 cols | 2016→2025
+2026-02-21 14:04:30,899 | INFO |   ✅ DAH:year 13 rows | 131 cols | 2013→2025
+2026-02-21 14:04:30,902 | INFO | [211/1633 | 12.9%] Done: DAH
+2026-02-21 14:04:44,058 | INFO |   ✅ DAN:quarter 33 rows | 133 cols | 2017→2025
+2026-02-21 14:04:57,624 | INFO |   ✅ DAN:year 13 rows | 133 cols | 2013→2025
+2026-02-21 14:04:57,626 | INFO | [212/1633 | 13.0%] Done: DAN
+2026-02-21 14:05:06,046 | WARNING |     [DAR:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17fdbe010 state=finished raised KeyError>]. Retrying after 2.5s...
+2026-02-21 14:05:17,385 | WARNING |     [DAR:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f6e1650 state=finished raised KeyError>]. Retrying after 7.0s...
+2026-02-21 14:05:34,831 | WARNING |   SKIP DAR:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17fd82e10 state=finished raised KeyError>]
+2026-02-21 14:05:46,518 | INFO |   ✅ DAR:year 9 rows | 122 cols | 2013→2021
+2026-02-21 14:05:46,521 | INFO | [213/1633 | 13.0%] Done: DAR
+2026-02-21 14:05:54,764 | WARNING |     [DAS:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17fae4890 state=finished raised KeyError>]. Retrying after 2.2s...
+2026-02-21 14:06:06,710 | WARNING |     [DAS:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x3060b9a50 state=finished raised KeyError>]. Retrying after 7.7s...
+2026-02-21 14:06:30,090 | WARNING |   SKIP DAS:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17fe70290 state=finished raised KeyError>]
+2026-02-21 14:06:42,452 | INFO |   ✅ DAS:year 12 rows | 118 cols | 2013→2024
+2026-02-21 14:06:42,455 | INFO | [214/1633 | 13.1%] Done: DAS
+2026-02-21 14:06:54,862 | INFO |   ✅ DAT:quarter 42 rows | 131 cols | 2015→2025
+2026-02-21 14:07:07,016 | INFO |   ✅ DAT:year 13 rows | 129 cols | 2013→2025
+2026-02-21 14:07:07,017 | INFO | [215/1633 | 13.2%] Done: DAT
+2026-02-21 14:07:21,885 | INFO |   ✅ DBC:quarter 53 rows | 136 cols | 2009→2025
+2026-02-21 14:07:34,994 | INFO |   ✅ DBC:year 13 rows | 134 cols | 2013→2025
+2026-02-21 14:07:34,997 | INFO | [216/1633 | 13.2%] Done: DBC
+2026-02-21 14:07:51,409 | INFO |   ✅ DBD:quarter 44 rows | 130 cols | 2015→2025
+2026-02-21 14:08:04,767 | INFO |   ✅ DBD:year 13 rows | 131 cols | 2013→2025
+2026-02-21 14:08:04,769 | INFO | [217/1633 | 13.3%] Done: DBD
+2026-02-21 14:08:12,965 | WARNING |     [DBH:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f7656d0 state=finished raised KeyError>]. Retrying after 2.0s...
+2026-02-21 14:08:25,148 | WARNING |     [DBH:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f7661d0 state=finished raised KeyError>]. Retrying after 7.9s...
+2026-02-21 14:08:42,540 | WARNING |   SKIP DBH:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f422690 state=finished raised KeyError>]
+2026-02-21 14:08:55,382 | INFO |   ✅ DBH:year 7 rows | 102 cols | 2015→2021
+2026-02-21 14:08:55,383 | INFO | [218/1633 | 13.3%] Done: DBH
+2026-02-21 14:09:08,371 | INFO |   ✅ DBM:quarter 9 rows | 110 cols | 2013→2016
+2026-02-21 14:09:21,094 | INFO |   ✅ DBM:year 12 rows | 121 cols | 2013→2024
+2026-02-21 14:09:21,096 | INFO | [219/1633 | 13.4%] Done: DBM
+2026-02-21 14:09:34,417 | INFO |   ✅ DBT:quarter 52 rows | 139 cols | 2013→2025
+2026-02-21 14:09:48,866 | INFO |   ✅ DBT:year 13 rows | 137 cols | 2013→2025
+2026-02-21 14:09:48,869 | INFO | [220/1633 | 13.5%] Done: DBT
+2026-02-21 14:10:02,036 | INFO |   ✅ DBW:quarter 23 rows | 100 cols | 2017→2022
+2026-02-21 14:10:14,789 | INFO |   ✅ DBW:year 9 rows | 103 cols | 2013→2021
+2026-02-21 14:10:14,791 | INFO | [221/1633 | 13.5%] Done: DBW
+2026-02-21 14:10:27,571 | INFO |   ✅ DC1:quarter 2 rows | 55 cols | 2016→2016
+2026-02-21 14:10:41,209 | INFO |   ✅ DC1:year 12 rows | 119 cols | 2013→2024
+2026-02-21 14:10:41,211 | INFO | [222/1633 | 13.6%] Done: DC1
+2026-02-21 14:10:54,121 | INFO |   ✅ DC2:quarter 53 rows | 111 cols | 2010→2025
+2026-02-21 14:11:06,912 | INFO |   ✅ DC2:year 13 rows | 122 cols | 2013→2025
+2026-02-21 14:11:06,914 | INFO | [223/1633 | 13.7%] Done: DC2
+2026-02-21 14:11:19,052 | INFO |   ✅ DC4:quarter 52 rows | 132 cols | 2013→2025
+2026-02-21 14:11:33,114 | INFO |   ✅ DC4:year 13 rows | 129 cols | 2013→2025
+2026-02-21 14:11:33,115 | INFO | [224/1633 | 13.7%] Done: DC4
+2026-02-21 14:11:44,977 | INFO |   ✅ DCF:quarter 19 rows | 121 cols | 2021→2025
+2026-02-21 14:11:58,440 | INFO |   ✅ DCF:year 13 rows | 126 cols | 2013→2025
+2026-02-21 14:11:58,442 | INFO | [225/1633 | 13.8%] Done: DCF
+2026-02-21 14:12:07,054 | WARNING |     [DCG:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17fead250 state=finished raised KeyError>]. Retrying after 2.5s...
+2026-02-21 14:12:16,664 | WARNING |     [DCG:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17feac1d0 state=finished raised KeyError>]. Retrying after 5.3s...
+2026-02-21 14:12:32,232 | WARNING |   SKIP DCG:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17fc65090 state=finished raised KeyError>]
+2026-02-21 14:12:45,140 | INFO |   ✅ DCG:year 12 rows | 132 cols | 2013→2024
+2026-02-21 14:12:45,142 | INFO | [226/1633 | 13.8%] Done: DCG
+2026-02-21 14:12:53,451 | WARNING |     [DCH:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x17f6481d0 state=finished raised KeyError>]. Retrying after 2.3s...
+2026-02-21 14:13:07,315 | WARNING |     [DCH:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x17f613d90 state=finished raised KeyError>]. Retrying after 9.5s...
+2026-02-21 14:13:28,821 | WARNING |   SKIP DCH:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f7ea590 state=finished raised KeyError>]
+2026-02-21 14:13:42,805 | INFO |   ✅ DCH:year 10 rows | 102 cols | 2015→2024
+2026-02-21 14:13:42,808 | INFO | [227/1633 | 13.9%] Done: DCH
+2026-02-21 14:13:57,053 | INFO |   ✅ DCL:quarter 52 rows | 135 cols | 2013→2025
+2026-02-21 14:14:10,175 | INFO |   ✅ DCL:year 13 rows | 134 cols | 2013→2025
+2026-02-21 14:14:10,177 | INFO | [228/1633 | 14.0%] Done: DCL
+2026-02-21 14:14:23,171 | INFO |   ✅ DCM:quarter 44 rows | 129 cols | 2015→2025
+2026-02-21 14:14:34,945 | INFO |   ✅ DCM:year 13 rows | 129 cols | 2013→2025
+2026-02-21 14:14:35,353 | INFO |   💾 Flushed 50 frames → chunk_0011.parquet (1,190 rows)
+2026-02-21 14:14:35,355 | INFO | [229/1633 | 14.0%] Done: DCM
+2026-02-21 14:14:49,388 | INFO |   ✅ DCR:quarter 1 rows | 72 cols | 2016→2016
+2026-02-21 14:15:03,756 | INFO |   ✅ DCR:year 12 rows | 126 cols | 2013→2024
+2026-02-21 14:15:03,758 | INFO | [230/1633 | 14.1%] Done: DCR
