@@ -1048,7 +1048,7 @@ export default function DailyTrackingPage() {
                                             <tr style={{ height: '10px' }}><td colSpan={sentimentHeatmap.dates.length + 1}></td></tr>
 
                                             {/* Summary Row */}
-                                            <tr className="summary-row" style={{ borderTop: '2px solid rgba(255,255,255,0.2)' }}>
+                                            <tr className="summary-row">
                                                 <td className="broker-cell" style={{ color: '#fff', borderRight: '1px solid rgba(255,255,255,0.1)', lineHeight: '1.2' }}>
                                                     Summary
                                                 </td>
