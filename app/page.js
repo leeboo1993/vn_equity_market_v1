@@ -1044,6 +1044,9 @@ export default function DailyTrackingPage() {
                                                 </tr>
                                             ))}
 
+                                            {/* Spacer Row */}
+                                            <tr style={{ height: '10px' }}><td colSpan={sentimentHeatmap.dates.length + 1}></td></tr>
+
                                             {/* Summary Row */}
                                             <tr className="summary-row" style={{ borderTop: '2px solid rgba(255,255,255,0.2)' }}>
                                                 <td className="broker-cell" style={{ color: '#fff', borderRight: '1px solid rgba(255,255,255,0.1)', lineHeight: '1.2' }}>
@@ -1089,11 +1092,8 @@ export default function DailyTrackingPage() {
                                                 })}
                                             </tr>
 
-                                            {/* Spacer Row */}
-                                            <tr style={{ height: '10px' }}><td colSpan={sentimentHeatmap.dates.length + 1}></td></tr>
-
                                             {/* Comparison Row: VNINDEX T+1 (At Bottom) */}
-                                            <tr className="comparison-row" style={{ borderTop: '2px dotted rgba(255,255,255,0.2)' }}>
+                                            <tr className="comparison-row" style={{ borderTop: 'none' }}>
                                                 <td className="broker-cell" style={{ color: '#fff', borderRight: '1px solid rgba(255,255,255,0.1)', lineHeight: '1.2' }}>
                                                     VNI (+1)
                                                 </td>
@@ -1135,7 +1135,7 @@ export default function DailyTrackingPage() {
                                         </tbody>
                                     </table>
                                     <div style={{ fontSize: '8px', color: '#888', marginTop: '8px', textAlign: 'left', fontStyle: 'normal' }}>
-                                        * Summary tally is: Positive/Neutral/Negative. Accuracy is evaluated by comparing the Dominant sentiment to the VNI (+1) return.<br />
+                                        * Summary: Positive/Neutral/Negative. Accuracy is evaluated by comparing the Dominant sentiment to the VNI (+1) return.<br />
                                         * VNI (+1) Performance: Green (&gt; +0.25%), Red (&lt; -0.25%), Neutral (+/- 0.25%)
                                     </div>
                                 </>
