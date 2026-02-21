@@ -774,6 +774,7 @@ body {
   padding: 2px 4px;
   text-align: center;
   border: none;
+  border-bottom: 1px solid #222;
   font-size: 9.5px;
   /* Slightly smaller for compactness */
 }
