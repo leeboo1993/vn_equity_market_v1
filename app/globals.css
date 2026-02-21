@@ -773,7 +773,7 @@ body {
 .heatmap-table td {
   padding: 2px 4px;
   text-align: center;
-  border: 1px solid #222;
+  border: none;
   font-size: 9.5px;
   /* Slightly smaller for compactness */
 }

@@ -1201,3 +1201,28 @@
 2026-02-21 14:22:20,966 | INFO |   ✅ DHB:year 13 rows | 133 cols | 2013→2025
 2026-02-21 14:22:20,967 | INFO | [246/1633 | 15.1%] Done: DHB
 2026-02-21 14:22:34,478 | INFO |   ✅ DHC:quarter 52 rows | 117 cols | 2013→2025
+2026-02-21 14:22:46,962 | INFO |   ✅ DHC:year 13 rows | 129 cols | 2013→2025
+2026-02-21 14:22:46,967 | INFO | [247/1633 | 15.1%] Done: DHC
+2026-02-21 14:22:59,125 | INFO |   ✅ DHD:quarter 14 rows | 117 cols | 2022→2025
+2026-02-21 14:23:11,704 | INFO |   ✅ DHD:year 13 rows | 122 cols | 2013→2025
+2026-02-21 14:23:11,706 | INFO | [248/1633 | 15.2%] Done: DHD
+2026-02-21 14:23:25,381 | INFO |   ✅ DHG:quarter 52 rows | 137 cols | 2013→2025
+2026-02-21 14:23:38,245 | INFO |   ✅ DHG:year 13 rows | 136 cols | 2013→2025
+2026-02-21 14:23:38,246 | INFO | [249/1633 | 15.2%] Done: DHG
+2026-02-21 14:23:51,069 | INFO |   ✅ DHM:quarter 52 rows | 131 cols | 2013→2025
+2026-02-21 14:24:04,121 | INFO |   ✅ DHM:year 13 rows | 129 cols | 2013→2025
+2026-02-21 14:24:04,121 | INFO | [250/1633 | 15.3%] Done: DHM
+2026-02-21 14:24:12,349 | WARNING |     [DHN:quarter] balance_sheet rate-limit/error (attempt 1/3): RetryError[<Future at 0x306248210 state=finished raised KeyError>]. Retrying after 2.1s...
+2026-02-21 14:24:24,608 | WARNING |     [DHN:quarter] balance_sheet rate-limit/error (attempt 2/3): RetryError[<Future at 0x30624afd0 state=finished raised KeyError>]. Retrying after 8.0s...
+2026-02-21 14:24:46,955 | WARNING |   SKIP DHN:quarter — Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f6813d0 state=finished raised KeyError>]
+2026-02-21 14:24:58,782 | INFO |   ✅ DHN:year 11 rows | 95 cols | 2014→2024
+2026-02-21 14:24:58,785 | INFO | [251/1633 | 15.4%] Done: DHN
+2026-02-21 14:25:11,844 | INFO |   ✅ DHP:quarter 52 rows | 113 cols | 2013→2025
+2026-02-21 14:25:24,337 | INFO |   ✅ DHP:year 13 rows | 110 cols | 2013→2025
+2026-02-21 14:25:24,338 | INFO | [252/1633 | 15.4%] Done: DHP
+2026-02-21 14:25:37,371 | INFO |   ✅ DHT:quarter 52 rows | 135 cols | 2013→2025
+2026-02-21 14:25:50,665 | INFO |   ✅ DHT:year 13 rows | 134 cols | 2013→2025
+2026-02-21 14:25:50,667 | INFO | [253/1633 | 15.5%] Done: DHT
+2026-02-21 14:26:04,131 | INFO |   ✅ DIC:quarter 51 rows | 122 cols | 2013→2025
+2026-02-21 14:26:16,992 | INFO |   ✅ DIC:year 12 rows | 133 cols | 2013→2024
+2026-02-21 14:26:16,993 | INFO | [254/1633 | 15.6%] Done: DIC

@@ -3307,3 +3307,4 @@
 2026-02-21T14:12:32.234603 | DCG:quarter | Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17fc65090 state=finished raised KeyError>]
 2026-02-21T14:13:28.823888 | DCH:quarter | Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f7ea590 state=finished raised KeyError>]
 2026-02-21T14:17:52.000908 | DDH:quarter | Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f288710 state=finished raised KeyError>]
+2026-02-21T14:24:46.957118 | DHN:quarter | Failed to fetch balance_sheet after 3 attempts: RetryError[<Future at 0x17f6813d0 state=finished raised KeyError>]
