@@ -423,8 +423,15 @@ export default function DailyTrackingPage() {
         // uniqueDates is descending (Newest first).
         const dates = uniqueDates.slice(0, 14).reverse();
 
+        // Filter brokers: only show those that have data on ANY of the displayed dates
+        const activeBrokers = uniqueBrokers.filter(broker => {
+            return dates.some(date =>
+                allReports.some(r => r.broker === broker && r.info_of_report?.date_of_issue === date)
+            );
+        });
+
         // 1. Build broker data
-        uniqueBrokers.forEach(broker => {
+        activeBrokers.forEach(broker => {
             heatmap[broker] = {};
             dates.forEach((date, i) => {
                 const report = allReports.find(r => r.broker === broker && r.info_of_report?.date_of_issue === date);
@@ -479,7 +486,7 @@ export default function DailyTrackingPage() {
             }
         });
 
-        return { brokers: uniqueBrokers, dates, data: heatmap, actuals };
+        return { brokers: activeBrokers, dates, data: heatmap, actuals };
 
     }, [allReports, uniqueBrokers, uniqueDates]);
 
@@ -903,83 +910,89 @@ export default function DailyTrackingPage() {
                             {isLoading ? (
                                 <div className="placeholder-text">Loading...</div>
                             ) : (
-                                <table className="heatmap-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Broker</th>
-                                            {sentimentHeatmap.dates.map(d => (
-                                                <th key={d}>{formatDateDisplay(d).slice(0, 5)}</th>
+                                <>
+                                    <table className="heatmap-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Broker</th>
+                                                {sentimentHeatmap.dates.map(d => (
+                                                    <th key={d}>{formatDateDisplay(d).slice(0, 5)}</th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {sentimentHeatmap.brokers.map(broker => (
+                                                <tr key={broker}>
+                                                    <td className="broker-cell">{broker.toUpperCase()}</td>
+                                                    {sentimentHeatmap.dates.map(d => {
+                                                        const cellData = sentimentHeatmap.data[broker]?.[d];
+                                                        return (
+                                                            <td
+                                                                key={d}
+                                                                className="heatmap-cell"
+                                                                style={{
+                                                                    backgroundColor: getSentimentColor(cellData?.sentiment),
+                                                                }}
+                                                                title={cellData?.sentiment || 'No data'}
+                                                            >
+                                                                {cellData?.target && (
+                                                                    <span className="cell-target">{formatTarget(cellData.target)}</span>
+                                                                )}
+                                                            </td>
+                                                        );
+                                                    })}
+                                                </tr>
                                             ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {sentimentHeatmap.brokers.map(broker => (
-                                            <tr key={broker}>
-                                                <td className="broker-cell">{broker.toUpperCase()}</td>
+
+                                            {/* Spacer Row */}
+                                            <tr style={{ height: '10px' }}><td colSpan={sentimentHeatmap.dates.length + 1}></td></tr>
+
+                                            {/* Comparison Row: VNINDEX T+1 (At Bottom) */}
+                                            <tr className="comparison-row" style={{ borderTop: '2px solid rgba(255,255,255,0.2)' }}>
+                                                <td className="broker-cell" style={{ color: '#fff', borderRight: '1px solid rgba(255,255,255,0.1)', lineHeight: '1.2' }}>
+                                                    VNI (+1)
+                                                </td>
                                                 {sentimentHeatmap.dates.map(d => {
-                                                    const cellData = sentimentHeatmap.data[broker]?.[d];
+                                                    const data = sentimentHeatmap.actuals[d];
+                                                    let bgColor = 'transparent';
+                                                    let textColor = '#ccc';
+                                                    if (data.hasData && typeof data.returnVal === 'number') {
+                                                        if (data.returnVal > 0.25) {
+                                                            bgColor = '#00ff7f';
+                                                            textColor = '#000';
+                                                        } else if (data.returnVal < -0.25) {
+                                                            bgColor = '#ff4444';
+                                                            textColor = '#000';
+                                                        } else {
+                                                            bgColor = '#444'; // Neutral
+                                                            textColor = '#fff';
+                                                        }
+                                                    }
+
                                                     return (
-                                                        <td
-                                                            key={d}
-                                                            className="heatmap-cell"
-                                                            style={{
-                                                                backgroundColor: getSentimentColor(cellData?.sentiment),
-                                                            }}
-                                                            title={cellData?.sentiment || 'No data'}
-                                                        >
-                                                            {cellData?.target && (
-                                                                <span className="cell-target">{formatTarget(cellData.target)}</span>
-                                                            )}
+                                                        <td key={d} className="heatmap-cell" style={{
+                                                            backgroundColor: bgColor,
+                                                            color: textColor,
+                                                            fontSize: '11px',
+                                                            fontWeight: 'bold',
+                                                            verticalAlign: 'middle'
+                                                        }}>
+                                                            {data.hasData ? (
+                                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: '1.2' }}>
+                                                                    <span>{formatNumber(data.value)}</span>
+                                                                    {data.returnText && <span style={{ fontSize: '10px', opacity: 0.8 }}>{data.returnText}</span>}
+                                                                </div>
+                                                            ) : '-'}
                                                         </td>
                                                     );
                                                 })}
                                             </tr>
-                                        ))}
-
-                                        {/* Spacer Row */}
-                                        <tr style={{ height: '10px' }}><td colSpan={sentimentHeatmap.dates.length + 1}></td></tr>
-
-                                        {/* Comparison Row: VNINDEX T+1 (At Bottom) */}
-                                        <tr className="comparison-row" style={{ borderTop: '2px solid rgba(255,255,255,0.2)' }}>
-                                            <td className="broker-cell" style={{ color: '#fff', borderRight: '1px solid rgba(255,255,255,0.1)', lineHeight: '1.2' }}>
-                                                VNI (+1)
-                                            </td>
-                                            {sentimentHeatmap.dates.map(d => {
-                                                const data = sentimentHeatmap.actuals[d];
-                                                let bgColor = 'transparent';
-                                                let textColor = '#ccc';
-                                                if (data.hasData && data.returnVal !== 0) {
-                                                    // Use green for positive return, red for negative
-                                                    // Using same palette as sentiment: #00ff7f (pos), #ff4444 (neg)
-                                                    // But maybe darker background? Let's use slight tint or just text color?
-                                                    // User said "row which have the color based on the performance"
-                                                    // Usually that means background color like the heatmap.
-                                                    if (data.returnVal > 0) bgColor = '#00ff7f';
-                                                    else if (data.returnVal < 0) bgColor = '#ff4444';
-                                                    textColor = '#000'; // Black text on colored bg
-                                                }
-                                                // If no current close to calc return, maybe just Neutral color or transparent?
-
-                                                return (
-                                                    <td key={d} className="heatmap-cell" style={{
-                                                        backgroundColor: bgColor,
-                                                        color: textColor,
-                                                        fontSize: '11px',
-                                                        fontWeight: 'bold',
-                                                        verticalAlign: 'middle'
-                                                    }}>
-                                                        {data.hasData ? (
-                                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: '1.2' }}>
-                                                                <span>{formatNumber(data.value)}</span>
-                                                                {data.returnText && <span style={{ fontSize: '10px', opacity: 0.8 }}>{data.returnText}</span>}
-                                                            </div>
-                                                        ) : '-'}
-                                                    </td>
-                                                );
-                                            })}
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                        </tbody>
+                                    </table>
+                                    <div style={{ fontSize: '11px', color: '#888', marginTop: '8px', textAlign: 'right', fontStyle: 'italic' }}>
+                                        * VNI (+1) Performance: Green (&gt; +0.25%), Red (&lt; -0.25%), Neutral (+/- 0.25%)
+                                    </div>
+                                </>
                             )}
                         </div>
                     </section>
