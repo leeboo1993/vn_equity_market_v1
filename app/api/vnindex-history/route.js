@@ -48,7 +48,7 @@ export async function GET(request) {
 
         // Get min and max dates to fetch the range, plus buffer for T+1 / T-1
         const minDate = new Date(Math.min(...dateObjs.map(d => d.getTime())));
-        const maxDate = new Date(Math.max(...dateObjs.map(d => d.getTime())));
+        let maxDate = new Date(Math.max(...dateObjs.map(d => d.getTime())));
         maxDate.setDate(maxDate.getDate() + 5); // Add 5 days buffer for T+1 and weekends
         minDate.setDate(minDate.getDate() - 5);
 
@@ -59,49 +59,63 @@ export async function GET(request) {
             return `${d}/${m}/${y}`;
         };
 
-        const startDateStr = formatDateSSI(minDate);
-        const toDateStr = formatDateSSI(maxDate);
+        const today = new Date();
+        if (maxDate > today) {
+            maxDate = today;
+        }
 
-        // Fetch VNINDEX history from SSI DailyIndex API
-        const url = `https://fc-data.ssi.com.vn/api/v2/Market/DailyIndex?indexId=VNINDEX&fromDate=${startDateStr}&toDate=${toDateStr}&pageIndex=1&pageSize=100`;
+        const historyMap = {};
 
-        const priceRes = await fetch(url, {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Accept': 'application/json'
-            },
-            next: { revalidate: 3600 } // Cache for 1 hour
-        });
+        // SSI DailyIndex API has a max range of 30 days. We must chunk the range.
+        let currentStart = new Date(minDate.getTime());
+        while (currentStart <= maxDate) {
+            let currentEnd = new Date(currentStart.getTime());
+            currentEnd.setDate(currentEnd.getDate() + 29); // Max 30 days inclusive
+            if (currentEnd > maxDate) {
+                currentEnd = new Date(maxDate.getTime());
+            }
 
-        if (priceRes.ok) {
-            const pData = await priceRes.json();
-            if (pData.data && pData.data.length > 0) {
-                // pData.data contains an array of index records
-                // e.g. { "TradingDate": "12/02/2025", "IndexValue": "1234.56", ... }
+            const startDateStr = formatDateSSI(currentStart);
+            const toDateStr = formatDateSSI(currentEnd);
 
-                const historyMap = {};
-                for (const rec of pData.data) {
-                    if (rec.TradingDate && rec.IndexValue) {
-                        // SSI date format: DD/MM/YYYY -> map to YYMMDD (e.g. 250212)
-                        const [d, m, yStr] = rec.TradingDate.split('/');
-                        const yy = yStr.substring(2, 4);
-                        const formattedDateYYMMDD = `${yy}${m}${d}`;
-                        const formattedDateYYYYMMDD = `${yStr}${m}${d}`;
-                        historyMap[formattedDateYYMMDD] = parseFloat(rec.IndexValue);
-                        historyMap[formattedDateYYYYMMDD] = parseFloat(rec.IndexValue);
-                        historyMap[`${yStr}-${m}-${d}`] = parseFloat(rec.IndexValue);
+            const url = `https://fc-data.ssi.com.vn/api/v2/Market/DailyIndex?indexId=VNINDEX&fromDate=${startDateStr}&toDate=${toDateStr}&pageIndex=1&pageSize=100`;
+            const priceRes = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                },
+                next: { revalidate: 3600 } // Cache for 1 hour
+            });
+
+            if (priceRes.ok) {
+                const pData = await priceRes.json();
+                if (pData.data && pData.data.length > 0) {
+                    for (const rec of pData.data) {
+                        if (rec.TradingDate && rec.IndexValue) {
+                            const [d, m, yStr] = rec.TradingDate.split('/');
+                            const yy = yStr.substring(2, 4);
+                            const formattedDateYYMMDD = `${yy}${m}${d}`;
+                            const formattedDateYYYYMMDD = `${yStr}${m}${d}`;
+                            historyMap[formattedDateYYMMDD] = parseFloat(rec.IndexValue);
+                            historyMap[formattedDateYYYYMMDD] = parseFloat(rec.IndexValue);
+                            historyMap[`${yStr}-${m}-${d}`] = parseFloat(rec.IndexValue);
+                        }
                     }
                 }
-
-                // Map requested dates to fetched historical prices
-                for (const date of dates) {
-                    const priceAtCall = historyMap[date] || null;
-                    const key = `VNINDEX_${date}`;
-                    prices[key] = {
-                        priceAtCall
-                    };
-                }
             }
+
+            // Move start to next chunk
+            currentStart = new Date(currentEnd.getTime());
+            currentStart.setDate(currentStart.getDate() + 1);
+        }
+
+        // Map requested dates to fetched historical prices
+        for (const date of dates) {
+            const priceAtCall = historyMap[date] || null;
+            const key = `VNINDEX_${date}`;
+            prices[key] = {
+                priceAtCall
+            };
         }
 
         return NextResponse.json({ prices });
