@@ -1,313 +1,352 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-export default function AdminDashboard() {
+export default function AdminPage() {
     const { data: session, status } = useSession();
-    const router = useRouter();
-    const [activeTab, setActiveTab] = useState('users');
     const [users, setUsers] = useState([]);
-    const [features, setFeatures] = useState({});
-    const [loading, setLoading] = useState(true);
-    const [message, setMessage] = useState('');
+    const [featureSettings, setFeatureSettings] = useState({});
+    const [activeTab, setActiveTab] = useState('users'); // 'users' or 'features'
+    const [isLoading, setIsLoading] = useState(true);
+    const router = useRouter();
 
     useEffect(() => {
-        if (status === 'unauthenticated' || (session && session.user.role !== 'admin')) {
+        if (status === "unauthenticated" || (session && session.user.role !== 'admin')) {
             router.push('/');
-        } else if (status === 'authenticated') {
+        } else if (status === "authenticated") {
             fetchData();
         }
     }, [status, session]);
 
     const fetchData = async () => {
-        setLoading(true);
+        setIsLoading(true);
         try {
             const [uRes, fRes] = await Promise.all([
                 fetch('/api/admin/users'),
                 fetch('/api/admin/features')
             ]);
-            if (uRes.ok) setUsers(await uRes.json());
-            if (fRes.ok) setFeatures(await fRes.json());
+            const [uData, fData] = await Promise.all([uRes.json(), fRes.json()]);
+            setUsers(uData);
+            setFeatureSettings(fData);
         } catch (e) {
-            setMessage('Error fetching data');
+            console.error(e);
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     };
 
-    const handleUpdateUser = async (email, updates) => {
+    const handleApprove = async (email, approved) => {
         try {
-            const res = await fetch('/api/admin/users', {
-                method: 'POST',
+            await fetch('/api/admin/users', {
+                method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, ...updates })
+                body: JSON.stringify({ email, approved }),
             });
-            if (res.ok) {
-                setMessage('User updated');
-                fetchData();
-            }
-        } catch (e) { setMessage('Failed to update'); }
+            fetchData();
+        } catch (e) {
+            console.error(e);
+        }
     };
 
-    const handleDeleteUser = async (email) => {
-        if (!confirm('Are you sure you want to delete this user?')) return;
+    const handleRoleChange = async (email, role) => {
         try {
-            const res = await fetch('/api/admin/users', {
+            await fetch('/api/admin/users', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, role }),
+            });
+            fetchData();
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const handleDelete = async (email) => {
+        if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+        try {
+            await fetch('/api/admin/users', {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email })
+                body: JSON.stringify({ email }),
             });
-            if (res.ok) {
-                setMessage('User deleted');
-                fetchData();
-            }
-        } catch (e) { setMessage('Failed to delete'); }
+            fetchData();
+        } catch (e) {
+            console.error(e);
+        }
     };
 
-    const handleToggleFeature = async (feature, role) => {
-        const newFeatures = { ...features };
-        const roles = newFeatures[feature] || [];
-        if (roles.includes(role)) {
-            newFeatures[feature] = roles.filter(r => r !== role);
-        } else {
-            newFeatures[feature] = [...roles, role];
-        }
+    const handleFeatureToggle = async (feature, role) => {
+        const currentRoles = featureSettings[feature] || [];
+        const newRoles = currentRoles.includes(role)
+            ? currentRoles.filter(r => r !== role)
+            : [...currentRoles, role];
 
-        setFeatures(newFeatures);
+        const newSettings = { ...featureSettings, [feature]: newRoles };
+        setFeatureSettings(newSettings);
+
         try {
-            const res = await fetch('/api/admin/features', {
+            await fetch('/api/admin/features', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newFeatures)
+                body: JSON.stringify(newSettings),
             });
-            if (res.ok) setMessage('Settings saved');
-        } catch (e) { setMessage('Failed to save'); fetchData(); }
+        } catch (e) {
+            console.error(e);
+        }
     };
 
-    if (status === 'loading' || loading) return <div className="admin-loading">Loading Admin Dashboard...</div>;
+    if (status === "loading" || isLoading) return <div className="admin-loading">Loading Management...</div>;
 
     return (
         <div className="admin-container">
-            <header className="admin-header">
-                <h1>Admin Command Center</h1>
-                <div className="tabs">
-                    <button className={activeTab === 'users' ? 'active' : ''} onClick={() => setActiveTab('users')}>Users</button>
-                    <button className={activeTab === 'features' ? 'active' : ''} onClick={() => setActiveTab('features')}>Feature Permissions</button>
-                </div>
-            </header>
+            <h1 className="admin-title">Administration</h1>
+            <p className="admin-subtitle">Manage users and feature visibility.</p>
 
-            {message && <div className="toast" onClick={() => setMessage('')}>{message}</div>}
+            <div className="admin-tabs">
+                <button
+                    className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('users')}
+                >
+                    Users
+                </button>
+                <button
+                    className={`tab-btn ${activeTab === 'features' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('features')}
+                >
+                    Feature Visibility
+                </button>
+            </div>
 
-            <main className="admin-content">
-                {activeTab === 'users' ? (
-                    <div className="users-table-container">
-                        <table className="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>User</th>
-                                    <th>Status</th>
-                                    <th>Role</th>
-                                    <th>Joined</th>
-                                    <th>Actions</th>
+            {activeTab === 'users' ? (
+                <div className="users-table-container">
+                    <table className="users-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Provider</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {users.map(user => (
+                                <tr key={user.email}>
+                                    <td>
+                                        <div className="user-info">
+                                            <div className="user-name">{user.name}</div>
+                                            <div className="user-email">{user.email}</div>
+                                        </div>
+                                    </td>
+                                    <td><span className={`provider-badge ${user.provider}`}>{user.provider}</span></td>
+                                    <td>
+                                        <select
+                                            value={user.role}
+                                            onChange={(e) => handleRoleChange(user.email, e.target.value)}
+                                            className="role-select"
+                                        >
+                                            <option value="guest">Guest</option>
+                                            <option value="member">Member</option>
+                                            <option value="admin">Admin</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <span className={`status-badge ${user.approved ? 'approved' : 'pending'}`}>
+                                            {user.approved ? 'Approved' : 'Pending'}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button
+                                            onClick={() => handleApprove(user.email, !user.approved)}
+                                            className={`approve-btn ${user.approved ? 'revoke' : 'approve'}`}
+                                            disabled={user.email === session?.user?.email}
+                                        >
+                                            {user.approved ? 'Revoke' : 'Approve'}
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(user.email)}
+                                            className="approve-btn delete ml-2"
+                                            disabled={user.email === session?.user?.email}
+                                            style={{ marginLeft: '10px' }}
+                                        >
+                                            Delete
+                                        </button>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {users.sort((a, b) => (a.approved === b.approved ? 0 : a.approved ? 1 : -1)).map(u => (
-                                    <tr key={u.email} className={!u.approved ? 'pending' : ''}>
-                                        <td>
-                                            <div className="user-info">
-                                                <span className="email">{u.email}</span>
-                                                <span className="provider">{u.provider}</span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span className={`badge ${u.approved ? 'approved' : 'pending'}`}>
-                                                {u.approved ? 'Approved' : 'Pending'}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <select
-                                                value={u.role}
-                                                onChange={(e) => handleUpdateUser(u.email, { role: e.target.value })}
-                                                className="role-select"
-                                            >
-                                                <option value="member">Member</option>
-                                                <option value="admin">Admin</option>
-                                            </select>
-                                        </td>
-                                        <td>{new Date(u.createdAt).toLocaleDateString()}</td>
-                                        <td className="actions">
-                                            {!u.approved && (
-                                                <button className="approve-btn" onClick={() => handleUpdateUser(u.email, { approved: true })}>Approve</button>
-                                            )}
-                                            {u.approved && u.role !== 'admin' && (
-                                                <button className="reject-btn" onClick={() => handleUpdateUser(u.email, { approved: false })}>Revoke</button>
-                                            )}
-                                            <button className="delete-btn" onClick={() => handleDeleteUser(u.email)}>Delete</button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                ) : (
-                    <div className="features-container">
-                        <p className="hint">Toggle which roles can access specific sections of the website.</p>
-                        <div className="feature-grid">
-                            {Object.keys(features).map(f => (
-                                <div key={f} className="feature-card">
-                                    <h3>{f}</h3>
-                                    <div className="role-toggles">
-                                        {['admin', 'member', 'guest'].map(role => (
-                                            <label key={role} className="toggle-label">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={features[f]?.includes(role) || role === 'admin'}
-                                                    disabled={role === 'admin'}
-                                                    onChange={() => handleToggleFeature(f, role)}
-                                                />
-                                                <span className="capitalize">{role}</span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
                             ))}
-                        </div>
-                    </div>
-                )}
-            </main>
+                        </tbody>
+                    </table>
+                </div>
+            ) : (
+                <div className="features-container">
+                    <table className="users-table">
+                        <thead>
+                            <tr>
+                                <th>Feature</th>
+                                <th>Guest</th>
+                                <th>Member</th>
+                                <th>Admin</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {Object.entries(featureSettings).map(([feature, allowedRoles]) => (
+                                <tr key={feature}>
+                                    <td className="feature-name">{feature}</td>
+                                    <td>
+                                        <input
+                                            type="checkbox"
+                                            checked={allowedRoles.includes('guest')}
+                                            onChange={() => handleFeatureToggle(feature, 'guest')}
+                                        />
+                                    </td>
+                                    <td>
+                                        <input
+                                            type="checkbox"
+                                            checked={allowedRoles.includes('member')}
+                                            onChange={() => handleFeatureToggle(feature, 'member')}
+                                        />
+                                    </td>
+                                    <td>
+                                        <input
+                                            type="checkbox"
+                                            checked={true}
+                                            disabled={true}
+                                        />
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
 
             <style jsx>{`
                 .admin-container {
-                    padding: 2rem;
-                    min-height: 100vh;
+                    padding: 40px;
                     background: #050505;
-                    color: #eee;
-                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                    min-height: 100vh;
+                    color: #fff;
                 }
-                .admin-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 2rem;
-                    border-bottom: 1px solid #222;
-                    padding-bottom: 1rem;
-                }
-                .admin-header h1 {
-                    font-size: 1.5rem;
-                    background: linear-gradient(to right, #00ff7f, #00d2ff);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                }
-                .tabs {
-                    display: flex;
-                    gap: 0.5rem;
-                    background: rgba(255,255,255,0.05);
-                    padding: 0.3rem;
-                    border-radius: 8px;
-                }
-                .tabs button {
-                    background: transparent;
-                    border: none;
-                    color: #888;
-                    padding: 0.5rem 1rem;
-                    border-radius: 6px;
-                    cursor: pointer;
-                    font-weight: 500;
-                }
-                .tabs button.active {
-                    background: #222;
+                .admin-title {
+                    font-size: 32px;
                     color: #00ff7f;
+                    margin-bottom: 10px;
                 }
-                .toast {
-                    position: fixed;
-                    bottom: 2rem;
-                    right: 2rem;
-                    background: #00ff7f;
-                    color: #000;
-                    padding: 0.8rem 1.5rem;
+                .admin-subtitle {
+                    color: #888;
+                    margin-bottom: 30px;
+                }
+                .admin-tabs {
+                    display: flex;
+                    gap: 10px;
+                    margin-bottom: 25px;
+                }
+                .tab-btn {
+                    padding: 10px 20px;
                     border-radius: 8px;
-                    font-weight: 600;
-                    box-shadow: 0 4px 20px rgba(0,255,127,0.3);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    background: rgba(255, 255, 255, 0.03);
+                    color: #888;
                     cursor: pointer;
+                    font-weight: 600;
+                    transition: all 0.2s;
                 }
-                .admin-table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    background: rgba(255,255,255,0.02);
-                    border-radius: 12px;
+                .tab-btn.active {
+                    background: rgba(0, 255, 127, 0.1);
+                    color: #00ff7f;
+                    border-color: #00ff7f;
+                }
+                .users-table-container, .features-container {
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 16px;
                     overflow: hidden;
                 }
-                .admin-table th {
+                .users-table {
+                    width: 100%;
+                    border-collapse: collapse;
                     text-align: left;
-                    padding: 1rem;
-                    background: rgba(255,255,255,0.05);
-                    color: #666;
-                    font-size: 0.8rem;
+                }
+                .users-table th {
+                    padding: 15px 20px;
+                    background: rgba(255, 255, 255, 0.05);
+                    color: #00ff7f;
+                    font-weight: 600;
+                    font-size: 14px;
                     text-transform: uppercase;
                 }
-                .admin-table td {
-                    padding: 1rem;
-                    border-bottom: 1px solid #111;
-                }
-                .pending {
-                    background: rgba(255, 165, 0, 0.05);
+                .users-table td {
+                    padding: 15px 20px;
+                    border-top: 1px solid rgba(255, 255, 255, 0.05);
                 }
                 .user-info {
                     display: flex;
                     flex-direction: column;
                 }
-                .email { font-weight: 500; }
-                .provider { font-size: 0.7rem; color: #555; text-transform: uppercase; }
-                .badge {
-                    padding: 0.2rem 0.5rem;
-                    border-radius: 4px;
-                    font-size: 0.7rem;
-                    font-weight: 700;
+                .user-name {
+                    font-weight: 600;
                 }
-                .badge.approved { background: rgba(0,255,127,0.1); color: #00ff7f; }
-                .badge.pending { background: rgba(255,165,0,0.1); color: #ffa500; }
+                .user-email {
+                    font-size: 12px;
+                    color: #888;
+                }
+                .provider-badge {
+                    font-size: 12px;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    background: #222;
+                    text-transform: capitalize;
+                }
+                .status-badge {
+                    font-size: 12px;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                }
+                .status-badge.approved { background: rgba(0, 255, 127, 0.1); color: #00ff7f; }
+                .status-badge.pending { background: rgba(255, 165, 0, 0.1); color: #ffa500; }
+                
                 .role-select {
                     background: #111;
+                    color: #fff;
                     border: 1px solid #333;
-                    color: #eee;
-                    padding: 0.3rem;
+                    padding: 6px;
                     border-radius: 4px;
+                    outline: none;
                 }
-                .actions {
-                    display: flex;
-                    gap: 0.5rem;
+                .feature-name {
+                    font-weight: 600;
                 }
-                .approve-btn { background: #00ff7f; color: #000; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; cursor: pointer; font-weight: 600; }
-                .reject-btn { background: transparent; border: 1px solid #ff4444; color: #ff4444; padding: 0.4rem 0.8rem; border-radius: 4px; cursor: pointer; }
-                .delete-btn { background: transparent; border: none; color: #555; padding: 0.4rem 0.8rem; cursor: pointer; font-size: 0.8rem; }
-                .delete-btn:hover { color: #ff4444; }
-
-                .features-container .hint { margin-bottom: 2rem; color: #888; }
-                .feature-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-                    gap: 1.5rem;
-                }
-                .feature-card {
-                    background: rgba(255,255,255,0.02);
-                    border: 1px solid #1a1a1a;
-                    padding: 1.5rem;
-                    border-radius: 12px;
-                }
-                .feature-card h3 { margin-bottom: 1rem; font-size: 1.1rem; color: #00ff7f; }
-                .role-toggles { display: flex; flex-direction: column; gap: 0.8rem; }
-                .toggle-label {
-                    display: flex;
-                    align-items: center;
-                    gap: 0.8rem;
+                input[type="checkbox"] {
+                    accent-color: #00ff7f;
+                    width: 18px;
+                    height: 18px;
                     cursor: pointer;
                 }
-                .toggle-label input { width: 1.2rem; height: 1.2rem; }
-                .capitalize { text-transform: capitalize; }
-                .admin-loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #050505; color: #00ff7f; font-weight: 600; }
+                .approve-btn {
+                    padding: 6px 12px;
+                    border-radius: 6px;
+                    border: none;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: opacity 0.2s;
+                }
+                .approve-btn.approve { background: #00ff7f; color: #000; }
+                .approve-btn.revoke { background: #ff4444; color: #fff; }
+                .approve-btn.delete { background: #ff3333; color: #fff; }
+                .approve-btn.delete:hover { background: #cc0000; }
+                .approve-btn:hover { opacity: 0.8; }
+                
+                .admin-loading {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100vh;
+                    background: #050505;
+                    color: #00ff7f;
+                    font-size: 18px;
+                }
             `}</style>
         </div>
     );
