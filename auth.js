@@ -15,10 +15,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 const existing = await findUserByEmail(credentials.email);
                 if (existing) return null;
 
+                const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
+                const isAdmin = credentials.email && adminEmails.includes(credentials.email.toLowerCase());
+
                 const newUser = await createUser({
                     email: credentials.email,
                     password: credentials.password,
                     provider: "credentials",
+                    role: isAdmin ? "admin" : "member",
+                    approved: isAdmin ? true : false
                 });
                 return newUser;
             },
