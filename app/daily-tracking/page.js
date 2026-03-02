@@ -16,8 +16,24 @@ import ResearchTab from '../components/daily-tracking/ResearchTab';
 import FundamentalsTab from '../components/daily-tracking/FundamentalsTab';
 
 export default function DLEquityPage() {
+    const { data: session, status } = useSession();
+    const router = useRouter();
+    const isAdmin = session?.user?.role === 'admin';
+
+    // Restrict tabs based on role
+    const availableTabs = isAdmin
+        ? ['Market', 'Economics', 'Research', 'Fundamentals']
+        : ['Research'];
+
     const [activeTab, setActiveTab] = useState('Market');
     const [tabData, setTabData] = useState({});
+
+    // Ensure activeTab is always valid if role changes or on mount
+    useEffect(() => {
+        if (!availableTabs.includes(activeTab)) {
+            setActiveTab(availableTabs[0]);
+        }
+    }, [isAdmin, activeTab, availableTabs]);
 
     const marketData = tabData['market'];
     const currentData = tabData[activeTab.toLowerCase()];
@@ -29,8 +45,6 @@ export default function DLEquityPage() {
     // Time filter: 1M, 3M, 6M, YTD, 1Y, ALL
     const [timeFilter, setTimeFilter] = useState('3M');
 
-    const { data: session, status } = useSession();
-    const router = useRouter();
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -153,7 +167,8 @@ export default function DLEquityPage() {
             </header>
 
             <div style={{ padding: '0 1.5rem', borderBottom: '1px solid #222', background: '#0a0a0a', display: 'flex', gap: '2rem' }}>
-                {['Market', 'Economics', 'Research', 'Fundamentals'].map(tab => (
+                {availableTabs.map(tab => (
+
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}

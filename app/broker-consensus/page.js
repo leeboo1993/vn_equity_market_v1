@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 
@@ -10,9 +11,24 @@ import MacroResearchPage from '../macro-research/page';
 import StrategyResearchPage from '../strategy-research/page';
 
 export default function BrokerConsensusPage() {
+    const { data: session } = useSession();
+    const isAdmin = session?.user?.role === 'admin';
+
+    // Restrict tabs based on role
+    const availableTabs = isAdmin
+        ? ['Daily', 'Company', 'Macro', 'Strategy']
+        : ['Daily', 'Company'];
+
     const [activeTab, setActiveTab] = useState('Daily');
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [portalNode, setPortalNode] = useState(null);
+
+    // Ensure activeTab is always valid if role changes or on mount
+    useEffect(() => {
+        if (!availableTabs.includes(activeTab)) {
+            setActiveTab(availableTabs[0]);
+        }
+    }, [isAdmin, activeTab, availableTabs]);
 
     return (
         <div style={{ backgroundColor: '#0a0a0a', minHeight: '100vh', color: '#ccc', fontFamily: 'Inter, sans-serif' }}>
@@ -35,7 +51,7 @@ export default function BrokerConsensusPage() {
             {/* Top Tabs */}
             <div style={{ padding: '0 1.5rem', borderBottom: '1px solid #222', background: '#0a0a0a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', gap: '2rem' }}>
-                    {['Daily', 'Company', 'Macro', 'Strategy'].map(tab => (
+                    {availableTabs.map(tab => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -61,6 +77,7 @@ export default function BrokerConsensusPage() {
             </div>
 
             {/* Tab Content */}
+
             <div style={{ flex: 1, overflow: 'hidden' }}>
                 {activeTab === 'Company' && (
                     <Dashboard initialReports={[]} shouldFetchData={true} hideHeader={true} portalNode={portalNode} />
