@@ -207,8 +207,9 @@ export default function DLEquityPage() {
                         <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⚠️</div>
                         <div style={{ color: '#888', fontSize: '13px' }}>{error}</div>
                     </div>
-                ) : currentData && !loading ? (
+                ) : !loadingFeatures && !loading ? (
                     <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+
 
                         {/* Time Filters (Only for Market and Economics) */}
                         {(activeTab === 'Market' || activeTab === 'Economics') && (
