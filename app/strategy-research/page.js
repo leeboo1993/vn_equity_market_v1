@@ -4,8 +4,7 @@ import Header from '../components/Header';
 
 export default function StrategyResearchPage() {
     return (
-        <>
-            <Header title="Strategy Research Panel" />
+        <div className="pt-4">
 
             <main className="main-container px-6 py-8">
                 <div className="placeholder-card bg-[#111] border border-[#222] rounded-xl p-12 text-center">
@@ -14,6 +13,6 @@ export default function StrategyResearchPage() {
                     <p className="text-gray-400">Investment strategies and portfolio analysis coming soon.</p>
                 </div>
             </main>
-        </>
+        </div>
     );
 }

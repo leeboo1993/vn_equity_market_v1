@@ -6,10 +6,9 @@ import { useSession, signOut } from 'next-auth/react';
 import { useFeatureAccess } from '../../lib/useFeatureAccess';
 
 const navItems = [
-    { href: '/', label: 'Daily Tracking', feature: 'Daily Tracking' },
-    { href: '/company-research', label: 'Company Research', feature: 'Company Research' },
-    { href: '/macro-research', label: 'Macro Research', feature: 'Macro Research' },
-    { href: '/strategy-research', label: 'Strategy Research', feature: 'Strategy Research' },
+    { href: '/priceboard', label: 'VN-Index', feature: 'Price Board' },
+    { href: '/broker-consensus', label: 'Broker Consensus', feature: 'Research' },
+    { href: '/daily-tracking', label: 'Daily Market Tracking', feature: 'Market Dashboard' },
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
@@ -63,17 +62,21 @@ export default function Sidebar({ isOpen, onClose }) {
 
                 <ul className="sidebar-nav">
                     {navItems
-                        .filter(item => hasAccess(item.feature))
-                        .map((item) => (
-                            <li key={item.href}>
-                                <Link
-                                    href={item.href}
-                                    className={`sidebar-link ${pathname === item.href ? 'active' : ''}`}
-                                    onClick={onClose}
-                                >
-                                    <span className="sidebar-label">{item.label}</span>
-                                </Link>
-                            </li>
+                        .filter(item => item.type === 'divider' || hasAccess(item.feature))
+                        .map((item, index) => (
+                            item.type === 'divider' ? (
+                                <div key={`divider-${index}`} className="sidebar-divider">{item.label}</div>
+                            ) : (
+                                <li key={item.href}>
+                                    <Link
+                                        href={item.href}
+                                        className={`sidebar-link ${pathname === item.href ? 'active' : ''}`}
+                                        onClick={onClose}
+                                    >
+                                        <span className="sidebar-label">{item.label}</span>
+                                    </Link>
+                                </li>
+                            )
                         ))}
 
                     {session?.user?.role === 'admin' && (

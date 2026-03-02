@@ -40,86 +40,218 @@ async function getAccessToken() {
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
-        const tickersParam = searchParams.get('tickers'); // e.g., "FPT,SSI,VNM"
+        let tickersParam = searchParams.get('tickers');
 
         if (!tickersParam) {
             return NextResponse.json({ error: "No tickers provided" }, { status: 400 });
         }
 
-        const tickers = tickersParam.split(',').map(t => t.trim().toUpperCase());
-        const token = await getAccessToken();
+        // Clean up tickers
+        const tickers = tickersParam.split(',').map(t => t.trim().toUpperCase()).join(',');
 
-        // SSI HTTP API for Daily Stock Price (latest day)
-        // We will fetch the price for today. If the market is closed or it's a weekend,
-        // we might need to fetch a date range to get the last trading day.
+        // We use a high-frequency public datafeed (VPS) to bypass the SSI FC-Data 1 req/sec limit 
+        // and to obtain the actual Layer 2 order book (Bids/Asks) which FC-Data REST does not provide.
+        const url = `https://bgapidatafeed.vps.com.vn/getliststockdata/${tickers}`;
 
-        const now = new Date();
-        // Format DD/MM/YYYY
-        const formatDate = (date) => {
-            const d = String(date.getDate()).padStart(2, '0');
-            const m = String(date.getMonth() + 1).padStart(2, '0');
-            const y = date.getFullYear();
-            return `${d}/${m}/${y}`;
-        };
+        const res = await fetch(url, {
+            headers: {
+                'Accept': 'application/json',
+                'User-Agent': 'Mozilla/5.0'
+            },
+            cache: 'no-store'
+        });
 
-        const todayStr = formatDate(now);
-        // Look back 5 days to ensure we hit a trading day
-        const pastDate = new Date(now);
-        pastDate.setDate(now.getDate() - 5);
-        const startDateStr = formatDate(pastDate);
+        if (!res.ok) {
+            throw new Error("Failed to fetch order book data");
+        }
 
+        const rawData = await res.json();
         const priceData = {};
 
-        // In a serverless environment, fetching 50 tickers sequentially is slow.
-        // We will do parallel fetches. If there are too many, batch them.
-        const BATCH_SIZE = 10;
-        for (let i = 0; i < tickers.length; i += BATCH_SIZE) {
-            const batch = tickers.slice(i, i + BATCH_SIZE);
-            const promises = batch.map(async (ticker) => {
-                const url = `https://fc-data.ssi.com.vn/api/v2/Market/DailyStockPrice?symbol=${ticker}&fromDate=${startDateStr}&toDate=${todayStr}&pageIndex=1&pageSize=100`;
+        // Parse VPS format
+        // g1, g2, g3 = Bid 1, 2, 3
+        // g4, g5, g6 = Ask 1, 2, 3
+        const parseG = (gStr) => {
+            if (!gStr) return { p: 0, v: 0 };
+            const parts = gStr.split('|');
+            return {
+                p: (parseFloat(parts[0]) || 0) * 1000,
+                v: (parseFloat(parts[1]) || 0) * 10
+            };
+        };
 
-                try {
-                    const priceRes = await fetch(url, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Accept': 'application/json'
-                        },
-                        // Next.js caching: revalidate every 30 seconds for "real-time" feel without spamming
-                        next: { revalidate: 30 }
+        rawData.forEach(item => {
+            if (!item.sym) return;
+
+            const b1 = parseG(item.g1);
+            const b2 = parseG(item.g2);
+            const b3 = parseG(item.g3);
+            const a1 = parseG(item.g4);
+            const a2 = parseG(item.g5);
+            const a3 = parseG(item.g6);
+
+            priceData[item.sym] = {
+                price: (parseFloat(item.lastPrice || 0) * 1000),
+                matchVol: (parseFloat(item.lastVolume || 0) * 10),
+                totalVol: parseFloat(item.totalVol || item.fBVol || 0) * 10,
+                ref: (parseFloat(item.r || 0) * 1000),
+                ceil: (parseFloat(item.c || 0) * 1000),
+                floor: (parseFloat(item.f || 0) * 1000),
+
+                // Bids
+                b1p: b1.p, b1v: b1.v,
+                b2p: b2.p, b2v: b2.v,
+                b3p: b3.p, b3v: b3.v,
+
+                // Asks
+                a1p: a1.p, a1v: a1.v,
+                a2p: a2.p, a2v: a2.v,
+                a3p: a3.p, a3v: a3.v,
+
+                // Range and Foreign 
+                high: (parseFloat(item.highPrice || 0) * 1000),
+                low: (parseFloat(item.lowPrice || 0) * 1000),
+                avg: (parseFloat(item.avePrice || 0) * 1000),
+                fBuy: (parseFloat(item.fBVol || 0) * 10),
+                fSell: (parseFloat(item.fSVolume || 0) * 10),
+
+                date: new Date().toISOString()
+            };
+        });
+
+        // SSI Index Cache
+        const INDEX_CACHE_TTL = 60 * 1000; // 60 seconds
+        if (typeof global.indexCache === 'undefined') {
+            global.indexCache = { data: null, expires: 0 };
+        }
+
+        const tickersStr = tickersParam.toUpperCase();
+        if ((tickersStr.includes('VNINDEX') || tickersStr.includes('VN30')) && Date.now() > global.indexCache.expires) {
+            try {
+                const ssiToken = await getAccessToken();
+
+                // Construct date range (T-7 to T0) for weekends
+                const dTo = new Date();
+                const dFrom = new Date();
+                dFrom.setDate(dFrom.getDate() - 7);
+
+                const fmtDate = (d) => {
+                    const dd = String(d.getDate()).padStart(2, '0');
+                    const mm = String(d.getMonth() + 1).padStart(2, '0');
+                    const yyyy = d.getFullYear();
+                    return `${dd}/${mm}/${yyyy}`;
+                };
+
+                const fromStr = fmtDate(dFrom);
+                const toStr = fmtDate(dTo);
+
+                const fetchIndex = async (idxName) => {
+                    const idxRes = await fetch(`https://fc-data.ssi.com.vn/api/v2/Market/DailyIndex?indexId=${idxName}&fromDate=${fromStr}&toDate=${toStr}&pageIndex=1&pageSize=10`, {
+                        headers: { "Authorization": `Bearer ${ssiToken}` }
                     });
+                    return await idxRes.json();
+                };
 
-                    if (priceRes.ok) {
-                        const pData = await priceRes.json();
-                        if (pData.data && pData.data.length > 0) {
-                            // The first element might be the oldest or newest depending on API sort order.
-                            // Usually we want the item with the latest TradingDate.
-                            // Let's parse dates and find the max.
-                            let latestRecord = pData.data[0];
-                            let maxDateInt = 0;
+                const fetchStock = async (sym) => {
+                    const res = await fetch(`https://fc-data.ssi.com.vn/api/v2/Market/DailyStockPrice?symbol=${sym}&fromDate=${fromStr}&toDate=${toStr}&pageIndex=1&pageSize=10`, {
+                        headers: { "Authorization": `Bearer ${ssiToken}` }
+                    });
+                    return await res.json();
+                };
 
-                            for (const rec of pData.data) {
-                                const [d, m, y] = rec.TradingDate.split('/');
-                                const val = parseInt(`${y}${m}${d}`);
-                                if (val > maxDateInt) {
-                                    maxDateInt = val;
-                                    latestRecord = rec;
+                const [vnindexData, vn30Data, f1m, f2m] = await Promise.all([
+                    fetchIndex('VNINDEX'),
+                    (async () => { await new Promise(r => setTimeout(r, 1200)); return fetchIndex('VN30'); })(),
+                    (async () => { await new Promise(r => setTimeout(r, 2400)); return fetchStock('VN30F1M'); })(),
+                    (async () => { await new Promise(r => setTimeout(r, 3600)); return fetchStock('VN30F2M'); })()
+                ]);
+
+                const ssiPrices = {};
+
+                const processData = (indexData) => {
+                    if ((indexData.status === 200 || String(indexData.status).toLowerCase() === 'success') && indexData.data) {
+                        const sortedData = indexData.data.sort((a, b) => {
+                            const parse = (s) => {
+                                if (!s) return 0;
+                                const parts = s.split('/');
+                                return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`).getTime();
+                            };
+                            return parse(b.TradingDate) - parse(a.TradingDate);
+                        });
+
+                        if (sortedData.length > 0) {
+                            // During off-hours, the current day might have 0 price but valid ref/change?
+                            // Or the current day might only exist in SSI as a "placeholder" with 0s.
+                            // We look for the first entry with a non-zero ClosePrice/IndexValue.
+                            // Look for the first entry with a non-zero price (historical fallback)
+                            let idx = sortedData[0];
+                            let priceVal = 0;
+                            for (const entry of sortedData) {
+                                priceVal = parseFloat(entry.IndexValue || entry.indexValue || entry.ClosePrice || entry.closePrice || 0);
+                                if (priceVal > 0) {
+                                    idx = entry;
+                                    break;
                                 }
                             }
 
-                            // SSI prices are usually true integer values (e.g. 10500)
-                            priceData[ticker] = {
-                                price: parseFloat(latestRecord.ClosePrice || latestRecord.Close || 0),
-                                date: latestRecord.TradingDate
-                            };
+                            const sym = (idx.IndexId || idx.indexId || idx.Symbol || idx.symbol || '').toUpperCase();
+                            if (sym) {
+                                // Points check: Futures often have PriceChange, Indices have Change (points) or RatioChange
+                                let changeVal = idx.Change !== undefined ? parseFloat(idx.Change || idx.change || 0) : parseFloat(idx.PriceChange || idx.priceChange || 0);
+
+                                // SSI Indices sometimes return change as 0.056 instead of 5.6 points. 
+                                // We check RatioChange to detect if we need to scale.
+                                let pctVal = parseFloat(idx.RatioChange || idx.pctChange || idx.PerPriceChange || idx.perPriceChange || 0);
+
+                                // Fix: If change is tiny but pct is large, it's likely a scaling issue. 
+                                // For VNINDEX ~1200, 1% is 12 pts. If change is 0.12, multiply by 100.
+                                if (Math.abs(changeVal) < 1 && Math.abs(pctVal) > 0.01 && priceVal > 100) {
+                                    changeVal *= 100;
+                                }
+
+                                ssiPrices[sym] = {
+                                    price: priceVal,
+                                    change: changeVal,
+                                    pctChange: pctVal,
+                                    totalVol: parseFloat(idx.TotalVol || idx.totalQuantity || idx.TotalTradedVol || idx.totalTradedVol || 0),
+                                    totalVal: parseFloat(idx.TotalVal || idx.totalValue || idx.TotalTradedValue || idx.totalTradedValue || 0),
+                                    advances: parseInt(idx.Advances || idx.advances || 0),
+                                    declines: parseInt(idx.Declines || idx.declines || 0),
+                                    noChanges: parseInt(idx.NoChanges || idx.noChanges || 0),
+                                    ceilings: parseInt(idx.Ceilings || idx.ceilings || 0),
+                                    floors: parseInt(idx.Floors || idx.floors || 0),
+                                    ref: parseFloat(idx.RefPrice || idx.refPrice || 0),
+                                    high: parseFloat(idx.HighestPrice || idx.highestPrice || 0),
+                                    low: parseFloat(idx.LowestPrice || idx.lowestPrice || 0),
+                                    date: idx.TradingDate || idx.tradingDate || '',
+                                    time: idx.Time || idx.time || '',
+                                    isIndex: true,
+                                    isSnapshot: true // Mark as historical snapshot if appropriate
+                                };
+                            }
                         }
                     }
-                } catch (e) {
-                    console.error(`Failed to fetch for ${ticker}`, e);
-                }
-            });
+                };
 
-            await Promise.all(promises);
+                processData(vnindexData);
+                processData(vn30Data);
+                processData(f1m);
+                processData(f2m);
+
+                global.indexCache = {
+                    data: ssiPrices,
+                    expires: Date.now() + INDEX_CACHE_TTL
+                };
+            } catch (idxError) {
+                console.warn("Could not fetch SSI Index Data:", idxError.message);
+            }
         }
+
+        // Apply Cached or Fresh SSI Data
+        if (global.indexCache.data) {
+            Object.assign(priceData, global.indexCache.data);
+        }
+
 
         return NextResponse.json({ prices: priceData });
 

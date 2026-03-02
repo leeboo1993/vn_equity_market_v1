@@ -10,7 +10,6 @@ export const metadata = {
 };
 
 export default function CompanyResearchPage() {
-    // Client-side fetching strategy to avoid 60MB payload limit on Vercel Functions
     // Data is pre-built into public/reports.json
-    return <Dashboard initialReports={[]} shouldFetchData={true} />;
+    return <Dashboard initialReports={[]} shouldFetchData={true} hideHeader={true} />;
 }

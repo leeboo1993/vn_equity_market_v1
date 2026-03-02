@@ -79,31 +79,50 @@ export async function GET(request) {
             const toDateStr = formatDateSSI(currentEnd);
 
             const url = `https://fc-data.ssi.com.vn/api/v2/Market/DailyIndex?indexId=VNINDEX&fromDate=${startDateStr}&toDate=${toDateStr}&pageIndex=1&pageSize=100`;
-            const priceRes = await fetch(url, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/json'
-                },
-                next: { revalidate: 3600 } // Cache for 1 hour
-            });
 
-            if (priceRes.ok) {
-                const pData = await priceRes.json();
-                if (pData.data && pData.data.length > 0) {
-                    for (const rec of pData.data) {
-                        if (rec.TradingDate && rec.IndexValue) {
-                            const [d, m, yStr] = rec.TradingDate.split('/');
-                            const yy = yStr.substring(2, 4);
-                            const formattedDateYYMMDD = `${yy}${m}${d}`;
-                            const formattedDateYYYYMMDD = `${yStr}${m}${d}`;
-                            historyMap[formattedDateYYMMDD] = parseFloat(rec.IndexValue);
-                            historyMap[formattedDateYYYYMMDD] = parseFloat(rec.IndexValue);
-                            historyMap[`${yStr}-${m}-${d}`] = parseFloat(rec.IndexValue);
-                        }
-                    }
+            let priceRes = null;
+            let pData = null;
+            let attempts = 0;
+            const maxAttempts = 5;
+
+            while (attempts < maxAttempts) {
+                priceRes = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    },
+                    next: { revalidate: 3600 } // Cache for 1 hour
+                });
+
+                if (priceRes.status === 429) {
+                    attempts++;
+                    console.warn(`[vnindex-history] 429 Rate Limit hit. Retrying in 1s... (Attempt ${attempts}/${maxAttempts})`);
+                    await new Promise(resolve => setTimeout(resolve, 1100)); // Wait > 1s
+                } else if (priceRes.ok) {
+                    pData = await priceRes.json();
+                    break;
+                } else {
+                    console.error(`SSI API Error: ${priceRes.status} ${priceRes.statusText}`);
+                    break;
                 }
             }
 
+            if (pData && pData.data && pData.data.length > 0) {
+                for (const rec of pData.data) {
+                    const tradingDate = rec.TradingDate || rec.tradingDate;
+                    const indexValue = rec.IndexValue !== undefined ? rec.IndexValue : (rec.indexValue !== undefined ? rec.indexValue : (rec.ClosePrice !== undefined ? rec.ClosePrice : rec.closePrice));
+
+                    if (tradingDate && indexValue !== undefined) {
+                        const [d, m, yStr] = tradingDate.split('/');
+                        const yy = yStr.substring(2, 4);
+                        const formattedDateYYMMDD = `${yy}${m}${d}`;
+                        const formattedDateYYYYMMDD = `${yStr}${m}${d}`;
+                        historyMap[formattedDateYYMMDD] = parseFloat(indexValue);
+                        historyMap[formattedDateYYYYMMDD] = parseFloat(indexValue);
+                        historyMap[`${yStr}-${m}-${d}`] = parseFloat(indexValue);
+                    }
+                }
+            }
             // Move start to next chunk
             currentStart = new Date(currentEnd.getTime());
             currentStart.setDate(currentStart.getDate() + 1);

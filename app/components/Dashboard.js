@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useSession } from 'next-auth/react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
@@ -264,7 +265,7 @@ const getCompanyName = (ticker) => {
     return map[ticker] || ticker;
 };
 
-export default function Dashboard({ reports: propReports, shouldFetchData }) {
+export default function Dashboard({ reports: propReports, shouldFetchData, hideHeader, portalNode }) {
     const { data: session } = useSession();
     const isAdmin = session?.user?.role === 'admin';
 
@@ -460,7 +461,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
     // Recursive Pagination Fetcher
     const fetchReportsRecursively = async (quartersToLoad) => {
         setIsLoading(true);
-        const limit = 400; // Optimized to 400 (max safe size ~3.7MB < 4.5MB)
+        const limit = 200; // Reduced from 400 to prevent 'API fetch failed' due to response size/memory limits
         let page = 1;
         let hasMore = true;
 
@@ -1100,22 +1101,32 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
 
 
 
+    const filterUI = (
+        <div style={{ display: 'flex', gap: '8px', zIndex: 10 }}>
+            <CustomSelect
+                options={uniqueTickers} value={filterTicker} onChange={setFilterTicker} placeholder="All Tickers" customWidth="120px"
+            />
+            <CustomSelect
+                options={uniqueBrokers} value={filterBroker} onChange={setFilterBroker} placeholder="All brokers" customWidth="120px"
+            />
+            <CustomSelect
+                options={uniqueSectors} value={filterSector} onChange={setFilterSector} placeholder="All sectors" customWidth="120px"
+            />
+            <CustomSelect
+                options={uniqueQuarters} value={filterPeriod} onChange={setFilterPeriod} placeholder="All Periods" customWidth="120px"
+            />
+        </div>
+    );
+
     return (
         <>
-            <Header title="Company Research Panel">
-                <CustomSelect
-                    options={uniqueTickers} value={filterTicker} onChange={setFilterTicker} placeholder="All Tickers"
-                />
-                <CustomSelect
-                    options={uniqueBrokers} value={filterBroker} onChange={setFilterBroker} placeholder="All brokers"
-                />
-                <CustomSelect
-                    options={uniqueSectors} value={filterSector} onChange={setFilterSector} placeholder="All sectors"
-                />
-                <CustomSelect
-                    options={uniqueQuarters} value={filterPeriod} onChange={setFilterPeriod} placeholder="All Periods"
-                />
-            </Header>
+            {!hideHeader && (
+                <Header title="Company Research Panel">
+                    {filterUI}
+                </Header>
+            )}
+
+            {hideHeader && portalNode && createPortal(filterUI, portalNode)}
 
             <main className="main-container dashboard-grid">
                 {/* COLUMN 1 */}
@@ -1252,13 +1263,21 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                 const stats = tickerStatsMap[ticker];
                                                 const cov = coverageMap[ticker];
 
+                                                // The `getTickerCallsSummary` function is what actually powers the visual UI dots.
+                                                // So to sort them identically to what the user sees, we should sort by the same metric.
+                                                const summary = getTickerCallsSummary(ticker, filteredReportsForRankings);
+
+                                                // The total dots shown is exactly the unique brokers providing active coverage
+                                                const trueBrokerCount = summary.total;
+
                                                 return {
                                                     ticker,
                                                     latestReport: cov.latestReport, // Ensure we have a report to link to
-                                                    brokerCount: cov.brokers.size,
+                                                    brokerCount: trueBrokerCount, // Use the matched summary count
                                                     avgUpside: stats ? (stats.totalUpside / stats.count) : null,
                                                     avgTargetPrice: stats ? Math.round(stats.totalTargetPrice / stats.count) : null,
-                                                    count: stats ? stats.count : 0 // Valid upside count
+                                                    count: stats ? stats.count : 0, // Valid upside count
+                                                    summaryElement: summary.element // Calculate once
                                                 };
                                             });
 
@@ -1277,19 +1296,20 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                     .slice(0, 10);
                                             } else {
                                                 // Coverage mode - sort by number of unique brokers
+                                                // Also filter out tickers that have no target prices (count === 0)
                                                 rankedTickers = tickerData
+                                                    .filter(t => t.count > 0)
                                                     .sort((a, b) => b.brokerCount - a.brokerCount)
                                                     .slice(0, 10);
                                             }
 
                                             return rankedTickers.map((t) => {
-                                                const summary = getTickerCallsSummary(t.ticker, filteredReportsForRankings);
                                                 const isPositive = t.avgUpside >= 0;
                                                 return (
                                                     <tr key={t.ticker} onClick={() => setSelectedReportId(t.latestReport.id)}>
                                                         <td>{t.ticker}</td>
                                                         <td>{t.avgTargetPrice?.toLocaleString() || '-'}</td>
-                                                        <td>{summary.element}</td>
+                                                        <td>{t.summaryElement}</td>
                                                         <td className={isPositive ? 'text-green' : 'text-red'}>
                                                             {(isPositive ? '+' : '') + safeToFixed(t.avgUpside, 1) + '%'}
                                                         </td>
@@ -1879,7 +1899,6 @@ export default function Dashboard({ reports: propReports, shouldFetchData }) {
                                                 </td>
                                                 <td style={{ textAlign: 'right' }} className="text-blue-400 font-medium whitespace-nowrap">
                                                     {actualPriceNow?.toLocaleString() || '-'}
-                                                    {isLive && <span className="text-[8px] ml-1 text-green-400 opacity-70" title="Live SSI Data">●</span>}
                                                 </td>
                                                 <td style={{ textAlign: 'right' }}>
                                                     {r.recommendation?.upside_at_call != null

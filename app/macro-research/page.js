@@ -80,10 +80,7 @@ export default function MacroResearchPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white">
-            <Header title="Macro Research" />
-
-            {/* Main Container - Full Width Fix */}
+        <div className="text-white pt-4">
             <main className="main-container px-6 py-8">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                     <div>
