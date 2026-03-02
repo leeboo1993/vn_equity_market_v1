@@ -167,9 +167,9 @@ export default function PriceBoard() {
 
     const fetchLivePrices = async () => {
         try {
-            // Need to fetch everything across all sectors, custom additions, and watchlist + Indices
+            // Need to fetch everything across all sectors, custom additions, and watchlist + Indices + Futures
             const customTickersGrouped = Object.values(customSectors).flat();
-            const allTickers = Array.from(new Set(['VNINDEX', 'VN30', ...Object.values(SECTORS).flat(), ...customTickersGrouped, 'GEX', ...watchlist]));
+            const allTickers = Array.from(new Set(['VNINDEX', 'VN30', 'VN30F1M', 'VN30F2M', ...Object.values(SECTORS).flat(), ...customTickersGrouped, 'GEX', ...watchlist]));
 
             if (allTickers.length === 0) {
                 setLoading(false);

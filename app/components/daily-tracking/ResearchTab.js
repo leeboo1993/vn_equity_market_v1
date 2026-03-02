@@ -89,7 +89,9 @@ export default function ResearchTab({ data }) {
 
     const filteredMacro = useMemo(() => {
         return macro_research.filter(item => {
-            return selectedMacroBroker === 'All' || item.broker === selectedMacroBroker;
+            if (selectedMacroBroker === 'All') return true;
+            const sourceName = item.source || item.Source || item.broker || '';
+            return sourceName.includes(selectedMacroBroker);
         });
     }, [macro_research, selectedMacroBroker]);
 
@@ -237,21 +239,21 @@ export default function ResearchTab({ data }) {
                     </div>
                 </div>
 
-                {/* Filter Chips */}
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                {/* Filter Chips - Match DL Equity Layout but Dark Theme */}
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px', padding: '0 1.5rem' }}>
                     {['All', 'Goldman Sachs', 'Gavekal', 'SSI', '13D'].map(broker => (
                         <button
                             key={broker}
                             onClick={() => setSelectedMacroBroker(broker)}
                             style={{
                                 padding: '6px 16px',
-                                borderRadius: '16px',
+                                borderRadius: '20px',
                                 fontSize: '13px',
                                 cursor: 'pointer',
                                 fontWeight: 500,
-                                background: selectedMacroBroker === broker ? '#027368' : 'transparent',
-                                color: selectedMacroBroker === broker ? '#fff' : '#888',
-                                border: `1px solid ${selectedMacroBroker === broker ? '#027368' : '#333'}`,
+                                background: selectedMacroBroker === broker ? '#027368' : '#fff',
+                                color: selectedMacroBroker === broker ? '#fff' : '#64748b',
+                                border: `1px solid ${selectedMacroBroker === broker ? '#027368' : '#cbd5e1'}`,
                                 transition: 'all 0.2s'
                             }}>
                             {broker}
@@ -259,28 +261,52 @@ export default function ResearchTab({ data }) {
                     ))}
                 </div>
 
-                {/* Macro Grid */}
+                {/* Macro Grid - Dark Theme Match */}
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                    gap: '16px'
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))',
+                    gap: '16px',
+                    padding: '0 1.5rem 1.5rem 1.5rem'
                 }}>
                     {filteredMacro.length === 0 ? (
                         <div style={{ color: '#888', padding: '2rem 0', gridColumn: '1 / -1', textAlign: 'center' }}>No macro research available.</div>
                     ) : (
                         filteredMacro.map((item, i) => {
-                            const badgeStyle = getMacroBadgeColors(item.broker);
+                            const sourceName = item.source || item.Source || item.broker || 'UNKNOWN';
+                            const dateStr = item.date ? item.date.substring(0, 10) : (item.DatePublish ? item.DatePublish.substring(0, 10) : '');
+
+                            // For formatting the date like "Mar 1, 2026"
+                            const formattedDate = dateStr ? new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+
+                            const titleStr = item.title || item.Title || 'Untitled';
+                            const summaryStr = item.summary || item.Summary || item.snippet || item.body || '';
+
+                            const badgeStyle = getMacroBadgeColors(sourceName);
+
                             return (
-                                <div key={i} style={{
-                                    border: '1px solid #2a2a2a',
-                                    borderRadius: '8px',
-                                    padding: '20px',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    backgroundColor: '#161616',
-                                    transition: 'border-color 0.2s, transform 0.2s, box-shadow 0.2s',
-                                    cursor: 'pointer'
-                                }}
+                                <div key={i}
+                                    onClick={() => setSelectedNews({
+                                        ...item,
+                                        ticker: 'MACRO',
+                                        nType: 'Research',
+                                        sentimentStyle: { bg: badgeStyle.bg, color: badgeStyle.color },
+                                        typeStyle: { bg: '#2a2a2a', color: '#999' },
+                                        snippet: item.summary || item.snippet || '',
+                                        body: item.body || '',
+                                        date: formattedDate || dateStr,
+                                        broker: sourceName,
+                                        title: titleStr
+                                    })}
+                                    style={{
+                                        border: '1px solid #2a2a2a',
+                                        borderRadius: '8px',
+                                        padding: '20px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        backgroundColor: '#161616',
+                                        transition: 'border-color 0.2s, transform 0.2s, box-shadow 0.2s',
+                                        cursor: 'pointer'
+                                    }}
                                     onMouseEnter={(e) => {
                                         e.currentTarget.style.borderColor = '#444';
                                         e.currentTarget.style.transform = 'translateY(-2px)';
@@ -291,15 +317,16 @@ export default function ResearchTab({ data }) {
                                         e.currentTarget.style.transform = 'translateY(0)';
                                         e.currentTarget.style.boxShadow = 'none';
                                     }}>
-                                    {/* Header: Badge & Date */}
+
+                                    {/* Header: Broker Pill & Date */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                        <Badge bg={badgeStyle.bg} color={badgeStyle.color}>{item.broker || 'UNKNOWN'}</Badge>
-                                        <span style={{ fontSize: '12px', color: '#888' }}>{item.date}</span>
+                                        <Badge bg={badgeStyle.bg} color={badgeStyle.color}>{sourceName}</Badge>
+                                        <span style={{ fontSize: '13px', color: '#888' }}>{formattedDate || dateStr}</span>
                                     </div>
 
                                     {/* Title */}
-                                    <h4 style={{ margin: '0 0 12px 0', fontSize: '15px', color: '#fff', lineHeight: '1.4' }}>
-                                        {item.title}
+                                    <h4 style={{ margin: '0 0 12px 0', fontSize: '15px', fontWeight: '500', color: '#fff', lineHeight: '1.4' }}>
+                                        {titleStr}
                                     </h4>
 
                                     {/* Excerpt Snippet */}
@@ -312,7 +339,7 @@ export default function ResearchTab({ data }) {
                                         WebkitBoxOrient: 'vertical',
                                         overflow: 'hidden'
                                     }}>
-                                        {item.snippet || item.body || ''}
+                                        {summaryStr}
                                     </div>
                                 </div>
                             );
@@ -378,30 +405,36 @@ export default function ResearchTab({ data }) {
                         </div>
 
                         {/* Summary Block (Left border highlight) */}
-                        <div style={{
-                            backgroundColor: '#262626',
-                            borderLeft: '4px solid #027368',
-                            padding: '16px 20px',
-                            borderRadius: '0 8px 8px 0',
-                            marginBottom: '24px',
-                            color: '#e5e7eb',
-                            fontSize: '14px',
-                            lineHeight: '1.6'
-                        }}>
-                            <span style={{ fontWeight: 600, color: '#fff', marginRight: '6px' }}>Summary:</span>
-                            {selectedNews.snippet || selectedNews.title || "No summary available."}
-                        </div>
+                        {selectedNews.snippet && selectedNews.snippet !== selectedNews.body && (
+                            <div style={{
+                                backgroundColor: '#262626',
+                                borderLeft: '4px solid #027368',
+                                padding: '16px 20px',
+                                borderRadius: '0 8px 8px 0',
+                                marginBottom: '24px',
+                                color: '#e5e7eb',
+                                fontSize: '14px',
+                                lineHeight: '1.6'
+                            }}>
+                                <span style={{ fontWeight: 600, color: '#fff', marginRight: '6px' }}>Summary:</span>
+                                {selectedNews.snippet}
+                            </div>
+                        )}
 
-                        {/* Full Description Body */}
-                        <div style={{
-                            fontSize: '15px',
-                            lineHeight: '1.7',
-                            color: '#d1d5db',
-                            marginBottom: '32px',
-                            whiteSpace: 'pre-line'
-                        }}>
-                            {selectedNews.body || selectedNews.snippet || "No additional body text provided."}
-                        </div>
+                        {/* Full Description Body (Only if actual body exists, otherwise hide empty box) */}
+                        {selectedNews.body ? (
+                            <div style={{
+                                fontSize: '15px',
+                                lineHeight: '1.7',
+                                color: '#d1d5db',
+                                marginBottom: '32px',
+                                whiteSpace: 'pre-line'
+                            }}>
+                                {selectedNews.body}
+                            </div>
+                        ) : (
+                            <div style={{ marginBottom: '32px' }} />
+                        )}
 
                         {/* Modal Footer */}
                         <div style={{

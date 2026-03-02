@@ -119,7 +119,7 @@ export async function GET(request) {
             };
         });
 
-        // SSI Index Cache
+        // SSI Index Cache and Futures Fallback
         const INDEX_CACHE_TTL = 60 * 1000; // 60 seconds
         if (typeof global.indexCache === 'undefined') {
             global.indexCache = { data: null, expires: 0 };
@@ -152,18 +152,40 @@ export async function GET(request) {
                     return await idxRes.json();
                 };
 
-                const fetchStock = async (sym) => {
-                    const res = await fetch(`https://fc-data.ssi.com.vn/api/v2/Market/DailyStockPrice?symbol=${sym}&fromDate=${fromStr}&toDate=${toStr}&pageIndex=1&pageSize=10`, {
-                        headers: { "Authorization": `Bearer ${ssiToken}` }
-                    });
-                    return await res.json();
+                // Fetch Futures via DNSE Entrade (Public, No Auth)
+                const fetchFuturesDNSE = async (sym) => {
+                    const toTime = Math.floor(Date.now() / 1000);
+                    const fromTime = toTime - (7 * 24 * 60 * 60); // 7 days ago
+                    const res = await fetch(`https://services.entrade.com.vn/chart-api/v2/ohlcs/derivative?resolution=1D&symbol=${sym}&from=${fromTime}&to=${toTime}`);
+                    if (!res.ok) return null;
+                    const data = await res.json();
+
+                    if (data && data.t && data.t.length > 0) {
+                        const lastIdx = data.t.length - 1;
+                        const prevIdx = lastIdx > 0 ? lastIdx - 1 : lastIdx;
+
+                        const close = data.c[lastIdx];
+                        const ref = lastIdx > 0 ? data.c[prevIdx] : close;
+
+                        return {
+                            symbol: sym,
+                            price: close,
+                            change: (close - ref),
+                            pctChange: ref > 0 ? ((close - ref) / ref) * 100 : 0,
+                            high: data.h[lastIdx],
+                            low: data.l[lastIdx],
+                            ref: ref,
+                            totalVol: data.v[lastIdx]
+                        };
+                    }
+                    return null;
                 };
 
-                const [vnindexData, vn30Data, f1m, f2m] = await Promise.all([
+                const [vnindexData, vn30Data, f1mData, f2mData] = await Promise.all([
                     fetchIndex('VNINDEX'),
                     (async () => { await new Promise(r => setTimeout(r, 1200)); return fetchIndex('VN30'); })(),
-                    (async () => { await new Promise(r => setTimeout(r, 2400)); return fetchStock('VN30F1M'); })(),
-                    (async () => { await new Promise(r => setTimeout(r, 3600)); return fetchStock('VN30F2M'); })()
+                    fetchFuturesDNSE('VN30F1M'),
+                    fetchFuturesDNSE('VN30F2M')
                 ]);
 
                 const ssiPrices = {};
@@ -180,10 +202,6 @@ export async function GET(request) {
                         });
 
                         if (sortedData.length > 0) {
-                            // During off-hours, the current day might have 0 price but valid ref/change?
-                            // Or the current day might only exist in SSI as a "placeholder" with 0s.
-                            // We look for the first entry with a non-zero ClosePrice/IndexValue.
-                            // Look for the first entry with a non-zero price (historical fallback)
                             let idx = sortedData[0];
                             let priceVal = 0;
                             for (const entry of sortedData) {
@@ -196,15 +214,9 @@ export async function GET(request) {
 
                             const sym = (idx.IndexId || idx.indexId || idx.Symbol || idx.symbol || '').toUpperCase();
                             if (sym) {
-                                // Points check: Futures often have PriceChange, Indices have Change (points) or RatioChange
                                 let changeVal = idx.Change !== undefined ? parseFloat(idx.Change || idx.change || 0) : parseFloat(idx.PriceChange || idx.priceChange || 0);
-
-                                // SSI Indices sometimes return change as 0.056 instead of 5.6 points. 
-                                // We check RatioChange to detect if we need to scale.
                                 let pctVal = parseFloat(idx.RatioChange || idx.pctChange || idx.PerPriceChange || idx.perPriceChange || 0);
 
-                                // Fix: If change is tiny but pct is large, it's likely a scaling issue. 
-                                // For VNINDEX ~1200, 1% is 12 pts. If change is 0.12, multiply by 100.
                                 if (Math.abs(changeVal) < 1 && Math.abs(pctVal) > 0.01 && priceVal > 100) {
                                     changeVal *= 100;
                                 }
@@ -226,7 +238,7 @@ export async function GET(request) {
                                     date: idx.TradingDate || idx.tradingDate || '',
                                     time: idx.Time || idx.time || '',
                                     isIndex: true,
-                                    isSnapshot: true // Mark as historical snapshot if appropriate
+                                    isSnapshot: true
                                 };
                             }
                         }
@@ -235,15 +247,17 @@ export async function GET(request) {
 
                 processData(vnindexData);
                 processData(vn30Data);
-                processData(f1m);
-                processData(f2m);
+
+                // Add Futures directly to cache
+                if (f1mData) ssiPrices['VN30F1M'] = f1mData;
+                if (f2mData) ssiPrices['VN30F2M'] = f2mData;
 
                 global.indexCache = {
                     data: ssiPrices,
                     expires: Date.now() + INDEX_CACHE_TTL
                 };
             } catch (idxError) {
-                console.warn("Could not fetch SSI Index Data:", idxError.message);
+                console.warn("Could not fetch SSI Index/Futures Data:", idxError.message);
             }
         }
 
