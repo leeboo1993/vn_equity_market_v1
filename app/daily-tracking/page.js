@@ -18,22 +18,39 @@ import FundamentalsTab from '../components/daily-tracking/FundamentalsTab';
 export default function DLEquityPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
-    const isAdmin = session?.user?.role === 'admin';
+    const role = session?.user?.role;
 
-    // Restrict tabs based on role
-    const availableTabs = isAdmin
-        ? ['Market', 'Economics', 'Research', 'Fundamentals']
-        : ['Research'];
-
+    const [availableTabs, setAvailableTabs] = useState([]);
     const [activeTab, setActiveTab] = useState('Market');
     const [tabData, setTabData] = useState({});
+    const [loadingFeatures, setLoadingFeatures] = useState(true);
 
-    // Ensure activeTab is always valid if role changes or on mount
+    // Fetch feature settings to determine available tabs
     useEffect(() => {
-        if (!availableTabs.includes(activeTab)) {
-            setActiveTab(availableTabs[0]);
+        if (status === 'authenticated' && role) {
+            fetch('/api/admin/features')
+                .then(res => res.json())
+                .then(settings => {
+                    const tabs = [];
+                    if (settings['Daily Tracking - Market']?.includes(role)) tabs.push('Market');
+                    if (settings['Daily Tracking - Economics']?.includes(role)) tabs.push('Economics');
+                    if (settings['Daily Tracking - Research']?.includes(role)) tabs.push('Research');
+                    if (settings['Daily Tracking - Fundamentals']?.includes(role)) tabs.push('Fundamentals');
+
+                    setAvailableTabs(tabs);
+                    if (tabs.length > 0 && !tabs.includes(activeTab)) {
+                        setActiveTab(tabs[0]);
+                    }
+                    setLoadingFeatures(false);
+                })
+                .catch(err => {
+                    console.error("Failed to fetch features", err);
+                    setLoadingFeatures(false);
+                });
+        } else if (status === 'unauthenticated') {
+            router.push('/login');
         }
-    }, [isAdmin, activeTab, availableTabs]);
+    }, [status, role]);
 
     const marketData = tabData['market'];
     const currentData = tabData[activeTab.toLowerCase()];
@@ -45,12 +62,6 @@ export default function DLEquityPage() {
     // Time filter: 1M, 3M, 6M, YTD, 1Y, ALL
     const [timeFilter, setTimeFilter] = useState('3M');
 
-
-    useEffect(() => {
-        if (status === 'unauthenticated') {
-            router.push('/login');
-        }
-    }, [status, router]);
 
     useEffect(() => {
         async function fetchTabData(tabName) {
@@ -135,7 +146,7 @@ export default function DLEquityPage() {
         };
     }, [marketData, timeFilter]);
 
-    if (status === 'loading' || loading) {
+    if (status === 'loading' || loadingFeatures || loading) {
         return (
             <div style={{ background: '#0a0a0a', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <div style={{ color: '#888', fontSize: '14px' }}>Loading Market Data...</div>

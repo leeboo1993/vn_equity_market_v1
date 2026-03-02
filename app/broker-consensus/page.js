@@ -11,24 +11,46 @@ import MacroResearchPage from '../macro-research/page';
 import StrategyResearchPage from '../strategy-research/page';
 
 export default function BrokerConsensusPage() {
-    const { data: session } = useSession();
-    const isAdmin = session?.user?.role === 'admin';
+    const { data: session, status } = useSession();
+    const role = session?.user?.role;
 
-    // Restrict tabs based on role
-    const availableTabs = isAdmin
-        ? ['Daily', 'Company', 'Macro', 'Strategy']
-        : ['Daily', 'Company'];
-
+    const [availableTabs, setAvailableTabs] = useState([]);
     const [activeTab, setActiveTab] = useState('Daily');
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [portalNode, setPortalNode] = useState(null);
+    const [loadingFeatures, setLoadingFeatures] = useState(true);
 
-    // Ensure activeTab is always valid if role changes or on mount
+    // Fetch feature settings to determine available tabs
     useEffect(() => {
-        if (!availableTabs.includes(activeTab)) {
-            setActiveTab(availableTabs[0]);
+        if (status === 'authenticated' && role) {
+            fetch('/api/admin/features')
+                .then(res => res.json())
+                .then(settings => {
+                    const tabs = [];
+                    if (settings['Broker Consensus - Daily']?.includes(role)) tabs.push('Daily');
+                    if (settings['Broker Consensus - Company']?.includes(role)) tabs.push('Company');
+                    if (settings['Broker Consensus - Macro']?.includes(role)) tabs.push('Macro');
+                    if (settings['Broker Consensus - Strategy']?.includes(role)) tabs.push('Strategy');
+
+                    setAvailableTabs(tabs);
+                    if (tabs.length > 0 && !tabs.includes(activeTab)) {
+                        setActiveTab(tabs[0]);
+                    }
+                    setLoadingFeatures(false);
+                })
+                .catch(err => {
+                    console.error("Failed to fetch features", err);
+                    setLoadingFeatures(false);
+                });
+        } else if (status === 'unauthenticated') {
+            setLoadingFeatures(false);
         }
-    }, [isAdmin, activeTab, availableTabs]);
+    }, [status, role]);
+
+    if (loadingFeatures || status === 'loading') {
+        return <div style={{ background: '#0a0a0a', minHeight: '100vh' }}></div>;
+    }
+
 
     return (
         <div style={{ backgroundColor: '#0a0a0a', minHeight: '100vh', color: '#ccc', fontFamily: 'Inter, sans-serif' }}>
