@@ -2,7 +2,10 @@ import { getFeatureSettings, saveFeatureSettings } from "@/lib/rbac";
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
+
     const session = await auth();
     if (!session || session.user.role !== 'admin') {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

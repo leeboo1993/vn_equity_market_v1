@@ -46,10 +46,11 @@ export async function POST(request) {
 
         const command = new PutObjectCommand({
             Bucket: BUCKET_NAME,
-            Key: `config/custom_sectors.json`,
+            Key: `config/${FILE_KEY}`,
             Body: JSON.stringify(body),
             ContentType: "application/json",
         });
+
 
         await r2Client.send(command);
 
