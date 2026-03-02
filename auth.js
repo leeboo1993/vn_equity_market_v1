@@ -48,6 +48,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             if (user) {
                 token.role = user.role;
                 token.approved = user.approved;
+                token.email = user.email;
+
+                // Admin override via environment variable
+                const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
+                if (user.email && adminEmails.includes(user.email.toLowerCase())) {
+                    token.role = 'admin';
+                    token.approved = true;
+                }
             }
 
             // Allow manual updates (e.g. via the Admin Dashboard if we implemented session updating)
