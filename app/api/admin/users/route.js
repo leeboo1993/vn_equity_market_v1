@@ -1,49 +1,52 @@
-import { getUsers, updateUser, deleteUser } from "@/lib/users";
 import { auth } from "@/auth";
+import { getUsers, updateUser, deleteUser } from "@/lib/users";
 import { NextResponse } from "next/server";
 
 export async function GET() {
     const session = await auth();
     if (!session || session.user.role !== 'admin') {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        return new NextResponse("Unauthorized", { status: 401 });
     }
 
     const users = await getUsers();
-    // Don't leak passwords to the frontend
-    const sanitizedUsers = users.map(({ password, ...rest }) => rest);
-    return NextResponse.json(sanitizedUsers);
+    // Return users without passwords
+    const safeUsers = users.map(({ password, ...u }) => u);
+    return NextResponse.json(safeUsers);
 }
 
-export async function PATCH(req) {
+export async function POST(req) {
     const session = await auth();
     if (!session || session.user.role !== 'admin') {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { email, approved, role } = await req.json();
-    const updates = {};
-    if (approved !== undefined) updates.approved = approved;
-    if (role !== undefined) updates.role = role;
+    try {
+        const { email, role, approved } = await req.json();
+        if (!email) return new NextResponse("Email required", { status: 400 });
 
-    const updatedUser = await updateUser(email, updates);
-    return NextResponse.json(updatedUser);
+        const updated = await updateUser(email, { role, approved });
+        if (!updated) return new NextResponse("User not found", { status: 404 });
+
+        const { password, ...safeUser } = updated;
+        return NextResponse.json(safeUser);
+    } catch (e) {
+        return new NextResponse(e.message, { status: 500 });
+    }
 }
 
 export async function DELETE(req) {
     const session = await auth();
     if (!session || session.user.role !== 'admin') {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { email } = await req.json();
-    if (!email) {
-        return NextResponse.json({ error: "Email is required" }, { status: 400 });
-    }
+    try {
+        const { email } = await req.json();
+        if (!email) return new NextResponse("Email required", { status: 400 });
 
-    const success = await deleteUser(email);
-    if (!success) {
-        return NextResponse.json({ error: "User not found" }, { status: 404 });
+        const success = await deleteUser(email);
+        return NextResponse.json({ success });
+    } catch (e) {
+        return new NextResponse(e.message, { status: 500 });
     }
-    
-    return NextResponse.json({ success: true });
 }
