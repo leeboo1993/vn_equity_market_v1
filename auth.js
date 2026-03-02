@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import authConfig from "./auth.config";
-import { findUserByEmail, createUser, verifyUserPassword } from "@/lib/users";
+import { findUserByEmail, createUser, verifyUserPassword, updateUser } from "@/lib/users";
+import bcrypt from "bcryptjs";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
     ...authConfig,
@@ -10,15 +11,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             ...authConfig.providers.find(p => p.id === 'credentials'),
             async authorize(credentials) {
                 const user = await verifyUserPassword(credentials.email, credentials.password);
-                if (user) return user;
+                if (user) {
+                    const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
+                    const isAdmin = credentials.email && adminEmails.includes(credentials.email.toLowerCase());
+                    if (isAdmin && (!user.approved || user.role !== 'admin')) {
+                        return await updateUser(credentials.email, { role: 'admin', approved: true });
+                    }
+                    return user;
+                }
 
                 const existing = await findUserByEmail(credentials.email);
-                if (existing) return null;
-
                 const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
                 const isAdmin = credentials.email && adminEmails.includes(credentials.email.toLowerCase());
 
+                if (existing) {
+                    if (isAdmin && !existing.password) {
+                        const hashedPassword = await bcrypt.hash(credentials.password, 10);
+                        return await updateUser(credentials.email, { password: hashedPassword, role: 'admin', approved: true });
+                    }
+                    return null;
+                }
+
                 const newUser = await createUser({
+
                     email: credentials.email,
                     password: credentials.password,
                     provider: "credentials",
