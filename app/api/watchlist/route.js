@@ -17,12 +17,14 @@ export async function GET(request) {
         const userId = session.user.email; // Use email as unique identifier for watchlists
 
         try {
+            const prefix = process.env.PROJECT_ID ? `${process.env.PROJECT_ID}_` : '';
             const command = new GetObjectCommand({
                 Bucket: BUCKET_NAME,
-                Key: `watchlists/${userId}.json`,
+                Key: `users/${prefix}watchlist_${userId}.json`,
             });
 
             const response = await r2Client.send(command);
+
             const str = await response.Body.transformToString();
             const data = JSON.parse(str);
 
@@ -57,9 +59,10 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Invalid payload structure' }, { status: 400 });
         }
 
+        const prefix = process.env.PROJECT_ID ? `${process.env.PROJECT_ID}_` : '';
         const command = new PutObjectCommand({
             Bucket: BUCKET_NAME,
-            Key: `watchlists/${userId}.json`,
+            Key: `users/${prefix}watchlist_${userId}.json`,
             Body: JSON.stringify(body),
             ContentType: "application/json",
         });

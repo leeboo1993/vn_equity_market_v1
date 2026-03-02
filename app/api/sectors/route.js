@@ -5,13 +5,15 @@ import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { auth } from "@/auth";
 
 const BUCKET_NAME = R2_BUCKET;
+const prefix = process.env.PROJECT_ID ? `${process.env.PROJECT_ID}_` : '';
+const FILE_KEY = `${prefix}sectors.json`;
 
 export async function GET(request) {
     try {
         try {
             const command = new GetObjectCommand({
                 Bucket: BUCKET_NAME,
-                Key: `config/custom_sectors.json`,
+                Key: `config/${FILE_KEY}`,
             });
 
             const response = await r2Client.send(command);
