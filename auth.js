@@ -32,6 +32,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     callbacks: {
         ...authConfig.callbacks,
         async signIn({ user, account, profile }) {
+            const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
+            const isAdmin = user.email && adminEmails.includes(user.email.toLowerCase());
+
+            // Registration Restriction: Block non-admins if RESTRICT_REGISTRATION is true
+            if (process.env.RESTRICT_REGISTRATION === 'true' && !isAdmin) {
+                // Check if user already exists (allow existing members to sign in)
+                const existingUser = await findUserByEmail(user.email);
+                if (!existingUser) return false;
+            }
+
             if (account.provider === "google" || account.provider === "facebook") {
                 let existingUser = await findUserByEmail(user.email);
                 if (!existingUser) {
@@ -40,9 +50,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         name: user.name,
                         image: user.image,
                         provider: account.provider,
+                        role: isAdmin ? "admin" : "member",
+                        approved: isAdmin ? true : false
                     });
                 }
-                // Attach database fields to the user object so they flow into the jwt callback
+                // Attach database fields to the user object
                 user.role = existingUser.role;
                 user.approved = existingUser.approved;
             }
@@ -54,24 +66,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 token.role = user.role;
                 token.approved = user.approved;
                 token.email = user.email;
-
-                // Admin override via environment variable
-                const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
-                if (user.email && adminEmails.includes(user.email.toLowerCase())) {
-                    token.role = 'admin';
-                    token.approved = true;
-                }
             }
 
-            // Allow manual updates (e.g. via the Admin Dashboard if we implemented session updating)
+            // --- IMMEDIATE ADMIN ELEVATION OVERRIDE ---
+            // Always verify Admin status from ENV to allow instant promotion without sign-out
+            const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
+            if (token.email && adminEmails.includes(token.email.toLowerCase())) {
+                token.role = 'admin';
+                token.approved = true;
+            }
+
+            // Allow manual updates
             if (trigger === "update" && session) {
                 token.role = session.user.role;
                 token.approved = session.user.approved;
             }
-
-            // Fallback: If for some reason we have a token but no role/approved status, 
-            // and we are NOT in the Edge runtime (middleware), we could fetch it here.
-            // But for now, ensuring it happens on signIn is the most efficient.
 
             return token;
         }
