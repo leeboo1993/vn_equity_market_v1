@@ -13,12 +13,13 @@ import {
 } from 'recharts';
 
 export default function DCCashRatioChart({ data }) {
-    if (!data || data.length === 0) return null;
-
     // data from dc_cash_ratio
     const chartData = useMemo(() => {
+        if (!data || data.length === 0) return [];
         return data.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
     }, [data]);
+
+    if (!data || data.length === 0) return null;
 
     return (
         <div className="card" style={{ padding: '1.5rem', height: '300px', display: 'flex', flexDirection: 'column' }}>

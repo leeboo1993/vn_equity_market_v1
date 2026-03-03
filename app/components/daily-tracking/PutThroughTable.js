@@ -5,12 +5,13 @@ import { useMemo, useState } from 'react';
 export default function PutThroughTable({ data }) {
     const [period, setPeriod] = useState(1); // 1, 7, 30
 
-    if (!data || data.length === 0) return null;
-
     const tableData = useMemo(() => {
+        if (!data || data.length === 0) return [];
         return data.filter(d => d.period_days === period)
             .sort((a, b) => b.pt_os_pct - a.pt_os_pct);
     }, [data, period]);
+
+    if (!data || data.length === 0) return null;
 
     const formatPct = (val) => {
         if (!val && val !== 0) return '-';

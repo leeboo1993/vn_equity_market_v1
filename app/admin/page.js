@@ -18,7 +18,7 @@ export default function AdminPage() {
         } else if (status === "authenticated") {
             fetchData();
         }
-    }, [status, session]);
+    }, [status, session, router]);
 
     const fetchData = async () => {
         setIsLoading(true);

@@ -25,9 +25,7 @@ export default function ResearchTab({ data }) {
     const [selectedNews, setSelectedNews] = useState(null); // Modal state
     const [selectedMacroBroker, setSelectedMacroBroker] = useState('All');
 
-    if (!data) return <div style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>No research data available.</div>;
-
-    const { ticker_news = [], macro_research = [] } = data; // Extract Macro Research
+    const { ticker_news = [], macro_research = [] } = data || {}; // Extract Macro Research
 
     // Extracted Unique Values for Dropdowns
     const brokers = useMemo(() => ['All Brokers', ...new Set(ticker_news.map(n => n.broker).filter(Boolean))], [ticker_news]);
@@ -94,6 +92,8 @@ export default function ResearchTab({ data }) {
             return sourceName.includes(selectedMacroBroker);
         });
     }, [macro_research, selectedMacroBroker]);
+
+    if (!data) return <div style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>No research data available.</div>;
 
     // Shared input styling
     const inputStyle = {

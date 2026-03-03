@@ -38,9 +38,7 @@ export default function DLEquityPage() {
                     if (settings['Daily Tracking - Fundamentals']?.includes(role)) tabs.push('Fundamentals');
 
                     setAvailableTabs(tabs);
-                    if (tabs.length > 0 && !tabs.includes(activeTab)) {
-                        setActiveTab(tabs[0]);
-                    }
+                    setActiveTab(prev => (tabs.length > 0 && !tabs.includes(prev)) ? tabs[0] : prev);
                     setLoadingFeatures(false);
                 })
                 .catch(err => {
@@ -50,7 +48,7 @@ export default function DLEquityPage() {
         } else if (status === 'unauthenticated') {
             router.push('/login');
         }
-    }, [status, role]);
+    }, [status, role, router]);
 
     const marketData = tabData['market'];
     const currentData = tabData[activeTab.toLowerCase()];

@@ -1,14 +1,21 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // Specialized Hook to compare previous and current values to trigger CSS flashes
+// Fixed to avoid accessing ref during render
 function usePrevious(value) {
-    const ref = useRef();
+    const [prev, setPrev] = useState(value);
+    const currentRef = useRef(value);
+
     useEffect(() => {
-        ref.current = value;
-    });
-    return ref.current;
+        if (currentRef.current !== value) {
+            setPrev(currentRef.current);
+            currentRef.current = value;
+        }
+    }, [value]);
+
+    return prev;
 }
 
 // Reusable Cell component that automatically flashes green/red when its value changes
@@ -21,11 +28,18 @@ const LiveCell = ({ value, formatter, style, comparePrice, currentPrice }) => {
             // Determine flash color. If comparePrice is passed, use it relative to previous, otherwise just absolute change
             const isUp = currentPrice ? currentPrice > comparePrice : value > prevValue;
 
-            setFlashClass(isUp ? 'flash-green' : 'flash-red');
+            // Use setTimeout to avoid synchronous setState warning inside useEffect mount
+            const flashTimer = setTimeout(() => {
+                setFlashClass(isUp ? 'flash-green' : 'flash-red');
+            }, 0);
 
             // Remove flash class after animation completes (750ms)
-            const timer = setTimeout(() => setFlashClass(''), 750);
-            return () => clearTimeout(timer);
+            const clearTimer = setTimeout(() => setFlashClass(''), 750);
+
+            return () => {
+                clearTimeout(flashTimer);
+                clearTimeout(clearTimer);
+            };
         }
     }, [value, prevValue, currentPrice, comparePrice]);
 
@@ -143,7 +157,7 @@ export default function PriceBoard() {
     };
 
     // Active Tickers based on selected tab
-    const getActiveTickers = () => {
+    const getActiveTickers = useCallback(() => {
         if (activeTab === 'Watchlist') return watchlist;
 
         const baseTickers = SECTORS[activeTab] || [];
@@ -161,11 +175,11 @@ export default function PriceBoard() {
 
         // Deduplicate
         return Array.from(new Set(finalTickers));
-    };
+    }, [activeTab, watchlist, customSectors]);
 
     const activeTickers = getActiveTickers();
 
-    const fetchLivePrices = async () => {
+    const fetchLivePrices = useCallback(async () => {
         // Only fetch if window is visible
         if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
             return;
@@ -194,7 +208,7 @@ export default function PriceBoard() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [getActiveTickers, watchlist]);
 
     // Polling interval
     useEffect(() => {
@@ -215,7 +229,7 @@ export default function PriceBoard() {
             clearInterval(interval);
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
-    }, [activeTab, watchlist]); // Also re-bind on tab change to get fresh data immediately
+    }, [activeTab, watchlist, fetchLivePrices]); // Also re-bind on tab change to get fresh data immediately
 
     // Watchlist Controls
     const handleAddWatchlist = (e) => {

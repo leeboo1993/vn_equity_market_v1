@@ -25,11 +25,24 @@ const stringToColor = (str) => {
     return '#' + '00000'.substring(0, 6 - c.length) + c;
 };
 
-export default function SectorLeadershipChart({ data }) {
-    if (!data || data.length === 0) return null;
+const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+        const data = payload[0].payload;
+        return (
+            <div style={{ backgroundColor: '#111', border: '1px solid #333', padding: '10px', color: '#fff', fontSize: '12px' }}>
+                <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>{data.sector}</div>
+                <div>Net Score: {data.net_score.toFixed(3)}</div>
+                <div>Return 5D: {data.ret.toFixed(2)}%</div>
+            </div>
+        );
+    }
+    return null;
+};
 
-    // Get latest date data for the scatter plot
+export default function SectorLeadershipChart({ data }) {
+    // Get latest date data for the scatter plot (Must be BEFORE any early returns!)
     const chartData = useMemo(() => {
+        if (!data || data.length === 0) return [];
         const sorted = data.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
         const latestDate = sorted[sorted.length - 1]?.date;
         if (!latestDate) return [];
@@ -40,21 +53,7 @@ export default function SectorLeadershipChart({ data }) {
         }));
     }, [data]);
 
-    if (chartData.length === 0) return null;
-
-    const CustomTooltip = ({ active, payload }) => {
-        if (active && payload && payload.length) {
-            const data = payload[0].payload;
-            return (
-                <div style={{ backgroundColor: '#111', border: '1px solid #333', padding: '10px', color: '#fff', fontSize: '12px' }}>
-                    <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>{data.sector}</div>
-                    <div>Net Score: {data.net_score.toFixed(3)}</div>
-                    <div>Return 5D: {data.ret.toFixed(2)}%</div>
-                </div>
-            );
-        }
-        return null;
-    };
+    if (!data || data.length === 0 || chartData.length === 0) return null;
 
     return (
         <div className="card" style={{ padding: '1.5rem', height: '400px', display: 'flex', flexDirection: 'column' }}>

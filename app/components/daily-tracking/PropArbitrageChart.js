@@ -15,12 +15,13 @@ import {
 } from 'recharts';
 
 export default function PropArbitrageChart({ data }) {
-    if (!data || data.length === 0) return null;
-
     // data from derivatives_prop
     const chartData = useMemo(() => {
+        if (!data || data.length === 0) return [];
         return data.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
     }, [data]);
+
+    if (!data || data.length === 0) return null;
 
     const latest = chartData[chartData.length - 1];
 

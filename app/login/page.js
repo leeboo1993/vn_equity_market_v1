@@ -15,7 +15,13 @@ export default function LoginPage() {
         // Common in-app browser indicators (Messenger, Instagram, Line, etc.)
         const inApp = /FBAN|FBAV|Instagram|Line|IAB|WebView|Chrome-LUCST|MobSafari/i.test(ua) ||
             (ua.includes('iPhone') && ua.includes('AppleWebKit') && !ua.includes('Safari'));
-        setIsInAppBrowser(inApp);
+
+        // Defer state update to avoid synchronous cascading render warning
+        if (inApp) {
+            setTimeout(() => {
+                setIsInAppBrowser(true);
+            }, 0);
+        }
     }, []);
 
     const handleGoogleLogin = () => {
@@ -60,7 +66,7 @@ export default function LoginPage() {
                         </div>
                         <p className="warning-text">
                             Google & Facebook block logins from inside apps like Messenger.
-                            <strong> Please use the "Email Magic Link" button below </strong>
+                            <strong> Please use the &quot;Email Magic Link&quot; button below </strong>
                             to sign in seamlessly without leaving this app.
                         </p>
                     </div>

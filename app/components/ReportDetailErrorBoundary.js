@@ -25,7 +25,7 @@ class ReportDetailErrorBoundary extends React.Component {
                         Unable to display this report
                     </h3>
                     <p style={{ color: '#888', fontSize: '14px', marginBottom: '8px' }}>
-                        There appears to be an issue with this report's data structure.
+                        There appears to be an issue with this report&apos;s data structure.
                     </p>
                     <p style={{ color: '#666', fontSize: '12px' }}>
                         Error: {this.state.error?.message || 'Unknown error'}

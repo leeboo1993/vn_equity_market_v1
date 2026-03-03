@@ -35,6 +35,7 @@ export default function Sidebar({ isOpen, onClose }) {
                     <div className="sidebar-account-info">
                         <div className="sidebar-user-avatar">
                             {session.user.image ? (
+                                /* eslint-disable-next-line @next/next/no-img-element */
                                 <img src={session.user.image} alt={session.user.name} />
                             ) : (
                                 <div className="avatar-placeholder">

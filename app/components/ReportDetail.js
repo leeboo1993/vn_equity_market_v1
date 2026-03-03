@@ -7,9 +7,9 @@ export default function ReportDetail({ report }) {
 
     useEffect(() => {
         if (!report) return;
-        setLivePrice(null);
 
         const fetchLivePrice = async () => {
+            setLivePrice(null);
             try {
                 const res = await fetch(`/api/live-prices?tickers=${report.info_of_report.ticker}`);
                 if (res.ok) {

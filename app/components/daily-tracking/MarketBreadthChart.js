@@ -14,13 +14,13 @@ import {
 } from 'recharts';
 
 export default function MarketBreadthChart({ data }) {
-    if (!data || data.length === 0) return null;
-
     // data is expected to be vn_index array from market.json
-
     const chartData = useMemo(() => {
+        if (!data || data.length === 0) return [];
         return data.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
     }, [data]);
+
+    if (!data || data.length === 0) return null;
 
     return (
         <div className="card" style={{ padding: '1.5rem', height: '400px', display: 'flex', flexDirection: 'column' }}>

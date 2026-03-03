@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import {
     LineChart,
     Line,
@@ -82,10 +82,8 @@ export default function EconomicsTab({ data, timeFilter }) {
         );
     };
 
-    if (!data) return <div style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>No economics data available.</div>;
-
     // Filter by general time window
-    const getFilteredData = (arr) => {
+    const getFilteredData = useCallback((arr) => {
         if (!arr || !arr.length) return [];
         let days = 3650; // max default
         if (timeFilter === '1M') days = 30;
@@ -102,10 +100,11 @@ export default function EconomicsTab({ data, timeFilter }) {
         const cutoffStr = cutoffDate.toISOString().split('T')[0];
 
         return arr.filter(d => d.date >= cutoffStr).sort((a, b) => new Date(a.date) - new Date(b.date));
-    };
+    }, [timeFilter]);
 
     // 1. BANK DEPOSIT RATES: Unified Trend Data
     const depositChartData = useMemo(() => {
+        if (!data) return [];
         let rawSource = [];
         if (dataSource === 'Quote') {
             rawSource = getFilteredData(quoteData);
@@ -130,10 +129,11 @@ export default function EconomicsTab({ data, timeFilter }) {
             });
             return Object.values(grouped).sort((a, b) => new Date(a.date) - new Date(b.date));
         }
-    }, [dataSource, quoteData, data.deposit, depositTenor, selectedBanks, timeFilter]);
+    }, [dataSource, quoteData, data, depositTenor, selectedBanks, getFilteredData]);
 
     // 2. STATE TREASURY & OMO: Group by Date
     const treasuryChartData = useMemo(() => {
+        if (!data || !data.treasury) return [];
         const raw = getFilteredData(data.treasury);
         const grouped = {};
         raw.forEach(d => {
@@ -145,10 +145,11 @@ export default function EconomicsTab({ data, timeFilter }) {
             grouped[d.date][key] = d.rate;
         });
         return Object.values(grouped).sort((a, b) => new Date(a.date) - new Date(b.date));
-    }, [data.treasury, timeFilter]);
+    }, [data, getFilteredData]);
 
     // 3. INTERBANK RATES: Group by Date
     const interbankChartData = useMemo(() => {
+        if (!data || !data.interbank) return [];
         const raw = getFilteredData(data.interbank);
         const grouped = {};
         raw.forEach(d => {
@@ -161,7 +162,9 @@ export default function EconomicsTab({ data, timeFilter }) {
             grouped[d.date][key] = d.rate;
         });
         return Object.values(grouped).sort((a, b) => new Date(a.date) - new Date(b.date));
-    }, [data.interbank, timeFilter]);
+    }, [data, getFilteredData]);
+
+    if (!data) return <div style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>No economics data available.</div>;
 
     // Reusable Custom Tooltip styling
     const customTooltipStyle = {

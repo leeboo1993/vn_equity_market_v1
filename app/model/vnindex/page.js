@@ -139,7 +139,7 @@ export default function ModelPage() {
                             {/* Headline Card */}
                             <div className="card" style={{ padding: '1.2rem', background: 'linear-gradient(135deg, rgba(10,10,10,1) 0%, rgba(20,20,20,1) 100%)' }}>
                                 <div style={{ fontSize: '10px', color: '#888', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                    Tomorrow's Forecast
+                                    Tomorrow&apos;s Forecast
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '8px' }}>
                                     <span style={{

@@ -527,6 +527,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData, hideH
                 })
                 .catch(console.error);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [shouldFetchData]);
 
     // Fallback or loading indicator?
@@ -727,6 +728,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData, hideH
                 fetchReportsRecursively([filterPeriod]);
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filterPeriod, loadedQuarters, uniqueQuarters]);
 
     // On-demand fetch for selected report details
@@ -802,7 +804,7 @@ export default function Dashboard({ reports: propReports, shouldFetchData, hideH
 
             return mTicker && mBroker && mSector && mPeriod && mTarget && isValidStock;
         });
-    }, [reports, filterTicker, filterBroker, filterSector, filterPeriod, shouldFilterTargets, stockInfo]);
+    }, [reports, filterTicker, filterBroker, filterSector, filterPeriod, shouldFilterTargets, stockInfo, enrichedIds]);
 
     // Separate filtered reports for rankings (Top 10 lists)
     // This excludes the "Has Target Price" checkbox filter to ensure rankings are consistent

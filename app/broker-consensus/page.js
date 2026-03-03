@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import Header from '../components/Header';
 import { useFeatureAccess } from '@/lib/useFeatureAccess';
@@ -18,15 +18,20 @@ export default function BrokerConsensusPage() {
     const [activeTab, setActiveTab] = useState('Daily');
     const [portalNode, setPortalNode] = useState(null);
 
-    const availableTabs = [];
-    if (hasAccess('Broker Consensus - Daily')) availableTabs.push('Daily');
-    if (hasAccess('Broker Consensus - Company')) availableTabs.push('Company');
-    if (hasAccess('Broker Consensus - Macro')) availableTabs.push('Macro');
-    if (hasAccess('Broker Consensus - Strategy')) availableTabs.push('Strategy');
+    const availableTabs = useMemo(() => {
+        const tabs = [];
+        if (hasAccess('Broker Consensus - Daily')) tabs.push('Daily');
+        if (hasAccess('Broker Consensus - Company')) tabs.push('Company');
+        if (hasAccess('Broker Consensus - Macro')) tabs.push('Macro');
+        if (hasAccess('Broker Consensus - Strategy')) tabs.push('Strategy');
+        return tabs;
+    }, [hasAccess]);
 
     useEffect(() => {
         if (availableTabs.length > 0 && !availableTabs.includes(activeTab)) {
-            setActiveTab(availableTabs[0]);
+            setTimeout(() => {
+                setActiveTab(availableTabs[0]);
+            }, 0);
         }
     }, [availableTabs, activeTab]);
 
