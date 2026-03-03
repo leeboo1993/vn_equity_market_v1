@@ -72,12 +72,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
         return true;
     },
-    async jwt({ token, user, trigger, session }) {
+    async jwt({ token, user, account, trigger, session }) {
         // Initial sign in
         if (user) {
-            token.role = user.role;
-            token.approved = user.approved;
             token.email = user.email;
+            if (account && account.provider !== "credentials") {
+                // Fetch latest database status for OAuth providers
+                const dbUser = await findUserByEmail(user.email);
+                if (dbUser) {
+                    token.role = dbUser.role;
+                    token.approved = dbUser.approved;
+                } else {
+                    token.role = "member";
+                    token.approved = false;
+                }
+            } else {
+                // Credentials provider already returns dbUser
+                token.role = user.role;
+                token.approved = user.approved;
+            }
         }
 
         // Always enforce Admin elevation from ENV (allows instant promotion)
