@@ -207,6 +207,17 @@ body {
   .metric-value {
     font-size: 1.25rem;
   }
+
+  /* Specific Company Research Mobile Fixes */
+  .dashboard-grid .section-title {
+    font-size: 11px;
+    margin-top: 4px;
+    margin-bottom: 8px;
+  }
+
+  .dashboard-grid .table-wrapper {
+    margin-top: 4px;
+  }
 }
 
 @media (max-width: 480px) {

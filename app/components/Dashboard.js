@@ -1104,7 +1104,21 @@ export default function Dashboard({ reports: propReports, shouldFetchData, hideH
 
 
     const filterUI = (
-        <div style={{ display: 'flex', gap: '8px', zIndex: 10 }}>
+        <div style={{
+            display: 'flex',
+            gap: '8px',
+            zIndex: 10,
+            overflowX: 'auto',
+            paddingBottom: '4px',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch'
+        }}>
+            <style jsx>{`
+                div::-webkit-scrollbar {
+                    display: none;
+                }
+            `}</style>
             <CustomSelect
                 options={uniqueTickers} value={filterTicker} onChange={setFilterTicker} placeholder="All Tickers" customWidth="120px"
             />
@@ -1136,15 +1150,23 @@ export default function Dashboard({ reports: propReports, shouldFetchData, hideH
                     <div className="card">{/* Removed height: '100%' to allow content to expand and scroll */}
 
                         <div className="section-block">
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                                <h3 className="section-title" style={{ margin: 0 }}>Top 10 stocks</h3>
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: '12px',
+                                flexWrap: 'wrap',
+                                gap: '8px'
+                            }}>
+                                <h3 className="section-title" style={{ margin: 0, whiteSpace: 'nowrap' }}>Top 10 stocks</h3>
                                 <div style={{
                                     backgroundColor: '#2C2C2E',
                                     borderRadius: '10px',
                                     padding: '3px',
                                     display: 'inline-flex',
                                     gap: '0',
-                                    border: '1px solid #3A3A3C'
+                                    border: '1px solid #3A3A3C',
+                                    marginLeft: 'auto'
                                 }}>
                                     <button
                                         onClick={() => setRankingMode('buy')}
