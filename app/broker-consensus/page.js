@@ -70,7 +70,19 @@ export default function BrokerConsensusPage() {
                     ))}
                 </div>
                 {/* Filters Portal Target */}
-                <div ref={setPortalNode} style={{ display: 'flex', alignItems: 'center' }}></div>
+                <div ref={setPortalNode} className="portal-filters-container" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    minHeight: '40px'
+                }}></div>
+                <style jsx>{`
+                    @media (max-width: 768px) {
+                        .portal-filters-container {
+                            width: 100%;
+                            justify-content: flex-start;
+                        }
+                    }
+                `}</style>
             </div>
 
             {/* Tab Content */}

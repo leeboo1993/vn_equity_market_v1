@@ -1109,6 +1109,8 @@ export default function Dashboard({ reports: propReports, shouldFetchData, hideH
             gap: '8px',
             zIndex: 10,
             overflowX: 'auto',
+            width: '100%',
+            maxWidth: 'calc(100vw - 3rem)',
             paddingBottom: '4px',
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
