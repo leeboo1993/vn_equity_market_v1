@@ -7,8 +7,8 @@ import { useFeatureAccess } from '../lib/useFeatureAccess';
 
 import DailyTrackingPage from '../components/DailyBrokerConsensus';
 import Dashboard from '../components/Dashboard';
-import MacroResearchPage from '../macro-research/page';
-import StrategyResearchPage from '../strategy-research/page';
+import MacroResearchPage from '../macro-research/page.js';
+import StrategyResearchPage from '../strategy-research/page.js';
 
 export default function BrokerConsensusPage() {
     const { data: session, status } = useSession();
