@@ -1,8 +1,30 @@
 'use client';
 
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function WaitingApprovalPage() {
+    const { data: session, update } = useSession();
+    const router = useRouter();
+
+    // Poll every 10 seconds to check if user has been approved
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            // Force session refresh from the server (triggers jwt callback which re-checks DB)
+            await update();
+        }, 10000);
+
+        return () => clearInterval(interval);
+    }, [update]);
+
+    // Redirect to home when approval is detected
+    useEffect(() => {
+        if (session?.user?.approved) {
+            router.replace("/");
+        }
+    }, [session, router]);
+
     return (
         <div className="waiting-container">
             <div className="waiting-card">
@@ -13,7 +35,7 @@ export default function WaitingApprovalPage() {
                     However, access to the investment data requires manual approval from the administrator.
                 </p>
                 <p className="note">
-                    You will be able to access the dashboard once your account is approved.
+                    You will be automatically redirected once your account is approved.
                 </p>
                 <button onClick={() => signOut({ callbackUrl: "/login" })} className="logout-btn">
                     Logout

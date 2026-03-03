@@ -91,6 +91,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 token.role = user.role;
                 token.approved = user.approved;
             }
+            token.lastDbCheck = Date.now();
+        }
+
+        // Periodically re-check the database for approval/role changes (every 30s)
+        // This ensures admin approval takes effect without requiring re-login
+        const DB_CHECK_INTERVAL = 30 * 1000; // 30 seconds
+        if (!token.lastDbCheck || (Date.now() - token.lastDbCheck > DB_CHECK_INTERVAL)) {
+            try {
+                const dbUser = await findUserByEmail(token.email);
+                if (dbUser) {
+                    token.role = dbUser.role;
+                    token.approved = dbUser.approved;
+                }
+            } catch (e) {
+                console.error("JWT db re-check failed:", e);
+            }
+            token.lastDbCheck = Date.now();
         }
 
         // Always enforce Admin elevation from ENV (allows instant promotion)
