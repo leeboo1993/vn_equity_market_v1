@@ -1,16 +1,15 @@
-import { NextResponse } from 'next/server';
-import { getFeatureSettings } from '../../../lib/rbac';
+import { getFeatureSettings } from "@/lib/rbac";
+import { auth } from "@/auth";
+import { NextResponse } from "next/server";
 
-// Public endpoint - anyone can read feature settings
+export const dynamic = "force-dynamic";
+
 export async function GET() {
-    try {
-        const features = await getFeatureSettings();
-        return NextResponse.json(features);
-    } catch (error) {
-        console.error('Error fetching features:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch features' },
-            { status: 500 }
-        );
+    const session = await auth();
+    if (!session) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const settings = await getFeatureSettings();
+    return NextResponse.json(settings);
 }

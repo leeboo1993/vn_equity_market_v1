@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Header from '../components/Header';
-import Sidebar from '../components/Sidebar';
+import { useFeatureAccess } from '../lib/useFeatureAccess';
 
 import DailyTrackingPage from '../components/DailyBrokerConsensus';
 import Dashboard from '../components/Dashboard';
@@ -13,39 +13,22 @@ import StrategyResearchPage from '../strategy-research/page';
 export default function BrokerConsensusPage() {
     const { data: session, status } = useSession();
     const role = session?.user?.role;
+    const { hasAccess, loading: loadingFeatures } = useFeatureAccess();
 
-    const [availableTabs, setAvailableTabs] = useState([]);
     const [activeTab, setActiveTab] = useState('Daily');
-    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [portalNode, setPortalNode] = useState(null);
-    const [loadingFeatures, setLoadingFeatures] = useState(true);
 
-    // Fetch feature settings to determine available tabs
+    const availableTabs = [];
+    if (hasAccess('Broker Consensus - Daily')) availableTabs.push('Daily');
+    if (hasAccess('Broker Consensus - Company')) availableTabs.push('Company');
+    if (hasAccess('Broker Consensus - Macro')) availableTabs.push('Macro');
+    if (hasAccess('Broker Consensus - Strategy')) availableTabs.push('Strategy');
+
     useEffect(() => {
-        if (status === 'authenticated' && role) {
-            fetch('/api/admin/features')
-                .then(res => res.json())
-                .then(settings => {
-                    const tabs = [];
-                    if (settings['Broker Consensus - Daily']?.includes(role)) tabs.push('Daily');
-                    if (settings['Broker Consensus - Company']?.includes(role)) tabs.push('Company');
-                    if (settings['Broker Consensus - Macro']?.includes(role)) tabs.push('Macro');
-                    if (settings['Broker Consensus - Strategy']?.includes(role)) tabs.push('Strategy');
-
-                    setAvailableTabs(tabs);
-                    if (tabs.length > 0 && !tabs.includes(activeTab)) {
-                        setActiveTab(tabs[0]);
-                    }
-                    setLoadingFeatures(false);
-                })
-                .catch(err => {
-                    console.error("Failed to fetch features", err);
-                    setLoadingFeatures(false);
-                });
-        } else if (status === 'unauthenticated') {
-            setLoadingFeatures(false);
+        if (availableTabs.length > 0 && !availableTabs.includes(activeTab)) {
+            setActiveTab(availableTabs[0]);
         }
-    }, [status, role]);
+    }, [availableTabs, activeTab]);
 
     if (loadingFeatures || status === 'loading') {
         return <div style={{ background: '#0a0a0a', minHeight: '100vh' }}></div>;
