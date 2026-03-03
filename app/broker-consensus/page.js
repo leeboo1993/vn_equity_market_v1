@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Header from '../components/Header';
-import { useFeatureAccess } from '../lib/useFeatureAccess';
+import { useFeatureAccess } from '@/lib/useFeatureAccess';
 
 import DailyTrackingPage from '../components/DailyBrokerConsensus';
 import Dashboard from '../components/Dashboard';
