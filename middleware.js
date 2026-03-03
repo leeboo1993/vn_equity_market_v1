@@ -1,26 +1,6 @@
 import NextAuth from "next-auth";
 import authConfig from "./auth.config";
 import { NextResponse } from "next/server";
-import { getFeatureSettings, hasAccess } from "./lib/rbac";
-
-const { auth } = NextAuth(authConfig);
-
-// In-memory cache for feature settings (60 second TTL)
-let featureCache = null;
-let cacheTimestamp = 0;
-const CACHE_TTL = 60 * 1000; // 60 seconds
-
-async function getCachedFeatures() {
-    const now = Date.now();
-    if (featureCache && (now - cacheTimestamp < CACHE_TTL)) {
-        return featureCache;
-    }
-
-    featureCache = await getFeatureSettings();
-    cacheTimestamp = now;
-    return featureCache;
-}
-
 export default auth(async (req) => {
     const { nextUrl } = req;
     const isLoggedIn = !!req.auth;
@@ -55,23 +35,9 @@ export default auth(async (req) => {
         return NextResponse.redirect(new URL("/", nextUrl));
     }
 
-    // Dynamic Feature-based Route Protection
-    const routeFeatureMap = {
-        '/broker-consensus': 'Research',
-        '/priceboard': 'Price Board',
-        '/daily-tracking': 'Market Dashboard',
-    };
-
-    const feature = routeFeatureMap[nextUrl.pathname];
-    if (feature) {
-        const userRole = req.auth?.user?.role;
-        const features = await getCachedFeatures();
-
-        if (!hasAccess(userRole, feature, features)) {
-            return NextResponse.redirect(new URL("/", nextUrl));
-        }
-    }
-
+    // Basic Access check for internal routes
+    // For more granular feature-based control, we handle it inside the page components
+    // to keep the middleware lightweight and Edge-compatible.
     return null;
 });
 

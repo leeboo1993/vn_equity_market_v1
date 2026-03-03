@@ -2,14 +2,25 @@ import NextAuth from "next-auth";
 import authConfig from "./auth.config";
 import { findUserByEmail, createUser, verifyUserPassword, updateUser } from "@/lib/users";
 import bcrypt from "bcryptjs";
+import Email from "next-auth/providers/nodemailer";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
     ...authConfig,
     providers: [
-        ...authConfig.providers.filter(p => p.id !== 'credentials'),
-        {
-            ...authConfig.providers.find(p => p.id === 'credentials'),
-            async authorize(credentials) {
+        ...authConfig.providers,
+        Email({
+            server: {
+                host: process.env.AUTH_EMAIL_SERVER_HOST,
+                port: process.env.AUTH_EMAIL_SERVER_PORT || 587,
+                auth: {
+                    user: process.env.AUTH_EMAIL_SERVER_USER,
+                    pass: process.env.AUTH_EMAIL_SERVER_PASSWORD,
+                },
+            },
+            from: process.env.AUTH_EMAIL_FROM,
+        }),
+        Credentials({
+            authorize: async (credentials) => {
                 const user = await verifyUserPassword(credentials.email, credentials.password);
                 if (user) {
                     const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
@@ -33,7 +44,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 }
 
                 const newUser = await createUser({
-
                     email: credentials.email,
                     password: credentials.password,
                     provider: "credentials",
@@ -42,7 +52,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 });
                 return newUser;
             },
-        }
+        })
     ],
     callbacks: {
         ...authConfig.callbacks,
