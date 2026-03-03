@@ -981,7 +981,7 @@ export default function DailyTrackingPage({ hideHeader = false }) {
                                     });
 
                                     return brokerOrder.map(brokerName => (
-                                        <div key={brokerName} className="market-view-item" style={{ marginBottom: '12px', borderBottom: 'none', paddingBottom: '0' }}>
+                                        <div key={brokerName} className="market-view-item" style={{ borderBottom: 'none', paddingBottom: '0' }}>
                                             {/* Show header if "All Brokers" is selected OR if we want to confirm the source even when filtered */}
                                             {/* User request implies grouping headers: "ACBS Research" then list */}
                                             <div className="market-view-header" style={{ marginBottom: '4px' }}>
