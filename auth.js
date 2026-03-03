@@ -44,92 +44,96 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             },
         })
     ],
-    async signIn({ user, account, profile }) {
-        const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
-        const isAdmin = user.email && adminEmails.includes(user.email.toLowerCase());
+    // WRAP THESE IN A CALLBACKS OBJECT!
+    callbacks: {
+        ...authConfig.callbacks, // Preserve the authorized callback from authConfig
+        async signIn({ user, account, profile, credentials }) {
+            const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
+            const isAdmin = user.email && adminEmails.includes(user.email.toLowerCase());
 
-        // Registration Restriction: Block non-admins if RESTRICT_REGISTRATION is true
-        if (process.env.RESTRICT_REGISTRATION === 'true' && !isAdmin) {
-            const existingUser = await findUserByEmail(user.email);
-            if (!existingUser) return false;
-        }
-
-        if (account.provider === "google" || account.provider === "facebook" || account.provider === "email") {
-            let existingUser = await findUserByEmail(user.email);
-            if (!existingUser) {
-                existingUser = await createUser({
-                    email: user.email,
-                    name: user.name || user.email.split('@')[0],
-                    image: user.image,
-                    provider: account.provider,
-                    role: isAdmin ? "admin" : "member",
-                    approved: isAdmin ? true : false
-                });
+            // Registration Restriction: Block non-admins if RESTRICT_REGISTRATION is true
+            if (process.env.RESTRICT_REGISTRATION === 'true' && !isAdmin) {
+                const existingUser = await findUserByEmail(user.email);
+                if (!existingUser) return false;
             }
-            // Attach database fields to the user object so they flow into the jwt callback
-            user.role = existingUser.role;
-            user.approved = existingUser.approved;
-        }
-        return true;
-    },
-    async jwt({ token, user, account, trigger, session }) {
-        // Initial sign in
-        if (user) {
-            token.email = user.email;
-            if (account && account.provider !== "credentials") {
-                // Fetch latest database status for OAuth providers
-                const dbUser = await findUserByEmail(user.email);
-                if (dbUser) {
-                    token.role = dbUser.role;
-                    token.approved = dbUser.approved;
+
+            if (account?.provider === "google" || account?.provider === "facebook" || account?.provider === "email") {
+                let existingUser = await findUserByEmail(user.email);
+                if (!existingUser) {
+                    existingUser = await createUser({
+                        email: user.email,
+                        name: user.name || user.email.split('@')[0],
+                        image: user.image,
+                        provider: account.provider,
+                        role: isAdmin ? "admin" : "member",
+                        approved: isAdmin ? true : false
+                    });
+                }
+                // Attach database fields to the user object so they flow into the jwt callback
+                user.role = existingUser.role;
+                user.approved = existingUser.approved;
+            }
+            return true;
+        },
+        async jwt({ token, user, account, trigger, session }) {
+            // Initial sign in
+            if (user) {
+                token.email = user.email;
+                if (account && account.provider !== "credentials") {
+                    // Fetch latest database status for OAuth providers
+                    const dbUser = await findUserByEmail(user.email);
+                    if (dbUser) {
+                        token.role = dbUser.role;
+                        token.approved = dbUser.approved;
+                    } else {
+                        token.role = "member";
+                        token.approved = false;
+                    }
                 } else {
-                    token.role = "member";
-                    token.approved = false;
+                    // Credentials provider already returns dbUser
+                    token.role = user.role;
+                    token.approved = user.approved;
                 }
-            } else {
-                // Credentials provider already returns dbUser
-                token.role = user.role;
-                token.approved = user.approved;
+                token.lastDbCheck = Date.now();
             }
-            token.lastDbCheck = Date.now();
-        }
 
-        // Periodically re-check the database for approval/role changes (every 30s)
-        // This ensures admin approval takes effect without requiring re-login
-        const DB_CHECK_INTERVAL = 30 * 1000; // 30 seconds
-        if (!token.lastDbCheck || (Date.now() - token.lastDbCheck > DB_CHECK_INTERVAL)) {
-            try {
-                const dbUser = await findUserByEmail(token.email);
-                if (dbUser) {
-                    token.role = dbUser.role;
-                    token.approved = dbUser.approved;
+            // Periodically re-check the database for approval/role changes (every 30s)
+            // This ensures admin approval takes effect without requiring re-login
+            const DB_CHECK_INTERVAL = 30 * 1000; // 30 seconds
+            if (!token.lastDbCheck || (Date.now() - token.lastDbCheck > DB_CHECK_INTERVAL)) {
+                try {
+                    const dbUser = await findUserByEmail(token.email);
+                    if (dbUser) {
+                        token.role = dbUser.role;
+                        token.approved = dbUser.approved;
+                    }
+                } catch (e) {
+                    console.error("JWT db re-check failed:", e);
                 }
-            } catch (e) {
-                console.error("JWT db re-check failed:", e);
+                token.lastDbCheck = Date.now();
             }
-            token.lastDbCheck = Date.now();
-        }
 
-        // Always enforce Admin elevation from ENV (allows instant promotion)
-        const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
-        if (token.email && adminEmails.includes(token.email.toLowerCase())) {
-            token.role = 'admin';
-            token.approved = true;
-        }
+            // Always enforce Admin elevation from ENV (allows instant promotion)
+            const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
+            if (token.email && adminEmails.includes(token.email.toLowerCase())) {
+                token.role = 'admin';
+                token.approved = true;
+            }
 
-        // Manual session updates
-        if (trigger === "update" && session?.user) {
-            token.role = session.user.role;
-            token.approved = session.user.approved;
-        }
+            // Manual session updates
+            if (trigger === "update" && session?.user) {
+                token.role = session.user.role;
+                token.approved = session.user.approved;
+            }
 
-        return token;
-    },
-    async session({ session, token }) {
-        if (session.user) {
-            session.user.role = token.role;
-            session.user.approved = token.approved;
+            return token;
+        },
+        async session({ session, token }) {
+            if (session.user) {
+                session.user.role = token.role;
+                session.user.approved = token.approved;
+            }
+            return session;
         }
-        return session;
     }
 });
