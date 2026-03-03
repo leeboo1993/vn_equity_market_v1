@@ -166,10 +166,16 @@ export default function PriceBoard() {
     const activeTickers = getActiveTickers();
 
     const fetchLivePrices = async () => {
+        // Only fetch if window is visible
+        if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+            return;
+        }
+
         try {
-            // Need to fetch everything across all sectors, custom additions, and watchlist + Indices + Futures
-            const customTickersGrouped = Object.values(customSectors).flat();
-            const allTickers = Array.from(new Set(['VNINDEX', 'VN30', 'VN30F1M', 'VN30F2M', ...Object.values(SECTORS).flat(), ...customTickersGrouped, 'GEX', ...watchlist]));
+            // OPTIMIZATION: Only fetch indices + current tab tickers + watchlist
+            // Instead of Object.values(customSectors).flat() (which fetches everything)
+            const activeTabTickers = getActiveTickers();
+            const allTickers = Array.from(new Set(['VNINDEX', 'VN30', 'VN30F1M', 'VN30F2M', ...activeTabTickers, ...watchlist]));
 
             if (allTickers.length === 0) {
                 setLoading(false);
@@ -193,9 +199,23 @@ export default function PriceBoard() {
     // Polling interval
     useEffect(() => {
         fetchLivePrices(); // Initial fetch
-        const interval = setInterval(fetchLivePrices, 2000); // 2 seconds polling for faster real time feel
-        return () => clearInterval(interval);
-    }, [watchlist, customSectors]); // Re-bind effect if additions change
+
+        // Polling logic with visibility check listener
+        const interval = setInterval(fetchLivePrices, 10000); // Increased to 10s to save usage
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                fetchLivePrices();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [activeTab, watchlist]); // Also re-bind on tab change to get fresh data immediately
 
     // Watchlist Controls
     const handleAddWatchlist = (e) => {

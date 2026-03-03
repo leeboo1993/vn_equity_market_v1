@@ -1,6 +1,7 @@
 import Google from "next-auth/providers/google";
 import Facebook from "next-auth/providers/facebook";
 import Credentials from "next-auth/providers/credentials";
+import Email from "next-auth/providers/nodemailer";
 
 export default {
     providers: [
@@ -11,6 +12,17 @@ export default {
         Facebook({
             clientId: process.env.FACEBOOK_CLIENT_ID,
             clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+        }),
+        Email({
+            server: {
+                host: process.env.AUTH_EMAIL_SERVER_HOST,
+                port: process.env.AUTH_EMAIL_SERVER_PORT || 587,
+                auth: {
+                    user: process.env.AUTH_EMAIL_SERVER_USER,
+                    pass: process.env.AUTH_EMAIL_SERVER_PASSWORD,
+                },
+            },
+            from: process.env.AUTH_EMAIL_FROM,
         }),
         Credentials({
             name: "Credentials",

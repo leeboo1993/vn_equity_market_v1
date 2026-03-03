@@ -267,7 +267,11 @@ export async function GET(request) {
         }
 
 
-        return NextResponse.json({ prices: priceData });
+        return NextResponse.json({ prices: priceData }, {
+            headers: {
+                'Cache-Control': 's-maxage=5, stale-while-revalidate=10'
+            }
+        });
 
     } catch (error) {
         console.error("Live Prices API Error:", error);

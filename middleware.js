@@ -28,12 +28,15 @@ export default auth(async (req) => {
 
     const isApiAuthRoute = nextUrl.pathname.startsWith("/api/auth");
     const isPublicRoute = ["/login", "/waiting-approval", "/public"].includes(nextUrl.pathname);
-    const isPublicAsset = nextUrl.pathname.startsWith("/_next") || nextUrl.pathname === "/favicon.ico";
+    const isPublicAsset = nextUrl.pathname.startsWith("/_next") ||
+        nextUrl.pathname === "/favicon.ico" ||
+        nextUrl.pathname.startsWith("/images/");
 
     if (isApiAuthRoute || isPublicAsset) return null;
 
     if (isPublicRoute) {
-        if (isLoggedIn && isApproved && nextUrl.pathname !== "/") {
+        // Redir authenticated & approved away from login/waiting to home
+        if (isLoggedIn && isApproved && (nextUrl.pathname === "/login" || nextUrl.pathname === "/waiting-approval")) {
             return NextResponse.redirect(new URL("/", nextUrl));
         }
         return null;
@@ -54,10 +57,9 @@ export default auth(async (req) => {
 
     // Dynamic Feature-based Route Protection
     const routeFeatureMap = {
-        '/': 'Daily Tracking',
-        '/macro-research': 'Macro Research',
-        '/strategy-research': 'Strategy Research',
-        '/company-research': 'Company Research',
+        '/broker-consensus': 'Research',
+        '/priceboard': 'Price Board',
+        '/daily-tracking': 'Market Dashboard',
     };
 
     const feature = routeFeatureMap[nextUrl.pathname];

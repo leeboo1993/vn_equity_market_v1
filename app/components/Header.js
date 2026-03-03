@@ -19,11 +19,13 @@ export default function Header({ title, children }) {
                     >
                         ☰
                     </button>
-                    <span className="header-title">{title}</span>
+                    <span className="header-title" style={{ fontSize: 'inherit' }}>{title}</span>
                 </div>
-                <div className="header-filters">
-                    {children}
-                </div>
+                {children && (
+                    <div className="header-filters" style={{ flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                        {children}
+                    </div>
+                )}
             </header>
         </>
     );

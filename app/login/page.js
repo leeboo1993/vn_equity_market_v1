@@ -1,13 +1,22 @@
 'use client';
 
 import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isSignUp, setIsSignUp] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isInAppBrowser, setIsInAppBrowser] = useState(false);
+
+    useEffect(() => {
+        const ua = navigator.userAgent || navigator.vendor || window.opera;
+        // Common in-app browser indicators (Messenger, Instagram, Line, etc.)
+        const inApp = /FBAN|FBAV|Instagram|Line|IAB|WebView|Chrome-LUCST|MobSafari/i.test(ua) ||
+            (ua.includes('iPhone') && ua.includes('AppleWebKit') && !ua.includes('Safari'));
+        setIsInAppBrowser(inApp);
+    }, []);
 
     const handleGoogleLogin = () => {
         setIsLoading(true);
@@ -19,6 +28,21 @@ export default function LoginPage() {
         signIn("facebook", { callbackUrl: "/" });
     };
 
+    const handleMagicLink = async (e) => {
+        if (e) e.preventDefault();
+        if (!email) {
+            alert("Please enter your email first");
+            return;
+        }
+        setIsLoading(true);
+        try {
+            await signIn("email", { email, callbackUrl: "/" });
+        } catch (error) {
+            console.error(error);
+            setIsLoading(false);
+        }
+    };
+
     const handleEmailLogin = (e) => {
         e.preventDefault();
         setIsLoading(true);
@@ -28,6 +52,19 @@ export default function LoginPage() {
     return (
         <div className="login-container">
             <div className="login-card">
+                {isInAppBrowser && (
+                    <div className="in-app-warning">
+                        <div className="warning-header">
+                            <span className="warning-icon">⚠️</span>
+                            <span className="warning-title">Google/Facebook Login Blocked</span>
+                        </div>
+                        <p className="warning-text">
+                            Google & Facebook block logins from inside apps like Messenger.
+                            <strong> Please use the "Email Magic Link" button below </strong>
+                            to sign in seamlessly without leaving this app.
+                        </p>
+                    </div>
+                )}
                 <div className="login-logo-section">
                     <h1 className="login-title">Vietnamese Equity Investment</h1>
                     <p className="login-subtitle">Trading Platform</p>
@@ -61,10 +98,10 @@ export default function LoginPage() {
                 </div>
 
                 <div className="divider">
-                    <span>or use password</span>
+                    <span>or use email</span>
                 </div>
 
-                <form onSubmit={handleEmailLogin} className="login-form">
+                <form className="login-form">
                     <div className="input-group">
                         <label className="input-label">Email</label>
                         <input
@@ -77,25 +114,39 @@ export default function LoginPage() {
                             disabled={isLoading}
                         />
                     </div>
-                    <div className="input-group">
-                        <label className="input-label">Password</label>
-                        <input
-                            type="password"
-                            placeholder="Password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            className="login-input"
+
+                    <div className="auth-actions">
+                        <button
+                            type="button"
+                            onClick={handleMagicLink}
+                            className="magic-link-btn"
                             disabled={isLoading}
-                        />
+                        >
+                            {isLoading ? "Sending..." : "Send Magic Link ✉️"}
+                        </button>
+
+                        <div className="password-section">
+                            <div className="input-group mb-2">
+                                <label className="input-label">Password</label>
+                                <input
+                                    type="password"
+                                    placeholder="Password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="login-input"
+                                    disabled={isLoading}
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                onClick={handleEmailLogin}
+                                className="email-login-btn"
+                                disabled={isLoading}
+                            >
+                                {isLoading ? (isSignUp ? "Creating..." : "Signing In...") : (isSignUp ? "Sign Up" : "Sign In with Password")}
+                            </button>
+                        </div>
                     </div>
-                    <button
-                        type="submit"
-                        className="email-login-btn"
-                        disabled={isLoading}
-                    >
-                        {isLoading ? (isSignUp ? "Creating Account..." : "Signing In...") : (isSignUp ? "Sign Up" : "Sign In")}
-                    </button>
 
                     <div className="form-footer">
                         <button
@@ -133,6 +184,41 @@ export default function LoginPage() {
                     max-width: 440px;
                     text-align: center;
                     box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+                    position: relative;
+                    overflow: hidden;
+                }
+                .in-app-warning {
+                    background: rgba(255, 107, 107, 0.1);
+                    border: 1px solid rgba(255, 107, 107, 0.3);
+                    border-radius: 12px;
+                    padding: 16px;
+                    margin-bottom: 25px;
+                    text-align: left;
+                }
+                .warning-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin-bottom: 8px;
+                }
+                .warning-icon {
+                    font-size: 18px;
+                }
+                .warning-title {
+                    color: #ff6b6b;
+                    font-weight: 700;
+                    font-size: 15px;
+                }
+                .warning-text {
+                    color: #eee;
+                    font-size: 13px;
+                    line-height: 1.5;
+                    margin: 0;
+                }
+                .warning-text strong {
+                    color: #fff;
+                    display: block;
+                    margin-top: 4px;
                 }
                 .login-logo-section {
                     margin-bottom: 30px;
@@ -230,34 +316,60 @@ export default function LoginPage() {
                     border-color: #00ff7f !important;
                     border-width: 1.5px;
                 }
+                .auth-actions {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 25px;
+                }
+                .magic-link-btn {
+                    padding: 14px;
+                    border-radius: 12px;
+                    border: 1px solid #00ff7f;
+                    background: rgba(0, 255, 127, 0.05);
+                    color: #00ff7f;
+                    font-weight: 700;
+                    font-size: 16px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .magic-link-btn:hover {
+                    background: rgba(0, 255, 127, 0.15);
+                    transform: translateY(-1px);
+                }
+                .password-section {
+                    border-top: 1px solid #222;
+                    padding-top: 25px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 15px;
+                }
+                .mb-2 {
+                    margin-bottom: 8px;
+                }
                 .email-login-btn {
                     padding: 14px;
                     border-radius: 12px;
                     border: none;
-                    background: #00ff7f; /* Original Neon Green */
-                    color: #000;
-                    font-weight: 700;
-                    font-size: 16px;
+                    background: #222;
+                    color: #fff;
+                    font-weight: 600;
+                    font-size: 15px;
                     cursor: pointer;
-                    transition: opacity 0.2s;
-                    margin-top: 10px;
+                    transition: all 0.2s;
                 }
                 .email-login-btn:hover {
-                    opacity: 0.9;
-                }
-                .form-footer {
-                    margin-top: 15px;
-                    text-align: center;
+                    background: #333;
                 }
                 .toggle-auth-btn {
                     background: transparent;
                     border: none;
-                    color: #999;
-                    font-size: 15px;
+                    color: #666;
+                    font-size: 14px;
                     font-weight: 500;
                     cursor: pointer;
                     text-decoration: underline;
                     transition: color 0.2s;
+                    width: 100%;
                 }
                 .toggle-auth-btn:hover {
                     color: #00ff7f;

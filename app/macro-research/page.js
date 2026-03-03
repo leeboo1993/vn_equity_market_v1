@@ -89,9 +89,9 @@ export default function MacroResearchPage() {
                     </div>
 
                     {/* Modern Tabs - Dark Mode */}
-                    <div className="bg-[#111] p-1 rounded-lg border border-[#333] flex shadow-sm">
+                    <div className="bg-[#111] p-1 rounded-lg border border-[#333] flex shadow-sm overflow-x-auto hidden-scrollbar" style={{ maxWidth: '100%' }}>
                         <button
-                            className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'global'
+                            className={`px-4 md:px-6 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'global'
                                 ? 'bg-[#00ff7f] text-black shadow-lg'
                                 : 'text-gray-400 hover:text-white hover:bg-[#222]'
                                 }`}
@@ -100,7 +100,7 @@ export default function MacroResearchPage() {
                             Global Macro
                         </button>
                         <button
-                            className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'vietnam'
+                            className={`px-4 md:px-6 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'vietnam'
                                 ? 'bg-[#00ff7f] text-black shadow-lg'
                                 : 'text-gray-400 hover:text-white hover:bg-[#222]'
                                 }`}

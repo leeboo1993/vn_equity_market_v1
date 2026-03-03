@@ -57,12 +57,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 if (!existingUser) return false;
             }
 
-            if (account.provider === "google" || account.provider === "facebook") {
+            if (account.provider === "google" || account.provider === "facebook" || account.provider === "email") {
                 let existingUser = await findUserByEmail(user.email);
                 if (!existingUser) {
                     existingUser = await createUser({
                         email: user.email,
-                        name: user.name,
+                        name: user.name || user.email.split('@')[0],
                         image: user.image,
                         provider: account.provider,
                         role: isAdmin ? "admin" : "member",
