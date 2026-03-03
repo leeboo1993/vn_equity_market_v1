@@ -1,6 +1,5 @@
 import Google from "next-auth/providers/google";
 import Facebook from "next-auth/providers/facebook";
-import Credentials from "next-auth/providers/credentials";
 
 export default {
     providers: [
@@ -11,14 +10,6 @@ export default {
         Facebook({
             clientId: process.env.FACEBOOK_CLIENT_ID,
             clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-        }),
-        Credentials({
-            name: "Credentials",
-            credentials: {
-                email: { label: "Email", type: "email" },
-                password: { label: "Password", type: "password" },
-            },
-            // We define authorize in the main auth.js to avoid Edge runtime issues
         }),
     ],
     pages: {

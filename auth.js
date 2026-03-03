@@ -3,6 +3,7 @@ import authConfig from "./auth.config";
 import { findUserByEmail, createUser, verifyUserPassword, updateUser } from "@/lib/users";
 import bcrypt from "bcryptjs";
 import Email from "next-auth/providers/nodemailer";
+import Credentials from "next-auth/providers/credentials";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
     ...authConfig,
