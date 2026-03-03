@@ -111,8 +111,8 @@ export default function ResearchTab({ data }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', position: 'relative' }}>
 
             {/* White-styled Container for the Ticker News block */}
-            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #222', paddingBottom: '1rem', margin: '-1.4rem -1.6rem 0 -1.6rem', padding: '1.4rem 1.6rem 1rem 1.6rem', backgroundColor: '#111', borderTopLeftRadius: '8px', borderTopRightRadius: '8px' }}>
+            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #222', paddingBottom: '0.75rem', margin: '-1.4rem -1.6rem 0 -1.6rem', padding: '1.4rem 1.6rem 0.75rem 1.6rem', backgroundColor: '#111', borderTopLeftRadius: '8px', borderTopRightRadius: '8px' }}>
                     <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#fff' }}>Ticker News</h3>
                     {/* Assuming icon is here in original, keeping it clean */}
                 </div>
@@ -230,8 +230,8 @@ export default function ResearchTab({ data }) {
             </div>
 
             {/* MACRO RESEARCH SECTION */}
-            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #222', paddingBottom: '1rem', margin: '-1.4rem -1.6rem 0 -1.6rem', padding: '1.4rem 1.6rem 1rem 1.6rem', backgroundColor: '#111', borderTopLeftRadius: '8px', borderTopRightRadius: '8px' }}>
+            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #222', paddingBottom: '0.75rem', margin: '-1.4rem -1.6rem 0 -1.6rem', padding: '1.4rem 1.6rem 0.75rem 1.6rem', backgroundColor: '#111', borderTopLeftRadius: '8px', borderTopRightRadius: '8px' }}>
                     <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#fff' }}>Macro Research</h3>
                     <div style={{ display: 'flex', gap: '8px' }}>
                         <button style={{ background: '#027368', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: '16px', fontSize: '13px', cursor: 'pointer', fontWeight: 500 }}>Articles</button>
@@ -251,9 +251,9 @@ export default function ResearchTab({ data }) {
                                 fontSize: '13px',
                                 cursor: 'pointer',
                                 fontWeight: 500,
-                                background: selectedMacroBroker === broker ? '#027368' : '#fff',
-                                color: selectedMacroBroker === broker ? '#fff' : '#64748b',
-                                border: `1px solid ${selectedMacroBroker === broker ? '#027368' : '#cbd5e1'}`,
+                                background: selectedMacroBroker === broker ? '#027368' : '#262626',
+                                color: selectedMacroBroker === broker ? '#fff' : '#94a3b8',
+                                border: `1px solid ${selectedMacroBroker === broker ? '#027368' : '#333'}`,
                                 transition: 'all 0.2s'
                             }}>
                             {broker}

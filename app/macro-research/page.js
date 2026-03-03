@@ -63,7 +63,7 @@ export default function MacroResearchPage() {
         );
 
         return (
-            <div className="space-y-6 animate-in fade-in duration-500">
+            <div className="space-y-4 animate-in fade-in duration-500">
                 {/* Filter Chips */}
                 <div className="flex gap-2 flex-wrap mb-4">
                     {['All', 'Goldman Sachs', 'Gavekal', 'SSI', '13D'].map(broker => (
@@ -72,7 +72,7 @@ export default function MacroResearchPage() {
                             onClick={() => setSelectedBroker(broker)}
                             className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${selectedBroker === broker
                                 ? 'bg-[#027368] text-white border-[#027368]'
-                                : 'bg-[#1a1a1a] text-gray-400 border border-[#333] hover:text-white'
+                                : 'bg-[#262626] text-gray-400 border border-[#333] hover:text-white'
                                 }`}
                         >
                             {broker}
@@ -178,7 +178,7 @@ export default function MacroResearchPage() {
         <div className="text-white pt-4">
             <main className="main-container px-3 md:px-6 py-8">
                 {/* Header & Sub-Navigation */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-[#222] pb-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-[#222] pb-6">
                     <div>
                         <h1 className="text-2xl font-bold text-[#00ff7f]">Macro Insights</h1>
                         <p className="text-gray-400 text-sm mt-1">Global analysis and economic indicators.</p>
