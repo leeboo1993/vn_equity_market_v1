@@ -111,8 +111,8 @@ export default function ResearchTab({ data }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', position: 'relative' }}>
 
             {/* White-styled Container for the Ticker News block */}
-            <div className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #222', paddingBottom: '1rem', margin: '-1.5rem -1.5rem 0 -1.5rem', padding: '1.5rem 1.5rem 1rem 1.5rem', backgroundColor: '#111', borderTopLeftRadius: '8px', borderTopRightRadius: '8px' }}>
+            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #222', paddingBottom: '1rem', margin: '-1.4rem -1.6rem 0 -1.6rem', padding: '1.4rem 1.6rem 1rem 1.6rem', backgroundColor: '#111', borderTopLeftRadius: '8px', borderTopRightRadius: '8px' }}>
                     <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#fff' }}>Ticker News</h3>
                     {/* Assuming icon is here in original, keeping it clean */}
                 </div>
@@ -230,8 +230,8 @@ export default function ResearchTab({ data }) {
             </div>
 
             {/* MACRO RESEARCH SECTION */}
-            <div className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #222', paddingBottom: '1rem', margin: '-1.5rem -1.5rem 0 -1.5rem', padding: '1.5rem 1.5rem 1rem 1.5rem', backgroundColor: '#111', borderTopLeftRadius: '8px', borderTopRightRadius: '8px' }}>
+            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #222', paddingBottom: '1rem', margin: '-1.4rem -1.6rem 0 -1.6rem', padding: '1.4rem 1.6rem 1rem 1.6rem', backgroundColor: '#111', borderTopLeftRadius: '8px', borderTopRightRadius: '8px' }}>
                     <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#fff' }}>Macro Research</h3>
                     <div style={{ display: 'flex', gap: '8px' }}>
                         <button style={{ background: '#027368', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: '16px', fontSize: '13px', cursor: 'pointer', fontWeight: 500 }}>Articles</button>
@@ -240,7 +240,7 @@ export default function ResearchTab({ data }) {
                 </div>
 
                 {/* Filter Chips - Match DL Equity Layout but Dark Theme */}
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px', padding: '0 1.5rem' }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     {['All', 'Goldman Sachs', 'Gavekal', 'SSI', '13D'].map(broker => (
                         <button
                             key={broker}
@@ -264,9 +264,8 @@ export default function ResearchTab({ data }) {
                 {/* Macro Grid - Dark Theme Match */}
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))',
-                    gap: '16px',
-                    padding: '0 1.5rem 1.5rem 1.5rem'
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                    gap: '16px'
                 }}>
                     {filteredMacro.length === 0 ? (
                         <div style={{ color: '#888', padding: '2rem 0', gridColumn: '1 / -1', textAlign: 'center' }}>No macro research available.</div>
