@@ -86,6 +86,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             }
             return true;
         },
+        async session({ session, token }) {
+            if (token) {
+                session.user.role = token.role;
+                session.user.approved = token.approved;
+            }
+            return session;
+        },
         async jwt({ token, user, trigger, session }) {
             // When user is provided (on sign in), enrich token with database fields
             if (user) {
