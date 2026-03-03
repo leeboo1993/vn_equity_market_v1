@@ -116,16 +116,7 @@ export default function LoginPage() {
                     </div>
 
                     <div className="auth-actions">
-                        <button
-                            type="button"
-                            onClick={handleMagicLink}
-                            className="magic-link-btn"
-                            disabled={isLoading}
-                        >
-                            {isLoading ? "Sending..." : "Send Magic Link ✉️"}
-                        </button>
-
-                        <div className="password-section">
+                        <div className="password-section" style={{ borderTop: 'none', paddingTop: '0' }}>
                             <div className="input-group mb-2">
                                 <label className="input-label">Password</label>
                                 <input
