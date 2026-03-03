@@ -1,8 +1,30 @@
 import NextAuth from "next-auth";
 import authConfig from "./auth.config";
 import { NextResponse } from "next/server";
+import { getFeatureSettings, hasAccess } from "./lib/rbac";
 
 const { auth } = NextAuth(authConfig);
+
+// In-memory cache for feature settings (Node/Edge runtime)
+let featureCache = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 60 * 1000; // 60 seconds
+
+async function getCachedFeatures() {
+    const now = Date.now();
+    if (featureCache && (now - cacheTimestamp < CACHE_TTL)) {
+        return featureCache;
+    }
+
+    try {
+        featureCache = await getFeatureSettings();
+        cacheTimestamp = now;
+        return featureCache;
+    } catch (e) {
+        console.error("Middleware Cache Error:", e);
+        return {};
+    }
+}
 
 export default auth(async (req) => {
     const { nextUrl } = req;
@@ -33,14 +55,33 @@ export default auth(async (req) => {
         return NextResponse.redirect(new URL("/waiting-approval", nextUrl));
     }
 
-    // Admin Route Protection
-    if (nextUrl.pathname.startsWith("/admin") && req.auth?.user?.role !== 'admin') {
-        return NextResponse.redirect(new URL("/", nextUrl));
+    // Dynamic Feature-based Route Protection
+    const userRole = req.auth?.user?.role;
+
+    // Admin always has access to everything
+    if (userRole === 'admin') return null;
+
+    const routeFeatureMap = {
+        '/broker-consensus': 'Research',
+        '/macro-research': 'Broker Consensus - Macro',
+        '/strategy-research': 'Broker Consensus - Strategy',
+        '/broker-sentiment': 'Broker Sentiment',
+        '/admin': 'admin', // Redundant but safe
+    };
+
+    const requiredFeature = routeFeatureMap[nextUrl.pathname];
+    if (requiredFeature) {
+        if (requiredFeature === 'admin' && userRole !== 'admin') {
+            return NextResponse.redirect(new URL("/", nextUrl));
+        }
+
+        const features = await getCachedFeatures();
+        if (!hasAccess(userRole, requiredFeature, features)) {
+            // Redirect to home if they don't have access to this feature
+            return NextResponse.redirect(new URL("/", nextUrl));
+        }
     }
 
-    // Basic Access check for internal routes
-    // For more granular feature-based control, we handle it inside the page components
-    // to keep the middleware lightweight and Edge-compatible.
     return null;
 });
 
