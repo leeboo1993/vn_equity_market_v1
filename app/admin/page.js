@@ -117,6 +117,12 @@ export default function AdminPage() {
                 >
                     Feature Visibility
                 </button>
+                <button
+                    className={`tab-btn ${activeTab === 'indices' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('indices')}
+                >
+                    Market Indices
+                </button>
             </div>
 
             {activeTab === 'users' ? (
@@ -179,7 +185,7 @@ export default function AdminPage() {
                         </tbody>
                     </table>
                 </div>
-            ) : (
+            ) : activeTab === 'features' ? (
                 <div className="features-container">
                     <table className="users-table">
                         <thead>
@@ -220,7 +226,9 @@ export default function AdminPage() {
                         </tbody>
                     </table>
                 </div>
-            )}
+            ) : activeTab === 'indices' ? (
+                <IndexManagement />
+            ) : null}
 
             <style jsx>{`
                 .admin-container {

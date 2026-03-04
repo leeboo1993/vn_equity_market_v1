@@ -353,60 +353,56 @@ export default function EconomicsTab({ data, timeFilter }) {
 
 function TradingViewCalendarWidget() {
     const containerRef = useRef(null);
-
     useEffect(() => {
-        if (containerRef.current && !containerRef.current.querySelector('script')) {
-            const script = document.createElement('script');
-            script.src = "https://s3.tradingview.com/external-embedding/embed-widget-events.js";
-            script.type = "text/javascript";
-            script.async = true;
-            script.innerHTML = JSON.stringify({
-                "width": "100%",
-                "height": "100%",
-                "colorTheme": "dark",
-                "isTransparent": true,
-                "locale": "en",
-                "importanceFilter": "-1,0,1",
-                "currencyFilter": "USD,VND"
-            });
-            containerRef.current.appendChild(script);
-        }
+        const container = containerRef.current;
+        if (!container) return;
+        container.innerHTML = '';
+
+        const script = document.createElement('script');
+        script.src = "https://s3.tradingview.com/external-embedding/embed-widget-events.js";
+        script.type = "text/javascript";
+        script.async = true;
+        script.innerHTML = JSON.stringify({
+            "width": "100%", "height": "100%", "colorTheme": "dark", "isTransparent": true, "locale": "en",
+            "importanceFilter": "-1,0,1", "currencyFilter": "USD,VND"
+        });
+        container.appendChild(script);
+
+        return () => {
+            if (container) container.innerHTML = '';
+        };
     }, []);
 
     return (
         <div className="tradingview-widget-container" ref={containerRef} style={{ height: '100%', width: '100%' }}>
-            <div className="tradingview-widget-container__widget" style={{ height: 'calc(100% - 32px)', width: '100%' }}></div>
         </div>
     );
 }
 
 function TradingViewMiniChartWidget() {
     const containerRef = useRef(null);
-
     useEffect(() => {
-        if (containerRef.current && !containerRef.current.querySelector('script')) {
-            const script = document.createElement('script');
-            script.src = "https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js";
-            script.type = "text/javascript";
-            script.async = true;
-            script.innerHTML = JSON.stringify({
-                "symbol": "SP:SPX",
-                "width": "100%",
-                "height": "100%",
-                "locale": "en",
-                "dateRange": "12M",
-                "colorTheme": "dark",
-                "isTransparent": true,
-                "autosize": true,
-                "largeChartUrl": ""
-            });
-            containerRef.current.appendChild(script);
-        }
+        const container = containerRef.current;
+        if (!container) return;
+        container.innerHTML = '';
+
+        const script = document.createElement('script');
+        script.src = "https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js";
+        script.type = "text/javascript";
+        script.async = true;
+        script.innerHTML = JSON.stringify({
+            "symbol": "SP:SPX", "width": "100%", "height": "100%", "locale": "en", "dateRange": "12M",
+            "colorTheme": "dark", "isTransparent": true, "autosize": true, "largeChartUrl": ""
+        });
+        container.appendChild(script);
+
+        return () => {
+            if (container) container.innerHTML = '';
+        };
     }, []);
 
     return (
         <div className="tradingview-widget-container" ref={containerRef} style={{ height: '100%', width: '100%' }}>
-            <div className="tradingview-widget-container__widget" style={{ height: 'calc(100% - 32px)', width: '100%' }}></div>
         </div>
     );
 }

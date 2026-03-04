@@ -15,6 +15,10 @@ import EconomicsTab from '../components/daily-tracking/EconomicsTab';
 import ResearchTab from '../components/daily-tracking/ResearchTab';
 import FundamentalsTab from '../components/daily-tracking/FundamentalsTab';
 
+import MacroeconomicsTab from '../components/daily-tracking/MacroeconomicsTab';
+
+import MarketTab from '../components/daily-tracking/MarketTab';
+
 export default function DLEquityPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
@@ -32,12 +36,15 @@ export default function DLEquityPage() {
                 .then(res => res.json())
                 .then(settings => {
                     const tabs = [];
+                    // Ensure Market is always first if available
                     if (settings['Daily Tracking - Market']?.includes(role)) tabs.push('Market');
+                    if (settings['Daily Tracking - Macroeconomics']?.includes(role)) tabs.push('Macroeconomics');
                     if (settings['Daily Tracking - Economics']?.includes(role)) tabs.push('Economics');
                     if (settings['Daily Tracking - Research']?.includes(role)) tabs.push('Research');
                     if (settings['Daily Tracking - Fundamentals']?.includes(role)) tabs.push('Fundamentals');
 
                     setAvailableTabs(tabs);
+                    // If current activeTab not in allowed list, reset to first allowed
                     setActiveTab(prev => (tabs.length > 0 && !tabs.includes(prev)) ? tabs[0] : prev);
                     setLoadingFeatures(false);
                 })
@@ -51,7 +58,7 @@ export default function DLEquityPage() {
     }, [status, role, router]);
 
     const marketData = tabData['market'];
-    const currentData = tabData[activeTab.toLowerCase()];
+    const currentData = tabData[activeTab.toLowerCase() === 'macroeconomics' ? 'economics' : activeTab.toLowerCase()];
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -63,7 +70,7 @@ export default function DLEquityPage() {
 
     useEffect(() => {
         async function fetchTabData(tabName) {
-            const type = tabName.toLowerCase();
+            const type = tabName.toLowerCase() === 'macroeconomics' ? 'economics' : tabName.toLowerCase();
             if (tabData[type]) {
                 setLoading(false);
                 return;
@@ -209,8 +216,8 @@ export default function DLEquityPage() {
                     <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
 
-                        {/* Time Filters (Only for Market and Economics) */}
-                        {(activeTab === 'Market' || activeTab === 'Economics') && (
+                        {/* Time Filters (Only for Market, Economics and Macroeconomics) */}
+                        {(activeTab === 'Market' || activeTab === 'Economics' || activeTab === 'Macroeconomics') && (
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 {['1M', '3M', '6M', 'YTD', '1Y', 'ALL'].map(t => (
                                     <button
@@ -274,26 +281,11 @@ export default function DLEquityPage() {
                                     </div>
                                 )}
 
-                                {/* Main Grid: Left Column (2/3) and Right Column (1/3) */}
-                                {filteredMarketData && (
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: '1.5rem', alignItems: 'start' }}>
-                                        {/* Left Column */}
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                                            <MarketBreadthChart data={filteredMarketData.vn_index} />
-                                            <SectorLeadershipChart data={filteredMarketData.sector_leadership} />
-                                        </div>
-
-                                        {/* Right Column */}
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                                            <PropArbitrageChart data={filteredMarketData.derivatives_prop} />
-                                            <DCCashRatioChart data={filteredMarketData.dc_cash_ratio} />
-                                            <PutThroughTable data={filteredMarketData.put_through} />
-                                        </div>
-                                    </div>
-                                )}
+                                <MarketTab data={filteredMarketData} timeFilter={timeFilter} />
                             </>
                         )}
 
+                        {activeTab === 'Macroeconomics' && <MacroeconomicsTab data={currentData} timeFilter={timeFilter} />}
                         {activeTab === 'Economics' && <EconomicsTab data={currentData} timeFilter={timeFilter} />}
                         {activeTab === 'Research' && <ResearchTab data={currentData} />}
                         {activeTab === 'Fundamentals' && <FundamentalsTab data={currentData} />}
@@ -304,3 +296,4 @@ export default function DLEquityPage() {
         </>
     );
 }
+
