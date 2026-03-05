@@ -281,7 +281,7 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                                 </defs>
                                 <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
                                 <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={axisDate} minTickGap={20} />
-                                <YAxis domain={['auto', 'auto']} stroke={COLORS.text} fontSize={10} tickFormatter={v => v.toLocaleString()} width={50} />
+                                <YAxis domain={[d => Math.floor(d * 0.98), d => Math.ceil(d * 1.02)]} stroke={COLORS.text} fontSize={10} tickFormatter={v => v.toLocaleString()} width={55} />
                                 <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px', color: '#fff' }} formatter={v => v.toLocaleString(undefined, { minimumFractionDigits: 0 })} labelFormatter={formatDate} />
                                 <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
                                 <Area type="monotone" dataKey="vcb" name="VCB Sell" stroke={COLORS.teal} fill="url(#colorVCB)" strokeWidth={2} dot={false} />
@@ -346,7 +346,7 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                             <LineChart data={goldSeries}>
                                 <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
                                 <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={axisDate} minTickGap={20} />
-                                <YAxis domain={['auto', 'auto']} stroke={COLORS.text} fontSize={10} tickFormatter={v => v.toLocaleString()} width={40} />
+                                <YAxis domain={[d => Math.floor(d * 0.98), d => Math.ceil(d * 1.02)]} stroke={COLORS.text} fontSize={10} tickFormatter={v => v.toLocaleString()} width={40} />
                                 <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px' }} formatter={v => v.toLocaleString()} labelFormatter={formatDate} />
                                 <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
                                 <Line type="monotone" dataKey="bar" name="SJC Bar" stroke={COLORS.yellow} dot={false} strokeWidth={2.5} />
@@ -360,7 +360,7 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                         <div>
                             <h3 style={{ margin: 0, fontSize: '14px', color: COLORS.white }}>Deposit Rates</h3>
-                            <p style={{ margin: '4px 0 0', fontSize: '11px', color: COLORS.text }}>Average deposit interest rates (% p.a.)</p>
+                            <p style={{ margin: '4px 0 0', fontSize: '11px', color: COLORS.text }}>Deposit interest rate (% p.a.) - Quoted on website</p>
                             <div style={{ fontSize: '10px', color: COLORS.text, marginTop: '4px' }}>Latest: {formatDate(latestDates.deposit) || '-'}</div>
                         </div>
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
@@ -477,7 +477,7 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                                 </defs>
                                 <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
                                 <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={axisDate} minTickGap={20} />
-                                <YAxis stroke={COLORS.text} fontSize={10} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} domain={['auto', 'auto']} width={40} />
+                                <YAxis stroke={COLORS.text} fontSize={10} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} domain={[d => Math.floor(d * 1.2), d => Math.ceil(d * 1.2)]} width={45} />
                                 <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px' }} formatter={v => v.toLocaleString()} labelFormatter={formatDate} />
                                 <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} iconType="circle" />
                                 <Area type="monotone" dataKey="State Treasury" stroke={COLORS.teal} fill="url(#colorTreasury)" strokeWidth={2} dot={false} connectNulls />
