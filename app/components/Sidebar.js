@@ -11,7 +11,6 @@ const navItems = [
     { href: '/industry-analysis', label: 'Industry Analysis', feature: 'Market Dashboard' },
     { href: '/broker-consensus', label: 'Broker Consensus', feature: 'Research' },
     { href: '/daily-tracking', label: 'Daily Market Tracking', feature: 'Market Dashboard' },
-    { href: '/company', label: 'Company Financials', feature: 'Market Dashboard' },
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
