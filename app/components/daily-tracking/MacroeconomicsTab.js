@@ -70,7 +70,7 @@ const INITIAL_INDICES = [
     { id: 'HSI', name: 'Hang Seng', region: 'Hong Kong', close: 17612.4, turnover: 6997, d1: -0.23, ytd: 4.9, pe: 9.8, pb: 1.0, resistance: 18200, support: 16950, rsi: 56, ma20: 17420, macd: '+3.2' },
 ];
 
-export default function MacroeconomicsTab({ data, timeFilter }) {
+export default function MacroeconomicsTab({ data, timeFilter, timeFilterControl }) {
     const [subTab, setSubTab] = useState('Global');
     const [indices, setIndices] = useState(INITIAL_INDICES);
     const [loadingIndices, setLoadingIndices] = useState(false);
@@ -228,6 +228,8 @@ export default function MacroeconomicsTab({ data, timeFilter }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {renderSubTabs()}
 
+            {(subTab === 'Macro' || subTab === 'Money market' || subTab === 'Commodity') && timeFilterControl}
+
             {subTab === 'Global' && (
                 <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'start', flexWrap: 'wrap' }}>
                     {/* Main Indicators Table */}
@@ -276,7 +278,7 @@ export default function MacroeconomicsTab({ data, timeFilter }) {
                             <div style={{ padding: '0.875rem 1rem', borderBottom: `1px solid ${COLORS.border}`, background: 'rgba(30, 41, 59, 0.4)' }}>
                                 <h3 style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#f8fafc' }}>{card.label}</h3>
                             </div>
-                            <TradingViewMiniChartWidget symbol={card.symbol} />
+                            <TradingViewMiniChartWidget symbol={card.symbol} timeFilter={timeFilter} />
                         </div>
                     ))}
                 </div>
@@ -300,7 +302,7 @@ export default function MacroeconomicsTab({ data, timeFilter }) {
                             <div style={{ padding: '0.875rem 1rem', borderBottom: `1px solid ${COLORS.border}`, background: 'rgba(30, 41, 59, 0.4)' }}>
                                 <h3 style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#f8fafc' }}>{card.label}</h3>
                             </div>
-                            <TradingViewMiniChartWidget symbol={card.symbol} />
+                            <TradingViewMiniChartWidget symbol={card.symbol} timeFilter={timeFilter} />
                         </div>
                     ))}
                 </div>
@@ -415,7 +417,7 @@ function TradingViewCalendarWidget() {
     return <div ref={containerRef} style={{ height: '100%', width: '100%', overflow: 'hidden' }} />;
 }
 
-function TradingViewMiniChartWidget({ symbol }) {
+function TradingViewMiniChartWidget({ symbol, timeFilter }) {
     const containerRef = useRef(null);
     useEffect(() => {
         const container = containerRef.current;
@@ -423,12 +425,20 @@ function TradingViewMiniChartWidget({ symbol }) {
 
         container.innerHTML = '';
 
+        let dateRange = "12M";
+        if (timeFilter === '1M') dateRange = "1M";
+        else if (timeFilter === '3M') dateRange = "3M";
+        else if (timeFilter === '6M') dateRange = "6M";
+        else if (timeFilter === 'YTD') dateRange = "YTD";
+        else if (timeFilter === '1Y') dateRange = "12M";
+        else if (timeFilter === 'ALL') dateRange = "ALL";
+
         const script = document.createElement('script');
         script.src = "https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js";
         script.type = "text/javascript";
         script.async = true;
         script.innerHTML = JSON.stringify({
-            "symbol": symbol, "width": "100%", "height": "100%", "locale": "en", "dateRange": "12M",
+            "symbol": symbol, "width": "100%", "height": "100%", "locale": "en", "dateRange": dateRange,
             "colorTheme": "dark", "isTransparent": true, "autosize": true, "largeChartUrl": ""
         });
         container.appendChild(script);
@@ -436,6 +446,6 @@ function TradingViewMiniChartWidget({ symbol }) {
         return () => {
             if (container) container.innerHTML = '';
         };
-    }, [symbol]);
+    }, [symbol, timeFilter]);
     return <div ref={containerRef} style={{ height: '100%', width: '100%', overflow: 'hidden' }} />;
 }

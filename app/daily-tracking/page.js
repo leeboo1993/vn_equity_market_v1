@@ -159,6 +159,30 @@ export default function DLEquityPage() {
         );
     }
 
+    const timeFilterControl = (
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+            {['1M', '3M', '6M', 'YTD', '1Y', 'ALL'].map(t => (
+                <button
+                    key={t}
+                    onClick={() => setTimeFilter(t)}
+                    style={{
+                        background: timeFilter === t ? '#00a884' : 'transparent',
+                        color: timeFilter === t ? '#fff' : '#aaa',
+                        border: `1px solid ${timeFilter === t ? '#00a884' : '#333'}`,
+                        padding: '6px 16px',
+                        borderRadius: '20px',
+                        fontSize: '12px',
+                        fontWeight: timeFilter === t ? 600 : 400,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                    }}
+                >
+                    {t}
+                </button>
+            ))}
+        </div>
+    );
+
     return (
         <>
             <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
@@ -216,34 +240,10 @@ export default function DLEquityPage() {
                     <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
 
-                        {/* Time Filters (Only for Market, Economics and Macroeconomics) */}
-                        {(activeTab === 'Market' || activeTab === 'Economics' || activeTab === 'Macroeconomics') && (
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                {['1M', '3M', '6M', 'YTD', '1Y', 'ALL'].map(t => (
-                                    <button
-                                        key={t}
-                                        onClick={() => setTimeFilter(t)}
-                                        style={{
-                                            background: timeFilter === t ? '#00a884' : 'transparent',
-                                            color: timeFilter === t ? '#fff' : '#aaa',
-                                            border: `1px solid ${timeFilter === t ? '#00a884' : '#333'}`,
-                                            padding: '6px 16px',
-                                            borderRadius: '20px',
-                                            fontSize: '12px',
-                                            fontWeight: timeFilter === t ? 600 : 400,
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s'
-                                        }}
-                                    >
-                                        {t}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-
                         {/* Tab Content Render */}
                         {activeTab === 'Market' && (
                             <>
+                                {timeFilterControl}
                                 {/* Top Cards Row */}
                                 {topMetrics && (
                                     <div className="card" style={{ padding: '0', minHeight: 'auto' }}>
@@ -285,8 +285,13 @@ export default function DLEquityPage() {
                             </>
                         )}
 
-                        {activeTab === 'Macroeconomics' && <MacroeconomicsTab data={currentData} timeFilter={timeFilter} />}
-                        {activeTab === 'Economics' && <EconomicsTab data={currentData} timeFilter={timeFilter} />}
+                        {activeTab === 'Macroeconomics' && <MacroeconomicsTab data={currentData} timeFilter={timeFilter} timeFilterControl={timeFilterControl} />}
+                        {activeTab === 'Economics' && (
+                            <>
+                                {timeFilterControl}
+                                <EconomicsTab data={currentData} timeFilter={timeFilter} />
+                            </>
+                        )}
                         {activeTab === 'Research' && <ResearchTab data={currentData} />}
                         {activeTab === 'Fundamentals' && <FundamentalsTab data={currentData} />}
 

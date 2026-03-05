@@ -16,26 +16,32 @@ import {
 
 const COLORS = {
     teal: '#00a884',
-    red: '#e55353',
     blue: '#3b82f6',
-    yellow: '#f59e0b',
     purple: '#a855f7',
-    orange: '#f97316',
-    pink: '#ec4899',
-    gray: '#444',
-    card: '#111',
-    border: '#222',
-    text: '#888',
-    white: '#fff'
+    yellow: '#f59e0b',
+    red: '#e55353',
+    green: '#10b981',
+    gray: '#64748b',
+    card: '#111111',
+    border: '#222222',
+    text: '#888888',
+    white: '#ffffff'
 };
 
 const BANK_COLORS = {
-    'VCB': '#00a884', 'TCB': '#e55353', 'VPB': '#f59e0b', 'ACB': '#3b82f6', 'BID': '#a855f7',
-    'MBB': '#f97316', 'CTG': '#ec4899', 'STB': '#10b981', 'HDB': '#facc15', 'VIB': '#6366f1',
-    'MSB': '#ef4444', 'LPB': '#8b5cf6', 'TPB': '#06b6d4', 'SHB': '#f97316'
+    'VPB': '#008466', 'TCB': '#2962FF', 'MBB': '#7B1FA2', 'BID': '#D4A82F',
+    'VCB': '#00B8D4', 'CTG': '#C62828', 'ACB': '#1565C0', 'HDB': '#E65100',
+    'VIB': '#F9A825', 'MSB': '#EF6C00', 'STB': '#2E7D32', 'LPB': '#D32F2F',
+    'TPB': '#7B1FA2', 'SHB': '#F57C00', 'EIB': '#1976D2', 'OCB': '#388E3C',
+    'SSB': '#C2185B', 'ABB': '#0097A7'
 };
 
-const dtFormatter = (v) => v ? v.substring(5).replace(/-/g, '/') : '';
+const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    return dateStr;
+};
 
 export default function MoneyMarketTab({ timeFilter }) {
     const [data, setData] = useState(null);
@@ -64,11 +70,15 @@ export default function MoneyMarketTab({ timeFilter }) {
     // Filter by timeFilter logic
     const filteredData = useMemo(() => {
         if (!data) return null;
-        let days = 90;
+        let days = 3650;
         if (timeFilter === '1M') days = 30;
         else if (timeFilter === '3M') days = 90;
         else if (timeFilter === '6M') days = 180;
         else if (timeFilter === '1Y') days = 365;
+        else if (timeFilter === 'YTD') {
+            const now = new Date();
+            days = Math.floor((now - new Date(now.getFullYear(), 0, 1)) / (1000 * 60 * 60 * 24));
+        }
 
         const cutoff = new Date();
         cutoff.setDate(cutoff.getDate() - days);
@@ -236,9 +246,12 @@ export default function MoneyMarketTab({ timeFilter }) {
             {/* Top Row: FX and Table */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))', gap: '1.5rem' }}>
                 <div className="card" style={{ padding: '1.5rem', background: COLORS.card, border: `1px solid ${COLORS.border}` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                        <h3 style={{ margin: 0, fontSize: '14px', color: COLORS.white }}>USD/VND: VCB vs Black Market</h3>
-                        <div style={{ fontSize: '10px', color: COLORS.text, opacity: 0.8 }}>Latest: {latestDates.fx || '-'}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                        <div>
+                            <h3 style={{ margin: 0, fontSize: '14px', color: COLORS.white }}>USD/VND: VCB vs Black Market</h3>
+                            <p style={{ margin: '4px 0 0', fontSize: '11px', color: COLORS.text }}>Daily selling rates comparison</p>
+                        </div>
+                        <div style={{ fontSize: '10px', color: COLORS.text, opacity: 0.8 }}>Latest: {formatDate(latestDates.fx) || '-'}</div>
                     </div>
                     <div style={{ height: '280px' }}>
                         <ResponsiveContainer width="100%" height="100%">
@@ -250,9 +263,9 @@ export default function MoneyMarketTab({ timeFilter }) {
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
-                                <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={dtFormatter} />
-                                <YAxis domain={['auto', 'auto']} stroke={COLORS.text} fontSize={10} tickFormatter={v => v.toLocaleString()} />
-                                <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px', color: '#fff' }} formatter={v => v.toLocaleString(undefined, { minimumFractionDigits: 0 })} />
+                                <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={formatDate} minTickGap={20} />
+                                <YAxis domain={['auto', 'auto']} stroke={COLORS.text} fontSize={10} tickFormatter={v => v.toLocaleString()} width={50} />
+                                <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px', color: '#fff' }} formatter={v => v.toLocaleString(undefined, { minimumFractionDigits: 0 })} labelFormatter={formatDate} />
                                 <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
                                 <Area type="monotone" dataKey="vcb" name="VCB Sell" stroke={COLORS.teal} fill="url(#colorVCB)" strokeWidth={2} dot={false} />
                                 <Line type="monotone" dataKey="black" name="Black Market" stroke={COLORS.yellow} strokeWidth={2} dot={false} />
@@ -265,7 +278,7 @@ export default function MoneyMarketTab({ timeFilter }) {
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                         <div>
                             <h3 style={{ margin: 0, fontSize: '14px', color: COLORS.white }}>FX Rates (VCB)</h3>
-                            <div style={{ fontSize: '9px', color: COLORS.text, marginTop: '2px' }}>Update: {latestDates.fx || '-'}</div>
+                            <div style={{ fontSize: '9px', color: COLORS.text, marginTop: '2px' }}>Update: {formatDate(latestDates.fx) || '-'}</div>
                         </div>
                         <div style={{ fontSize: '11px', color: COLORS.text }}>DoD Change</div>
                     </div>
@@ -304,17 +317,20 @@ export default function MoneyMarketTab({ timeFilter }) {
             {/* Middle Row: Gold and Deposit */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
                 <div className="card" style={{ padding: '1.5rem', background: COLORS.card, border: `1px solid ${COLORS.border}` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                        <h3 style={{ margin: 0, fontSize: '14px', color: COLORS.white }}>Gold Price (Sell)</h3>
-                        <div style={{ fontSize: '10px', color: COLORS.text, opacity: 0.8 }}>Latest: {latestDates.gold || '-'}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                        <div>
+                            <h3 style={{ margin: 0, fontSize: '14px', color: COLORS.white }}>Gold Price (Sell)</h3>
+                            <p style={{ margin: '4px 0 0', fontSize: '11px', color: COLORS.text }}>Selling price per tael (Millions VND)</p>
+                        </div>
+                        <div style={{ fontSize: '10px', color: COLORS.text, opacity: 0.8 }}>Latest: {formatDate(latestDates.gold) || '-'}</div>
                     </div>
                     <div style={{ height: '280px' }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={goldSeries}>
                                 <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
-                                <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={dtFormatter} />
-                                <YAxis domain={['auto', 'auto']} stroke={COLORS.text} fontSize={10} tickFormatter={v => (v / 1e6).toFixed(1) + 'M'} />
-                                <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px' }} formatter={v => v.toLocaleString()} />
+                                <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={formatDate} minTickGap={20} />
+                                <YAxis domain={['auto', 'auto']} stroke={COLORS.text} fontSize={10} tickFormatter={v => v.toLocaleString()} width={40} />
+                                <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px' }} formatter={v => v.toLocaleString()} labelFormatter={formatDate} />
                                 <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
                                 <Line type="monotone" dataKey="bar" name="SJC Bar" stroke={COLORS.yellow} dot={false} strokeWidth={2.5} />
                                 <Line type="monotone" dataKey="ring" name="9999 Ring" stroke={COLORS.teal} dot={false} strokeWidth={2.5} />
@@ -327,7 +343,8 @@ export default function MoneyMarketTab({ timeFilter }) {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                         <div>
                             <h3 style={{ margin: 0, fontSize: '14px', color: COLORS.white }}>Deposit Rates</h3>
-                            <div style={{ fontSize: '10px', color: COLORS.text, marginTop: '2px' }}>Latest: {latestDates.deposit || '-'}</div>
+                            <p style={{ margin: '4px 0 0', fontSize: '11px', color: COLORS.text }}>Average deposit interest rates (% p.a.)</p>
+                            <div style={{ fontSize: '10px', color: COLORS.text, marginTop: '4px' }}>Latest: {formatDate(latestDates.deposit) || '-'}</div>
                         </div>
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                             <div style={{ display: 'flex', gap: '4px', background: '#1a1a1a', padding: '2px', borderRadius: '4px' }}>
@@ -391,7 +408,7 @@ export default function MoneyMarketTab({ timeFilter }) {
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={depositSeries}>
                                 <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
-                                <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={dtFormatter} />
+                                <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={formatDate} minTickGap={20} />
                                 <YAxis
                                     domain={[
                                         dataMin => Math.max(0, dataMin - 1),
@@ -400,8 +417,9 @@ export default function MoneyMarketTab({ timeFilter }) {
                                     stroke={COLORS.text}
                                     fontSize={10}
                                     tickFormatter={v => `${v}%`}
+                                    width={40}
                                 />
-                                <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px' }} formatter={v => `${v}%`} />
+                                <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px' }} formatter={v => `${v}%`} labelFormatter={formatDate} />
                                 <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
                                 {selectedBanks.map(bank => (
                                     <Line
@@ -424,9 +442,12 @@ export default function MoneyMarketTab({ timeFilter }) {
             {/* Bottom Row: Liquidity and Interbank */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))', gap: '1.5rem' }}>
                 <div className="card" style={{ padding: '1.5rem', background: COLORS.card, border: `1px solid ${COLORS.border}` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                        <h3 style={{ margin: 0, fontSize: '14px', color: COLORS.white }}>State Treasury, OMO & CITAD</h3>
-                        <div style={{ fontSize: '10px', color: COLORS.text, opacity: 0.8 }}>Latest: {latestDates.liquidity || '-'}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                        <div>
+                            <h3 style={{ margin: 0, fontSize: '14px', color: COLORS.white }}>State Treasury, OMO & CITAD</h3>
+                            <p style={{ margin: '4px 0 0', fontSize: '11px', color: COLORS.text }}>Liquidity injection/absorption (Billion VND)</p>
+                        </div>
+                        <div style={{ fontSize: '10px', color: COLORS.text, opacity: 0.8 }}>Latest: {formatDate(latestDates.liquidity) || '-'}</div>
                     </div>
                     <div style={{ height: '280px' }}>
                         <ResponsiveContainer width="100%" height="100%">
@@ -438,9 +459,9 @@ export default function MoneyMarketTab({ timeFilter }) {
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
-                                <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={dtFormatter} />
-                                <YAxis stroke={COLORS.text} fontSize={10} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} domain={['auto', 'auto']} />
-                                <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px' }} formatter={v => v.toLocaleString()} />
+                                <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={formatDate} minTickGap={20} />
+                                <YAxis stroke={COLORS.text} fontSize={10} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} domain={['auto', 'auto']} width={40} />
+                                <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px' }} formatter={v => v.toLocaleString()} labelFormatter={formatDate} />
                                 <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} iconType="circle" />
                                 <Area type="monotone" dataKey="State Treasury" stroke={COLORS.teal} fill="url(#colorTreasury)" strokeWidth={2} dot={false} connectNulls />
                                 <Area type="monotone" dataKey="OMO" stroke={COLORS.yellow} fill="transparent" strokeWidth={2} dot={false} connectNulls />
@@ -451,15 +472,18 @@ export default function MoneyMarketTab({ timeFilter }) {
                 </div>
 
                 <div className="card" style={{ padding: '1.5rem', background: COLORS.card, border: `1px solid ${COLORS.border}` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                        <h3 style={{ margin: 0, fontSize: '14px', color: COLORS.white }}>Interbank Rates</h3>
-                        <div style={{ fontSize: '10px', color: COLORS.text, opacity: 0.8 }}>Latest: {latestDates.interbank || '-'}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                        <div>
+                            <h3 style={{ margin: 0, fontSize: '14px', color: COLORS.white }}>Interbank Rates</h3>
+                            <p style={{ margin: '4px 0 0', fontSize: '11px', color: COLORS.text }}>Overnight to 1-Year interbank rates (% p.a.)</p>
+                        </div>
+                        <div style={{ fontSize: '10px', color: COLORS.text, opacity: 0.8 }}>Latest: {formatDate(latestDates.interbank) || '-'}</div>
                     </div>
                     <div style={{ height: '280px' }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={interbankSeries}>
                                 <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
-                                <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={dtFormatter} />
+                                <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={formatDate} minTickGap={20} />
                                 <YAxis
                                     domain={[
                                         dataMin => Math.max(0, dataMin - 1),
@@ -468,8 +492,9 @@ export default function MoneyMarketTab({ timeFilter }) {
                                     stroke={COLORS.text}
                                     fontSize={10}
                                     tickFormatter={v => `${Number(v).toFixed(1)}%`}
+                                    width={40}
                                 />
-                                <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px' }} formatter={v => `${v}%`} />
+                                <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px' }} formatter={v => `${v}%`} labelFormatter={formatDate} />
                                 <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} iconType="circle" />
                                 <Line type="monotone" dataKey="O/N" stroke={COLORS.red} strokeWidth={2.5} dot={false} connectNulls />
                                 <Line type="monotone" dataKey="1W" stroke={COLORS.teal} strokeWidth={2.5} dot={false} connectNulls />
