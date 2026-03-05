@@ -70,7 +70,7 @@ const INITIAL_INDICES = [
     { id: 'HSI', name: 'Hang Seng', region: 'Hong Kong', close: 17612.4, turnover: 6997, d1: -0.23, ytd: 4.9, pe: 9.8, pb: 1.0, resistance: 18200, support: 16950, rsi: 56, ma20: 17420, macd: '+3.2' },
 ];
 
-export default function MacroeconomicsTab({ data, timeFilter, timeFilterControl }) {
+export default function MacroeconomicsTab({ data, timeFilter, customRange, timeFilterControl }) {
     const [subTab, setSubTab] = useState('Global');
     const [indices, setIndices] = useState(INITIAL_INDICES);
     const [loadingIndices, setLoadingIndices] = useState(false);
@@ -286,7 +286,7 @@ export default function MacroeconomicsTab({ data, timeFilter, timeFilterControl 
 
             {subTab === 'Money market' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    <MoneyMarketTab timeFilter={timeFilter} />
+                    <MoneyMarketTab timeFilter={timeFilter} customRange={customRange} />
                 </div>
             )}
 

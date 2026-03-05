@@ -36,6 +36,15 @@ const BANK_COLORS = {
     'SSB': '#C2185B', 'ABB': '#0097A7'
 };
 
+// DD/MM for chart X-axis ticks
+const axisDate = (dateStr) => {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length === 3) return `${parts[2]}/${parts[1]}`;
+    return dateStr;
+};
+
+// DD/MM/YYYY for "Latest:" labels and tooltips
 const formatDate = (dateStr) => {
     if (!dateStr) return '';
     const parts = dateStr.split('-');
@@ -43,7 +52,7 @@ const formatDate = (dateStr) => {
     return dateStr;
 };
 
-export default function MoneyMarketTab({ timeFilter }) {
+export default function MoneyMarketTab({ timeFilter, customRange }) {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -70,21 +79,29 @@ export default function MoneyMarketTab({ timeFilter }) {
     // Filter by timeFilter logic
     const filteredData = useMemo(() => {
         if (!data) return null;
-        let days = 3650;
-        if (timeFilter === '1M') days = 30;
-        else if (timeFilter === '3M') days = 90;
-        else if (timeFilter === '6M') days = 180;
-        else if (timeFilter === '1Y') days = 365;
-        else if (timeFilter === 'YTD') {
-            const now = new Date();
-            days = Math.floor((now - new Date(now.getFullYear(), 0, 1)) / (1000 * 60 * 60 * 24));
+
+        let cutoffStr;
+        let toStr = '9999-12-31';
+
+        if (timeFilter === 'CUSTOM' && customRange) {
+            cutoffStr = customRange.from || '1900-01-01';
+            if (customRange.to) toStr = customRange.to;
+        } else {
+            let days = 3650;
+            if (timeFilter === '1M') days = 30;
+            else if (timeFilter === '3M') days = 90;
+            else if (timeFilter === '6M') days = 180;
+            else if (timeFilter === '1Y') days = 365;
+            else if (timeFilter === 'YTD') {
+                const now = new Date();
+                days = Math.floor((now - new Date(now.getFullYear(), 0, 1)) / (1000 * 60 * 60 * 24));
+            }
+            const cutoff = new Date();
+            cutoff.setDate(cutoff.getDate() - days);
+            cutoffStr = cutoff.toISOString().split('T')[0];
         }
 
-        const cutoff = new Date();
-        cutoff.setDate(cutoff.getDate() - days);
-        const cutoffStr = cutoff.toISOString().split('T')[0];
-
-        const filterFn = (arr) => arr ? arr.filter(d => d.date >= cutoffStr) : [];
+        const filterFn = (arr) => arr ? arr.filter(d => d.date >= cutoffStr && d.date <= toStr) : [];
 
         return {
             gold: filterFn(data.gold),
@@ -96,7 +113,7 @@ export default function MoneyMarketTab({ timeFilter }) {
             treasury: filterFn(data.treasury),
             interbank: filterFn(data.interbank)
         };
-    }, [data, timeFilter]);
+    }, [data, timeFilter, customRange]);
 
     // 1. USD/VND Comparison
     const usdComparisonData = useMemo(() => {
@@ -263,7 +280,7 @@ export default function MoneyMarketTab({ timeFilter }) {
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
-                                <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={formatDate} minTickGap={20} />
+                                <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={axisDate} minTickGap={20} />
                                 <YAxis domain={['auto', 'auto']} stroke={COLORS.text} fontSize={10} tickFormatter={v => v.toLocaleString()} width={50} />
                                 <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px', color: '#fff' }} formatter={v => v.toLocaleString(undefined, { minimumFractionDigits: 0 })} labelFormatter={formatDate} />
                                 <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
@@ -328,7 +345,7 @@ export default function MoneyMarketTab({ timeFilter }) {
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={goldSeries}>
                                 <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
-                                <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={formatDate} minTickGap={20} />
+                                <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={axisDate} minTickGap={20} />
                                 <YAxis domain={['auto', 'auto']} stroke={COLORS.text} fontSize={10} tickFormatter={v => v.toLocaleString()} width={40} />
                                 <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px' }} formatter={v => v.toLocaleString()} labelFormatter={formatDate} />
                                 <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
@@ -408,7 +425,7 @@ export default function MoneyMarketTab({ timeFilter }) {
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={depositSeries}>
                                 <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
-                                <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={formatDate} minTickGap={20} />
+                                <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={axisDate} minTickGap={20} />
                                 <YAxis
                                     domain={[
                                         dataMin => Math.max(0, dataMin - 1),
@@ -459,7 +476,7 @@ export default function MoneyMarketTab({ timeFilter }) {
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
-                                <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={formatDate} minTickGap={20} />
+                                <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={axisDate} minTickGap={20} />
                                 <YAxis stroke={COLORS.text} fontSize={10} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} domain={['auto', 'auto']} width={40} />
                                 <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px' }} formatter={v => v.toLocaleString()} labelFormatter={formatDate} />
                                 <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} iconType="circle" />
@@ -483,7 +500,7 @@ export default function MoneyMarketTab({ timeFilter }) {
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={interbankSeries}>
                                 <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
-                                <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={formatDate} minTickGap={20} />
+                                <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={axisDate} minTickGap={20} />
                                 <YAxis
                                     domain={[
                                         dataMin => Math.max(0, dataMin - 1),

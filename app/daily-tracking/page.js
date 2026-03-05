@@ -64,8 +64,26 @@ export default function DLEquityPage() {
     const [error, setError] = useState(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    // Time filter: 1M, 3M, 6M, YTD, 1Y, ALL
+    // Time filter: 1M, 3M, 6M, YTD, 1Y, ALL, CUSTOM
     const [timeFilter, setTimeFilter] = useState('3M');
+    const [customFrom, setCustomFrom] = useState('');
+    const [customTo, setCustomTo] = useState('');
+
+    const handlePreset = (t) => {
+        setTimeFilter(t);
+        setCustomFrom('');
+        setCustomTo('');
+    };
+
+    const handleCustomFrom = (val) => {
+        setCustomFrom(val);
+        setTimeFilter('CUSTOM');
+    };
+
+    const handleCustomTo = (val) => {
+        setCustomTo(val);
+        setTimeFilter('CUSTOM');
+    };
 
 
     useEffect(() => {
@@ -121,35 +139,37 @@ export default function DLEquityPage() {
     const filteredMarketData = useMemo(() => {
         if (!marketData) return null;
 
-        let days = 3650; // ALL
-        if (timeFilter === '1M') days = 30;
-        else if (timeFilter === '3M') days = 90;
-        else if (timeFilter === '6M') days = 180;
-        else if (timeFilter === '1Y') days = 365;
-        // YTD requires calculating days since Jan 1st
-        else if (timeFilter === 'YTD') {
-            const now = new Date();
-            const start = new Date(now.getFullYear(), 0, 1);
-            days = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+        let cutoffStr;
+        if (timeFilter === 'CUSTOM') {
+            cutoffStr = customFrom || '1900-01-01';
+        } else {
+            let days = 3650; // ALL
+            if (timeFilter === '1M') days = 30;
+            else if (timeFilter === '3M') days = 90;
+            else if (timeFilter === '6M') days = 180;
+            else if (timeFilter === '1Y') days = 365;
+            else if (timeFilter === 'YTD') {
+                const now = new Date();
+                const start = new Date(now.getFullYear(), 0, 1);
+                days = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+            }
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - days);
+            cutoffStr = cutoffDate.toISOString().split('T')[0];
         }
 
-        const cutoffDate = new Date();
-        cutoffDate.setDate(cutoffDate.getDate() - days);
-        const cutoffStr = cutoffDate.toISOString().split('T')[0];
-
-        const filterFn = (arr) => arr ? arr.filter(d => d.date >= cutoffStr) : [];
+        const toStr = (timeFilter === 'CUSTOM' && customTo) ? customTo : '9999-12-31';
+        const filterFn = (arr) => arr ? arr.filter(d => d.date >= cutoffStr && d.date <= toStr) : [];
 
         return {
             ...marketData,
             vn_index: filterFn(marketData.vn_index),
             derivatives_prop: filterFn(marketData.derivatives_prop),
             dc_cash_ratio: filterFn(marketData.dc_cash_ratio),
-            // Sector leadership is scatter point in time, usually just latest date but can keep history
             sector_leadership: filterFn(marketData.sector_leadership),
-            // put_through uses crawl_date not date
             put_through: marketData.put_through
         };
-    }, [marketData, timeFilter]);
+    }, [marketData, timeFilter, customFrom, customTo]);
 
     if (status === 'loading' || loadingFeatures || loading) {
         return (
@@ -159,12 +179,14 @@ export default function DLEquityPage() {
         );
     }
 
+    const customRange = timeFilter === 'CUSTOM' ? { from: customFrom, to: customTo } : null;
+
     const timeFilterControl = (
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
             {['1M', '3M', '6M', 'YTD', '1Y', 'ALL'].map(t => (
                 <button
                     key={t}
-                    onClick={() => setTimeFilter(t)}
+                    onClick={() => handlePreset(t)}
                     style={{
                         background: timeFilter === t ? '#00a884' : 'transparent',
                         color: timeFilter === t ? '#fff' : '#aaa',
@@ -180,6 +202,40 @@ export default function DLEquityPage() {
                     {t}
                 </button>
             ))}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '4px' }}>
+                <span style={{ fontSize: '11px', color: '#666' }}>From</span>
+                <input
+                    type="date"
+                    value={customFrom}
+                    onChange={e => handleCustomFrom(e.target.value)}
+                    style={{
+                        background: '#1a1a1a',
+                        border: `1px solid ${timeFilter === 'CUSTOM' && customFrom ? '#00a884' : '#333'}`,
+                        color: '#ccc',
+                        borderRadius: '6px',
+                        padding: '4px 8px',
+                        fontSize: '11px',
+                        cursor: 'pointer',
+                        colorScheme: 'dark'
+                    }}
+                />
+                <span style={{ fontSize: '11px', color: '#666' }}>To</span>
+                <input
+                    type="date"
+                    value={customTo}
+                    onChange={e => handleCustomTo(e.target.value)}
+                    style={{
+                        background: '#1a1a1a',
+                        border: `1px solid ${timeFilter === 'CUSTOM' && customTo ? '#00a884' : '#333'}`,
+                        color: '#ccc',
+                        borderRadius: '6px',
+                        padding: '4px 8px',
+                        fontSize: '11px',
+                        cursor: 'pointer',
+                        colorScheme: 'dark'
+                    }}
+                />
+            </div>
         </div>
     );
 
@@ -285,7 +341,7 @@ export default function DLEquityPage() {
                             </>
                         )}
 
-                        {activeTab === 'Macroeconomics' && <MacroeconomicsTab data={currentData} timeFilter={timeFilter} timeFilterControl={timeFilterControl} />}
+                        {activeTab === 'Macroeconomics' && <MacroeconomicsTab data={currentData} timeFilter={timeFilter} customRange={customRange} timeFilterControl={timeFilterControl} />}
                         {activeTab === 'Economics' && (
                             <>
                                 {timeFilterControl}
