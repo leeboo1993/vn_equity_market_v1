@@ -196,76 +196,87 @@ async function getSSIData(token) {
     return results;
 }
 
+// Per-index result cache: serves stale data when live fetch fails
+const yahooCache = {};
+
+async function fetchOneYahoo(config) {
+    const period1 = Math.floor((Date.now() - 60 * 24 * 60 * 60 * 1000) / 1000);
+    const period2 = Math.floor(Date.now() / 1000);
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(config.yfId)}?period1=${period1}&period2=${period2}&interval=1d`;
+
+    const res = await fetch(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; bot/1.0)', 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(10000)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const json = await res.json();
+    const result = json?.chart?.result?.[0];
+    if (!result) throw new Error('No result');
+
+    const timestamps = result.timestamp || [];
+    const closePrices = result.indicators?.quote?.[0]?.close || [];
+    const meta = result.meta || {};
+
+    const validPairs = timestamps
+        .map((ts, i) => ({ date: new Date(ts * 1000), close: closePrices[i] }))
+        .filter(p => p.close != null && !isNaN(p.close));
+
+    if (validPairs.length < 2) throw new Error('Insufficient data');
+
+    const latest = validPairs[validPairs.length - 1];
+    const prev = validPairs[validPairs.length - 2];
+    const closes = validPairs.map(p => p.close);
+    const d1 = ((latest.close - prev.close) / prev.close) * 100;
+
+    const recentRange = closes.slice(-Math.min(20, closes.length));
+    const dateStr = `${String(latest.date.getDate()).padStart(2, '0')}/${String(latest.date.getMonth() + 1).padStart(2, '0')}/${latest.date.getFullYear()}`;
+
+    const rsiVals = closes.length >= 15 ? RSI.calculate({ values: closes, period: 14 }) : [];
+    const maVals = closes.length >= 20 ? SMA.calculate({ values: closes, period: 20 }) : [];
+    const macdVals = closes.length >= 27 ? MACD.calculate({ values: closes, fastPeriod: 12, slowPeriod: 26, signalPeriod: 9, SimpleMAOscillator: false, SimpleMASignal: false }) : [];
+
+    return {
+        id: config.id,
+        name: config.name,
+        region: config.region,
+        date: dateStr,
+        close: parseFloat(latest.close.toFixed(2)),
+        d1: parseFloat(d1.toFixed(2)),
+        turnover: null,
+        pe: meta.trailingPE ? parseFloat(meta.trailingPE.toFixed(2)) : null,
+        pb: null,
+        rsi: rsiVals.length ? Math.round(rsiVals[rsiVals.length - 1]) : null,
+        ma20: maVals.length ? Math.round(maVals[maVals.length - 1]) : null,
+        macd: macdVals.length ? parseFloat((macdVals[macdVals.length - 1]?.MACD || 0).toFixed(2)) : null,
+        support: Math.round(Math.min(...recentRange) * 100) / 100,
+        resistance: Math.round(Math.max(...recentRange) * 100) / 100,
+        ytd: parseFloat(d1.toFixed(2)),
+        stale: false
+    };
+}
+
 async function getYahooData() {
     const INDEX_CONFIG = await getIndexConfig();
-    const results = {};
     const yahooIndices = INDEX_CONFIG.filter(i => i.source === 'yahoo');
 
-    for (const config of yahooIndices) {
-        try {
-            // Use Yahoo Finance v8 HTTP API directly (avoids library version issues)
-            const period1 = Math.floor((Date.now() - 60 * 24 * 60 * 60 * 1000) / 1000); // 60 days ago
-            const period2 = Math.floor(Date.now() / 1000);
-            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(config.yfId)}?period1=${period1}&period2=${period2}&interval=1d`;
+    // Fetch ALL in parallel — no sequential delays
+    const settled = await Promise.allSettled(yahooIndices.map(c => fetchOneYahoo(c)));
 
-            const res = await fetch(url, {
-                headers: { 'User-Agent': 'Mozilla/5.0 (compatible; bot/1.0)' },
-                signal: AbortSignal.timeout(8000)
-            });
-            if (!res.ok) { console.error(`Yahoo HTTP ${res.status} for ${config.yfId}`); continue; }
-
-            const json = await res.json();
-            const result = json?.chart?.result?.[0];
-            if (!result) continue;
-
-            const timestamps = result.timestamp || [];
-            const closePrices = result.indicators?.quote?.[0]?.close || [];
-            const meta = result.meta || {};
-
-            const validPairs = timestamps
-                .map((ts, i) => ({ date: new Date(ts * 1000), close: closePrices[i] }))
-                .filter(p => p.close != null && !isNaN(p.close));
-
-            if (validPairs.length < 2) continue;
-
-            const latest = validPairs[validPairs.length - 1];
-            const prev = validPairs[validPairs.length - 2];
-            const closes = validPairs.map(p => p.close);
-            const d1 = ((latest.close - prev.close) / prev.close) * 100;
-
-            const recentRange = closes.slice(-20);
-            const support = Math.min(...recentRange);
-            const resistance = Math.max(...recentRange);
-
-            const dateStr = `${String(latest.date.getDate()).padStart(2, '0')}/${String(latest.date.getMonth() + 1).padStart(2, '0')}/${latest.date.getFullYear()}`;
-
-            const rsiVals = closes.length >= 15 ? RSI.calculate({ values: closes, period: 14 }) : [];
-            const maVals = closes.length >= 20 ? SMA.calculate({ values: closes, period: 20 }) : [];
-            const macdVals = closes.length >= 27 ? MACD.calculate({ values: closes, fastPeriod: 12, slowPeriod: 26, signalPeriod: 9, SimpleMAOscillator: false, SimpleMASignal: false }) : [];
-
-            results[config.id] = {
-                id: config.id,
-                name: config.name,
-                region: config.region,
-                date: dateStr,
-                close: parseFloat(latest.close.toFixed(2)),
-                d1: parseFloat(d1.toFixed(2)),
-                turnover: null,
-                pe: meta.trailingPE ? parseFloat(meta.trailingPE.toFixed(2)) : null,
-                pb: null,
-                rsi: rsiVals.length ? Math.round(rsiVals[rsiVals.length - 1]) : null,
-                ma20: maVals.length ? Math.round(maVals[maVals.length - 1]) : null,
-                macd: macdVals.length ? parseFloat((macdVals[macdVals.length - 1]?.MACD || 0).toFixed(2)) : null,
-                support: Math.round(support * 100) / 100,
-                resistance: Math.round(resistance * 100) / 100,
-                ytd: parseFloat(d1.toFixed(2))
-            };
-
-            await new Promise(r => setTimeout(r, 300)); // throttle
-        } catch (e) {
-            console.error(`Yahoo error for ${config.yfId}:`, e.message);
+    const results = {};
+    settled.forEach((outcome, i) => {
+        const config = yahooIndices[i];
+        if (outcome.status === 'fulfilled') {
+            yahooCache[config.id] = outcome.value;          // update cache
+            results[config.id] = outcome.value;
+        } else {
+            console.error(`Yahoo failed for ${config.yfId}: ${outcome.reason?.message}`);
+            // Serve cached data with a stale flag so user knows
+            if (yahooCache[config.id]) {
+                results[config.id] = { ...yahooCache[config.id], stale: true };
+            }
         }
-    }
+    });
     return results;
 }
 
