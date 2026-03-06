@@ -43,6 +43,7 @@ async function getIndexConfig() {
             // Vietnam
             { id: 'VNINDEX', ssiId: 'VNINDEX', name: 'VN-Index', region: 'Vietnam', source: 'ssi', vnDirectId: 'VNINDEX' },
             { id: 'HNXINDEX', ssiId: 'HNXINDEX', name: 'HNX-Index', region: 'Vietnam', source: 'ssi', vnDirectId: 'HNXINDEX' },
+            { id: 'VN30', ssiId: 'VN30', name: 'VN30', region: 'Vietnam', source: 'ssi', vnDirectId: 'VNINDEX' },
             // USA
             { id: 'SPX', yfId: '^GSPC', name: 'S&P 500', region: 'USA', source: 'yahoo' },
             { id: 'NASDAQ', yfId: '^IXIC', name: 'Nasdaq', region: 'USA', source: 'yahoo' },
@@ -64,19 +65,51 @@ async function getIndexConfig() {
     }
 }
 
+let cachedVNRatios = null;
+let cachedVNRatiosTime = 0;
+
 async function getVNDirectRatios(symbol) {
-    const url = `https://finfo-api.vndirect.com.vn/v4/ratios/latest?filter=itemCode:51025,51023&where=code:${symbol}`;
+    // Try R2 market.json first (updated daily, fast)
     try {
+        // Cache for 30 min within same process
+        if (cachedVNRatios && Date.now() - cachedVNRatiosTime < 30 * 60 * 1000) {
+            return cachedVNRatios[symbol] || { pe: null, pb: null };
+        }
+        const command = new GetObjectCommand({
+            Bucket: process.env.R2_BUCKET,
+            Key: 'cafef_data/dl_equity/market.json',
+        });
+        const response = await r2Client.send(command);
+        const str = await response.Body.transformToString();
+        const mData = JSON.parse(str);
+        // market.json may have vn_index array sorted by date
+        const build = {};
+        if (mData.vn_index && mData.vn_index.length > 0) {
+            const sorted = [...mData.vn_index].sort((a, b) => b.date.localeCompare(a.date));
+            const latest = sorted[0];
+            build['VNINDEX'] = { pe: latest.pe || null, pb: latest.pb || null };
+        }
+        if (Object.keys(build).length > 0) {
+            cachedVNRatios = build;
+            cachedVNRatiosTime = Date.now();
+            return build[symbol] || { pe: null, pb: null };
+        }
+    } catch (e) {
+        console.error('R2 market.json failed, trying VNDirect live', e.message);
+    }
+
+    // Fallback: live VNDirect API (with timeout)
+    try {
+        const url = `https://finfo-api.vndirect.com.vn/v4/ratios/latest?filter=itemCode:51025,51023&where=code:${symbol}`;
         const res = await fetch(url, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'User-Agent': 'Mozilla/5.0',
                 'Referer': 'https://www.vndirect.com.vn/',
-                'Origin': 'https://www.vndirect.com.vn'
             },
-            next: { revalidate: 3600 } // Cache for 1 hour
+            signal: AbortSignal.timeout(5000),
         });
         const data = await res.json();
-        let pe = 14.97, pb = 1.7; // default fallbacks
+        let pe = null, pb = null;
         if (data.data && data.data.length > 0) {
             data.data.forEach(item => {
                 if (item.itemCode === '51025') pe = item.value;
@@ -84,32 +117,10 @@ async function getVNDirectRatios(symbol) {
             });
             return { pe, pb };
         }
-        throw new Error('No data from VNDirect');
     } catch (e) {
-        console.error(`VNDirect fetch failed for ${symbol}, trying market.json fallback`, e);
-        try {
-            // Fallback: Read from market.json in R2
-            const command = new GetObjectCommand({
-                Bucket: process.env.R2_BUCKET,
-                Key: "cafef_data/dl_equity/market.json",
-            });
-            const response = await r2Client.send(command);
-            const str = await response.Body.transformToString();
-            const mData = JSON.parse(str);
-            if (mData.vn_index && mData.vn_index.length > 0) {
-                // Find latest entry for this index
-                const sorted = mData.vn_index.sort((a, b) => b.date.localeCompare(a.date));
-                const latest = sorted[0];
-                return {
-                    pe: latest.pe || 14.97,
-                    pb: latest.pb || 1.7
-                };
-            }
-        } catch (err) {
-            console.error('Market.json fallback failed', err);
-        }
-        return { pe: 14.97, pb: 1.7 };
+        console.error(`VNDirect fallback failed for ${symbol}:`, e.message);
     }
+    return { pe: null, pb: null };
 }
 
 async function getSSIData(token) {

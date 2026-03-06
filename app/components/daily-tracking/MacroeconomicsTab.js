@@ -64,6 +64,7 @@ const INITIAL_INDICES = [
     // Vietnam
     { id: 'VNINDEX', name: 'VN-Index', region: 'Vietnam', close: 1767.84, turnover: 474, d1: -2.25, ytd: 10.0, pe: 14.97, pb: 1.7, resistance: 1850, support: 1750, rsi: 52, ma20: null, macd: null, date: 'N/A' },
     { id: 'HNXINDEX', name: 'HNX-Index', region: 'Vietnam', close: 253.64, turnover: 44, d1: -0.5, ytd: 3.0, pe: 16.1, pb: 1.3, resistance: 260, support: 245, rsi: 50, ma20: null, macd: null, date: 'N/A' },
+    { id: 'VN30', name: 'VN30', region: 'Vietnam', close: 1904.19, turnover: 250, d1: -2.0, ytd: 8.0, pe: 14.97, pb: 1.7, resistance: 1950, support: 1850, rsi: 52, ma20: null, macd: null, date: 'N/A' },
     // USA
     { id: 'SPX', name: 'S&P 500', region: 'USA', close: 5700, turnover: 65000, d1: -0.9, ytd: 8.0, pe: 26.0, pb: 5.0, resistance: 6000, support: 5600, rsi: 55, ma20: null, macd: null, date: 'N/A' },
     { id: 'NASDAQ', name: 'Nasdaq', region: 'USA', close: 18000, turnover: 50000, d1: -1.2, ytd: 6.0, pe: 32.0, pb: 7.0, resistance: 19000, support: 17500, rsi: 52, ma20: null, macd: null, date: 'N/A' },
