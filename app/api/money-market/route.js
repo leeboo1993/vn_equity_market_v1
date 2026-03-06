@@ -48,18 +48,25 @@ export async function GET(request) {
             return await response.Body.transformToString();
         };
 
+        console.time('Fetch R2 Files');
         const [goldFs, vcbFs, blackFs, silverFs, depositF, economicsBody] = await Promise.all([
             fetchFiles('cafef_data/gold_price/', 5),
             fetchFiles('cafef_data/vcb_fx_data/', 1),
             fetchFiles('cafef_data/usd_black_market/', 1),
             fetchFiles('cafef_data/silver_price/', 5),
-            new Promise(async (resolve) => {
-                const listCommand = new ListObjectsV2Command({ Bucket: R2_BUCKET, Prefix: 'cafef_data/deposit_rate/deposit_rate_backup/' });
-                const res = await r2Client.send(listCommand);
-                resolve((res.Contents || []).filter(c => c.Key.endsWith('.json')).sort((a, b) => b.LastModified - a.LastModified).slice(0, 45));
-            }),
+            (async () => {
+                try {
+                    const listCommand = new ListObjectsV2Command({ Bucket: R2_BUCKET, Prefix: 'cafef_data/deposit_rate/' });
+                    const res = await r2Client.send(listCommand);
+                    return (res.Contents || []).filter(c => c.Key.endsWith('.json') && !c.Key.includes('_backup')).sort((a, b) => b.LastModified - a.LastModified).slice(0, 1);
+                } catch (e) {
+                    console.error("Error fetching deposit rate files:", e);
+                    return [];
+                }
+            })(),
             fetchBody('cafef_data/dl_equity/economics.json').catch(e => null)
         ]);
+        console.timeEnd('Fetch R2 Files');
 
         const parseCsv = (csv) => {
             const lines = csv.split('\n').map(l => l.trim()).filter(Boolean);
@@ -133,34 +140,33 @@ export async function GET(request) {
             blackMarketData = parseCsv(body).map(d => ({ ...d, date: normDate(d.date) }));
         }
 
-        const fetchDepositDay = async (key) => {
+        console.time('Parse Deposit Rates');
+        let depositTimeSeries = [];
+        if (depositF.length > 0) {
             try {
-                const body = await fetchBody(key);
+                const body = await fetchBody(depositF[0].Key);
                 const parsed = JSON.parse(body.replace(/:\s*NaN/g, ': null'));
-                const dateMatch = key.match(/deposit_rate_(\d{2})(\d{2})(\d{2})\.json/);
-                let dateStr = parsed.last_updated?.split('T')[0];
-                if (dateMatch) dateStr = `20${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}`;
-                const banks = {};
+
+                const groupedByDate = {};
                 (parsed.data || []).forEach(item => {
+                    if (!item.date) return;
+                    if (!groupedByDate[item.date]) groupedByDate[item.date] = { date: item.date, banks: {} };
+
                     const rawBank = (item.bank || '').toUpperCase().trim();
                     const norm = VALID_BANKS[rawBank];
                     if (norm) {
-                        banks[norm] = {
-                            "1M": item['1m'],
-                            "3M": item['3m'],
-                            "6M": item['6m'],
-                            "9M": item['9m'],
-                            "12M": item['12m'],
-                            "18M": item['18m'],
-                            "24M": item['24m']
+                        groupedByDate[item.date].banks[norm] = {
+                            "1M": item['1m'], "3M": item['3m'], "6M": item['6m'],
+                            "9M": item['9m'], "12M": item['12m'], "18M": item['18m'], "24M": item['24m']
                         };
                     }
                 });
-                return { date: dateStr, banks };
-            } catch (e) { return null; }
-        };
-        const depositResults = await Promise.all(depositF.map(f => fetchDepositDay(f.Key)));
-        const depositTimeSeries = depositResults.filter(Boolean).sort((a, b) => a.date.localeCompare(b.date));
+                depositTimeSeries = Object.values(groupedByDate).sort((a, b) => a.date.localeCompare(b.date));
+            } catch (e) {
+                console.error("Error parsing consolidated deposit rate file:", e);
+            }
+        }
+        console.timeEnd('Parse Deposit Rates');
 
         let treasury = [];
         let interbank = [];

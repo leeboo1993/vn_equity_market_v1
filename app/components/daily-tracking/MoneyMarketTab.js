@@ -61,7 +61,21 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
     const [depositTenor, setDepositTenor] = useState('12M');
     const [dataSource, setDataSource] = useState('Retail');
     const [selectedBanks, setSelectedBanks] = useState(['VCB', 'TCB', 'VPB', 'ACB', 'BID']);
-    const [goldSilverSelection, setGoldSilverSelection] = useState(['bar', 'silver_bar']);
+    const [goldSilverSelection, setGoldSilverSelection] = useState(['bar', 'silver_kg']);
+
+    // Toggles for charts
+    const [hiddenInterbank, setHiddenInterbank] = useState([]);
+    const [hiddenTreasury, setHiddenTreasury] = useState([]);
+
+    const toggleInterbank = (e) => {
+        const key = e.dataKey;
+        setHiddenInterbank(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
+    };
+
+    const toggleTreasury = (e) => {
+        const key = e.dataKey;
+        setHiddenTreasury(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
+    };
 
     useEffect(() => {
         setLoading(true);
@@ -390,8 +404,7 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', background: '#1a1a1a', padding: '2px', borderRadius: '4px', justifyContent: 'flex-end' }}>
                                 {[
                                     { key: 'bar', label: 'Gold Bar' },
-                                    { key: 'ring', label: 'Gold Ring' },
-                                    { key: 'silver_bar', label: 'Silver' }
+                                    { key: 'silver_kg', label: 'Silver Bar' }
                                 ].map(item => (
                                     <button
                                         key={item.key}
@@ -453,8 +466,7 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                                 />
                                 <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
                                 {goldSilverSelection.includes('bar') && <Line type="monotone" dataKey="bar" name="Gold Bar" stroke={COLORS.yellow} dot={false} strokeWidth={2} connectNulls />}
-                                {goldSilverSelection.includes('ring') && <Line type="monotone" dataKey="ring" name="9999 Ring" stroke={COLORS.teal} dot={false} strokeWidth={2} connectNulls />}
-                                {goldSilverSelection.includes('silver_bar') && <Line type="monotone" dataKey="silver_bar" name="Silver Bar" stroke={COLORS.blue} dot={false} strokeWidth={2} connectNulls />}
+                                {goldSilverSelection.includes('silver_kg') && <Line type="monotone" dataKey="silver_kg" name="Silver Bar" stroke={COLORS.blue} dot={false} strokeWidth={2} connectNulls />}
                             </LineChart>
                         </ResponsiveContainer>
                     </div>
@@ -464,7 +476,7 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                         <div>
                             <h3 style={{ margin: 0, fontSize: '14px', color: COLORS.white }}>Deposit Rates</h3>
-                            <p style={{ margin: '4px 0 0', fontSize: '11px', color: COLORS.text }}>Deposit interest rate (% p.a.) - Quoted on website</p>
+                            <p style={{ margin: '4px 0 0', fontSize: '11px', color: COLORS.text }}>Deposit interest rate (% p.a.)</p>
                         </div>
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                             <div style={{ display: 'flex', gap: '4px', background: '#1a1a1a', padding: '2px', borderRadius: '4px' }}>
@@ -506,7 +518,7 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
 
                     {/* Bank Chips */}
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '1rem', maxHeight: '60px', overflowY: 'auto', padding: '2px' }}>
-                        {availableBanks.map(b => (
+                        {[...selectedBanks, ...availableBanks.filter(b => !selectedBanks.includes(b))].map(b => (
                             <button
                                 key={b}
                                 onClick={() => toggleBank(b)}
@@ -582,10 +594,10 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                                 <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={axisDate} minTickGap={20} />
                                 <YAxis stroke={COLORS.text} fontSize={10} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} domain={[d => Math.floor(d * 1.2), d => Math.ceil(d * 1.2)]} width={45} />
                                 <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px' }} formatter={v => v.toLocaleString()} labelFormatter={formatDate} />
-                                <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} iconType="circle" />
-                                <Area type="monotone" dataKey="State Treasury" stroke={COLORS.teal} fill="url(#colorTreasury)" strokeWidth={2} dot={false} connectNulls />
-                                <Area type="monotone" dataKey="OMO" stroke={COLORS.yellow} fill="transparent" strokeWidth={2} dot={false} connectNulls />
-                                <Area type="monotone" dataKey="CITAD" stroke={COLORS.blue} fill="transparent" strokeWidth={2} dot={false} connectNulls />
+                                <Legend onClick={toggleTreasury} wrapperStyle={{ fontSize: '10px', paddingTop: '10px', cursor: 'pointer' }} iconType="circle" />
+                                <Area hide={hiddenTreasury.includes('State Treasury')} type="monotone" dataKey="State Treasury" stroke={COLORS.teal} fill="url(#colorTreasury)" strokeWidth={2} dot={false} connectNulls />
+                                <Area hide={hiddenTreasury.includes('OMO')} type="monotone" dataKey="OMO" stroke={COLORS.yellow} fill="transparent" strokeWidth={2} dot={false} connectNulls />
+                                <Area hide={hiddenTreasury.includes('CITAD')} type="monotone" dataKey="CITAD" stroke={COLORS.blue} fill="transparent" strokeWidth={2} dot={false} connectNulls />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
@@ -615,11 +627,11 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                                     width={40}
                                 />
                                 <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px' }} formatter={v => `${v}%`} labelFormatter={formatDate} />
-                                <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} iconType="circle" />
-                                <Line type="monotone" dataKey="O/N" stroke={COLORS.red} strokeWidth={2.5} dot={false} connectNulls />
-                                <Line type="monotone" dataKey="1W" stroke={COLORS.teal} strokeWidth={2.5} dot={false} connectNulls />
-                                <Line type="monotone" dataKey="1M" stroke={COLORS.blue} strokeWidth={2.5} dot={false} connectNulls />
-                                <Line type="monotone" dataKey="1Y" stroke={COLORS.purple} strokeWidth={2.5} dot={false} connectNulls />
+                                <Legend onClick={toggleInterbank} wrapperStyle={{ fontSize: '10px', paddingTop: '10px', cursor: 'pointer' }} iconType="circle" />
+                                <Line hide={hiddenInterbank.includes('O/N')} type="monotone" dataKey="O/N" stroke={COLORS.red} strokeWidth={2.5} dot={false} connectNulls />
+                                <Line hide={hiddenInterbank.includes('1W')} type="monotone" dataKey="1W" stroke={COLORS.teal} strokeWidth={2.5} dot={false} connectNulls />
+                                <Line hide={hiddenInterbank.includes('1M')} type="monotone" dataKey="1M" stroke={COLORS.blue} strokeWidth={2.5} dot={false} connectNulls />
+                                <Line hide={hiddenInterbank.includes('1Y')} type="monotone" dataKey="1Y" stroke={COLORS.purple} strokeWidth={2.5} dot={false} connectNulls />
                             </LineChart>
                         </ResponsiveContainer>
                     </div>
