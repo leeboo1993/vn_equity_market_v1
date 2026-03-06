@@ -375,11 +375,11 @@ function GlobalIndicatorsTable({ indices }) {
                             <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}`, color: '#cbd5e1', fontWeight: 600 }}>{row.pe}x</td>
                             <td style={{ padding: '8px 16px', textAlign: 'right', color: '#cbd5e1', fontWeight: 600 }}>{row.pb}x</td>
 
-                            <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}`, color: '#f1f5f9' }}>{row.resistance.toLocaleString()}</td>
-                            <td style={{ padding: '8px 16px', textAlign: 'right', color: '#f1f5f9' }}>{row.support.toLocaleString()}</td>
-                            <td style={{ padding: '8px 16px', textAlign: 'right', fontWeight: 700, color: row.rsi > 70 ? COLORS.red : (row.rsi < 30 ? COLORS.green : '#cbd5e1') }}>{row.rsi}</td>
-                            <td style={{ padding: '8px 16px', textAlign: 'right', color: '#94a3b8' }}>{row.ma20.toLocaleString()}</td>
-                            <td style={{ padding: '8px 16px', textAlign: 'right', color: String(row.macd).startsWith('+') ? COLORS.green : COLORS.red, fontWeight: 600 }}>{row.macd}</td>
+                            <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}`, color: '#f1f5f9' }}>{row.resistance != null ? row.resistance.toLocaleString() : '–'}</td>
+                            <td style={{ padding: '8px 16px', textAlign: 'right', color: '#f1f5f9' }}>{row.support != null ? row.support.toLocaleString() : '–'}</td>
+                            <td style={{ padding: '8px 16px', textAlign: 'right', fontWeight: 700, color: row.rsi > 70 ? COLORS.red : (row.rsi < 30 ? COLORS.green : '#cbd5e1') }}>{row.rsi ?? '–'}</td>
+                            <td style={{ padding: '8px 16px', textAlign: 'right', color: '#94a3b8' }}>{row.ma20 != null ? row.ma20.toLocaleString() : '–'}</td>
+                            <td style={{ padding: '8px 16px', textAlign: 'right', color: row.macd != null ? (String(row.macd).startsWith('-') ? COLORS.red : COLORS.green) : '#94a3b8', fontWeight: 600 }}>{row.macd ?? '–'}</td>
                         </tr>
                     ))}
                 </tbody>
