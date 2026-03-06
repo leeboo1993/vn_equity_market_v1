@@ -145,19 +145,17 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
             const prevD = arr[i - 1];
             const prevS = i > 0 ? (filteredData.silver || []).find(sv => sv.date === prevD.date) : null;
 
-            const silver_mace = s ? parseFloat(s.silver_sell) : null;
+            const silver_tael = s ? parseFloat(s.silver_sell) : null;
 
             const res = {
                 date: d.date,
                 bar: parseFloat(d.bar_sell) || null,
                 ring: parseFloat(d.ring_sell) || null,
-                silver_bar: silver_mace,
-                // 1 Mace = 3.75g. 1kg = 1000g. 1kg = 1000 / 3.75 ~ 266.67 maces? No.
-                // 1 Tael = 10 Mace = 37.5g. 1kg = 1000g.
-                // 1kg = 1000 / 37.5 Taels = 26.666... Taels.
-                // 1kg = 26.666... * 10 Mace = 266.666 Mace.
-                // Price per kg (Millions VND) = Price per Mace * 266.666
-                silver_kg: silver_mace ? silver_mace * 266.666 : null
+                silver_bar: silver_tael,
+                // 1 Tael = 37.5g. 1kg = 1000g.
+                // 1kg = 1000 / 37.5 Taels = 26.6666... Taels.
+                // Price per kg (Millions VND) = Price per Tael * 26.6666
+                silver_kg: silver_tael ? silver_tael * 26.6666 : null
             };
 
             // Calculate DoD Change %
@@ -165,8 +163,8 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                 if (res.bar && prevD.bar_sell) res.bar_dod = ((res.bar - parseFloat(prevD.bar_sell)) / parseFloat(prevD.bar_sell)) * 100;
                 if (res.ring && prevD.ring_sell) res.ring_dod = ((res.ring - parseFloat(prevD.ring_sell)) / parseFloat(prevD.ring_sell)) * 100;
             }
-            if (prevS && silver_mace && prevS.silver_sell) {
-                res.silver_dod = ((silver_mace - parseFloat(prevS.silver_sell)) / parseFloat(prevS.silver_sell)) * 100;
+            if (prevS && silver_tael && prevS.silver_sell) {
+                res.silver_dod = ((silver_tael - parseFloat(prevS.silver_sell)) / parseFloat(prevS.silver_sell)) * 100;
             }
 
             return res;

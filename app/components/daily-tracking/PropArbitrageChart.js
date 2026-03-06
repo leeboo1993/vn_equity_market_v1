@@ -18,7 +18,10 @@ export default function PropArbitrageChart({ data }) {
     // data from derivatives_prop
     const chartData = useMemo(() => {
         if (!data || data.length === 0) return [];
-        return data.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+        return data.slice().sort((a, b) => new Date(a.date) - new Date(b.date)).map(d => ({
+            ...d,
+            total_net_today: (d.total_net_today || 0) / 1000
+        }));
     }, [data]);
 
     if (!data || data.length === 0) return null;
@@ -33,7 +36,7 @@ export default function PropArbitrageChart({ data }) {
             {latest && (
                 <div style={{ fontSize: '12px', color: '#888', marginBottom: '8px' }}>
                     Balance <span style={{ color: latest.outstanding_balance_bn > 0 ? '#00a884' : '#e55353', fontWeight: 600 }}>{latest.outstanding_balance_bn}bn</span>
-                    {' '}Net Today <span style={{ color: latest.total_net_today > 0 ? '#00a884' : '#e55353', fontWeight: 600 }}>{latest.total_net_today}bn</span>
+                    {' '}Net Today <span style={{ color: latest.total_net_today > 0 ? '#00a884' : '#e55353', fontWeight: 600 }}>{latest.total_net_today.toFixed(1)}bn</span>
                 </div>
             )}
 

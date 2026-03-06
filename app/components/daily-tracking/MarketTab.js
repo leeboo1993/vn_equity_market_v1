@@ -58,19 +58,26 @@ export default function MarketTab({ data, timeFilter }) {
         const recent = sorted.slice(-15);
 
         return recent.map(d => {
-            const foreign = d.foreign_net_value || 0;
-            // Prop data might be in derivatives_prop or we could have a prop_net_value in future
-            // For now, let's look for prop in the data or placeholder
-            const prop = 0; // Placeholder if not explicitly in vn_index record
+            const foreignTotal = d.foreign_net_value || 0;
+            const dc = d.dc_foreign_flow || 0;
 
-            // Total market net is 0, so Domestic = -(Foreign + Prop)
-            const domestic = -(foreign + prop);
+            // Link derivatives_prop date if matching
+            const propData = (data.derivatives_prop || []).find(p => p.date === d.date);
+            // Derivatives prop total_net_today is usually in Millions VND, convert to Billions
+            const prop = propData ? (propData.total_net_today * 1e6) : 0;
+
+            // Total market net is 0: Foreign + Institutional + Prop + Individual = 0
+            // Note: ForeignTotal already includes individual foreign + funds like DC.
+            // Individual is the remaining plug
+            const individual = -(foreignTotal + prop);
 
             return {
                 date: d.date,
-                foreign: foreign / 1e9, // in Billions
-                institutional: prop / 1e9,
-                individual: domestic / 1e9
+                foreignTotal: foreignTotal / 1e9,
+                foreignExDC: (foreignTotal - dc) / 1e9,
+                dc: dc / 1e9,
+                prop: prop / 1e9,
+                individual: individual / 1e9
             };
         });
     }, [data]);
@@ -202,9 +209,10 @@ export default function MarketTab({ data, timeFilter }) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                     {/* Investor Flow Row */}
                     <h3 style={{ margin: '0', fontSize: '14px', fontWeight: 600, color: COLORS.white }}>Investor Flow</h3>
-                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                        {renderFlowChart('Foreign Net', 'foreign', COLORS.teal)}
-                        {renderFlowChart('Institutional Net', 'institutional', COLORS.blue)}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+                        {renderFlowChart('Foreign Net (ex-DC)', 'foreignExDC', COLORS.teal)}
+                        {renderFlowChart('Dragon Capital (DC)', 'dc', COLORS.blue)}
+                        {renderFlowChart('Prop Net (Deriv Proxy)', 'prop', COLORS.blue)}
                         {renderFlowChart('Domestic Individual', 'individual', COLORS.teal)}
                     </div>
 
