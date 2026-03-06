@@ -84,7 +84,8 @@ export default function MacroeconomicsTab({ data, timeFilter, customRange, timeF
                 if (res.ok) {
                     const d = await res.json();
                     if (d.indices) {
-                        setIndices(Object.values(d.indices));
+                        const live = Object.values(d.indices);
+                        if (live.length > 0) setIndices(live);
                     }
                 }
             } catch (e) {

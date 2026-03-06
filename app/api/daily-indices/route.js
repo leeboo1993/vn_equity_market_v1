@@ -42,7 +42,12 @@ async function getIndexConfig() {
         // Fallback or throw
         return [
             { id: 'VNINDEX', ssiId: 'VNINDEX', name: 'VN-Index', region: 'Vietnam', source: 'ssi', vnDirectId: 'VNINDEX' },
-            { id: 'SPX', yfId: '^GSPC', name: 'S&P 500', region: 'USA', source: 'yahoo', proxyId: 'SPY' }
+            { id: 'HNXINDEX', ssiId: 'HNXINDEX', name: 'HNX-Index', region: 'Vietnam', source: 'ssi', vnDirectId: 'HNXINDEX' },
+            { id: 'SPX', yfId: '^GSPC', name: 'S&P 500', region: 'USA', source: 'yahoo', proxyId: 'SPY' },
+            { id: 'DJI', yfId: '^DJI', name: 'Dow Jones', region: 'USA', source: 'yahoo', proxyId: 'DIA' },
+            { id: 'FTSE', yfId: '^FTSE', name: 'FTSE 100', region: 'UK', source: 'yahoo', proxyId: 'ISF.L' },
+            { id: 'N225', yfId: '^N225', name: 'Nikkei 225', region: 'Japan', source: 'yahoo', proxyId: 'EWJ' },
+            { id: 'HSI', yfId: '^HSI', name: 'Hang Seng', region: 'Hong Kong', source: 'yahoo', proxyId: '2800.HK' },
         ];
     }
 }
