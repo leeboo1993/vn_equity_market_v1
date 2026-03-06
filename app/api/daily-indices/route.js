@@ -40,13 +40,26 @@ async function getIndexConfig() {
         console.error('Error fetching indices config:', error);
         // Fallback or throw
         return [
+            // Vietnam
             { id: 'VNINDEX', ssiId: 'VNINDEX', name: 'VN-Index', region: 'Vietnam', source: 'ssi', vnDirectId: 'VNINDEX' },
             { id: 'HNXINDEX', ssiId: 'HNXINDEX', name: 'HNX-Index', region: 'Vietnam', source: 'ssi', vnDirectId: 'HNXINDEX' },
-            { id: 'SPX', yfId: '^GSPC', name: 'S&P 500', region: 'USA', source: 'yahoo', proxyId: 'SPY' },
-            { id: 'DJI', yfId: '^DJI', name: 'Dow Jones', region: 'USA', source: 'yahoo', proxyId: 'DIA' },
-            { id: 'FTSE', yfId: '^FTSE', name: 'FTSE 100', region: 'UK', source: 'yahoo', proxyId: 'ISF.L' },
-            { id: 'N225', yfId: '^N225', name: 'Nikkei 225', region: 'Japan', source: 'yahoo', proxyId: 'EWJ' },
-            { id: 'HSI', yfId: '^HSI', name: 'Hang Seng', region: 'Hong Kong', source: 'yahoo', proxyId: '2800.HK' },
+            // USA
+            { id: 'SPX', yfId: '^GSPC', name: 'S&P 500', region: 'USA', source: 'yahoo' },
+            { id: 'NASDAQ', yfId: '^IXIC', name: 'Nasdaq', region: 'USA', source: 'yahoo' },
+            { id: 'DJI', yfId: '^DJI', name: 'Dow Jones', region: 'USA', source: 'yahoo' },
+            // Europe
+            { id: 'FTSE', yfId: '^FTSE', name: 'FTSE 100', region: 'UK', source: 'yahoo' },
+            { id: 'DAX', yfId: '^GDAXI', name: 'DAX', region: 'Germany', source: 'yahoo' },
+            { id: 'CAC40', yfId: '^FCHI', name: 'CAC 40', region: 'France', source: 'yahoo' },
+            // China
+            { id: 'SSE', yfId: '000001.SS', name: 'Shanghai (SSE)', region: 'China', source: 'yahoo' },
+            { id: 'CSI300', yfId: '000300.SS', name: 'CSI 300', region: 'China', source: 'yahoo' },
+            { id: 'HSI', yfId: '^HSI', name: 'Hang Seng', region: 'Hong Kong', source: 'yahoo' },
+            // Asia
+            { id: 'N225', yfId: '^N225', name: 'Nikkei 225', region: 'Japan', source: 'yahoo' },
+            { id: 'KOSPI', yfId: '^KS11', name: 'KOSPI', region: 'Korea', source: 'yahoo' },
+            { id: 'ASX200', yfId: '^AXJO', name: 'ASX 200', region: 'Australia', source: 'yahoo' },
+            { id: 'STI', yfId: '^STI', name: 'STI', region: 'Singapore', source: 'yahoo' },
         ];
     }
 }

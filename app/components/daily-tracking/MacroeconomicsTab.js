@@ -59,15 +59,28 @@ const TrendIcon = ({ trend }) => {
     );
 };
 
-// Initial Mock Data (Fallback if API fails)
+// Initial Mock Data (Fallback if API fails) — grouped by region
 const INITIAL_INDICES = [
-    { id: 'VNINDEX', name: 'VN-Index', region: 'Vietnam', close: 1813.14, turnover: 473.5, d1: 0.15, ytd: 13.6, pe: 14.97, pb: 1.7, resistance: 1850, support: 1780, rsi: 64, ma20: 1810, macd: '+1.2' },
-    { id: 'HNXINDEX', name: 'HNX-Index', region: 'Vietnam', close: 240.15, turnover: 43.5, d1: 0.72, ytd: 4.4, pe: 16.1, pb: 1.3, resistance: 255, support: 235, rsi: 60, ma20: 238, macd: '+0.4' },
-    { id: 'SPX', name: 'S&P 500', region: 'USA', close: 5892.40, turnover: 70955, d1: -0.92, ytd: 17.5, pe: 26.1, pb: 5.0, resistance: 6000, support: 5800, rsi: 58, ma20: 5850, macd: '+12.5' },
-    { id: 'DJI', name: 'Dow Jones', region: 'USA', close: 40713, turnover: 13837, d1: -0.45, ytd: 7.9, pe: 22.7, pb: 5.2, resistance: 41200, support: 39950, rsi: 59, ma20: 40450, macd: '+15.2' },
-    { id: 'FTSE', name: 'FTSE 100', region: 'UK', close: 8288.65, turnover: 2879, d1: 0.12, ytd: 7.3, pe: 14.4, pb: 1.9, resistance: 8400, support: 8150, rsi: 54, ma20: 8210, macd: '-2.1' },
-    { id: 'N225', name: 'Nikkei 225', region: 'Japan', close: 38364.2, turnover: 18869, d1: 0.44, ytd: 14.6, pe: 23.4, pb: 2.1, resistance: 39500, support: 37200, rsi: 54, ma20: 38100, macd: '+22.1' },
-    { id: 'HSI', name: 'Hang Seng', region: 'Hong Kong', close: 17612.4, turnover: 6997, d1: -0.23, ytd: 4.9, pe: 9.8, pb: 1.0, resistance: 18200, support: 16950, rsi: 56, ma20: 17420, macd: '+3.2' },
+    // Vietnam
+    { id: 'VNINDEX', name: 'VN-Index', region: 'Vietnam', close: 1767.84, turnover: 474, d1: -2.25, ytd: 10.0, pe: 14.97, pb: 1.7, resistance: 1850, support: 1750, rsi: 52, ma20: null, macd: null, date: 'N/A' },
+    { id: 'HNXINDEX', name: 'HNX-Index', region: 'Vietnam', close: 253.64, turnover: 44, d1: -0.5, ytd: 3.0, pe: 16.1, pb: 1.3, resistance: 260, support: 245, rsi: 50, ma20: null, macd: null, date: 'N/A' },
+    // USA
+    { id: 'SPX', name: 'S&P 500', region: 'USA', close: 5700, turnover: 65000, d1: -0.9, ytd: 8.0, pe: 26.0, pb: 5.0, resistance: 6000, support: 5600, rsi: 55, ma20: null, macd: null, date: 'N/A' },
+    { id: 'NASDAQ', name: 'Nasdaq', region: 'USA', close: 18000, turnover: 50000, d1: -1.2, ytd: 6.0, pe: 32.0, pb: 7.0, resistance: 19000, support: 17500, rsi: 52, ma20: null, macd: null, date: 'N/A' },
+    { id: 'DJI', name: 'Dow Jones', region: 'USA', close: 43000, turnover: 14000, d1: -0.5, ytd: 5.0, pe: 22.0, pb: 5.0, resistance: 45000, support: 42000, rsi: 54, ma20: null, macd: null, date: 'N/A' },
+    // Europe
+    { id: 'FTSE', name: 'FTSE 100', region: 'UK', close: 8288, turnover: 2800, d1: 0.1, ytd: 5.0, pe: 14.0, pb: 1.9, resistance: 8500, support: 8100, rsi: 53, ma20: null, macd: null, date: 'N/A' },
+    { id: 'DAX', name: 'DAX', region: 'Germany', close: 22000, turnover: 5000, d1: 0.4, ytd: 14.0, pe: 17.0, pb: 1.8, resistance: 23000, support: 21000, rsi: 60, ma20: null, macd: null, date: 'N/A' },
+    { id: 'CAC40', name: 'CAC 40', region: 'France', close: 8200, turnover: 3500, d1: 0.2, ytd: 8.0, pe: 16.0, pb: 1.7, resistance: 8500, support: 8000, rsi: 55, ma20: null, macd: null, date: 'N/A' },
+    // China
+    { id: 'SSE', name: 'Shanghai (SSE)', region: 'China', close: 3300, turnover: 40000, d1: 0.3, ytd: 2.0, pe: 13.0, pb: 1.3, resistance: 3500, support: 3100, rsi: 51, ma20: null, macd: null, date: 'N/A' },
+    { id: 'CSI300', name: 'CSI 300', region: 'China', close: 3900, turnover: 35000, d1: 0.5, ytd: 3.0, pe: 14.0, pb: 1.5, resistance: 4100, support: 3700, rsi: 53, ma20: null, macd: null, date: 'N/A' },
+    { id: 'HSI', name: 'Hang Seng', region: 'Hong Kong', close: 25000, turnover: 7000, d1: 1.0, ytd: 12.0, pe: 10.0, pb: 1.0, resistance: 27000, support: 24000, rsi: 58, ma20: null, macd: null, date: 'N/A' },
+    // Asia
+    { id: 'N225', name: 'Nikkei 225', region: 'Japan', close: 38000, turnover: 18000, d1: 0.4, ytd: 10.0, pe: 23.0, pb: 2.1, resistance: 40000, support: 36000, rsi: 54, ma20: null, macd: null, date: 'N/A' },
+    { id: 'KOSPI', name: 'KOSPI', region: 'Korea', close: 2600, turnover: 8000, d1: 0.2, ytd: 3.0, pe: 12.0, pb: 1.0, resistance: 2800, support: 2500, rsi: 50, ma20: null, macd: null, date: 'N/A' },
+    { id: 'ASX200', name: 'ASX 200', region: 'Australia', close: 8200, turnover: 5000, d1: 0.1, ytd: 4.0, pe: 18.0, pb: 2.2, resistance: 8500, support: 8000, rsi: 52, ma20: null, macd: null, date: 'N/A' },
+    { id: 'STI', name: 'STI', region: 'Singapore', close: 3900, turnover: 1200, d1: 0.3, ytd: 5.0, pe: 14.0, pb: 1.3, resistance: 4000, support: 3700, rsi: 53, ma20: null, macd: null, date: 'N/A' },
 ];
 
 export default function MacroeconomicsTab({ data, timeFilter, customRange, timeFilterControl }) {
