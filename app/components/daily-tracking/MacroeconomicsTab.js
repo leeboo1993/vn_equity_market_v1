@@ -99,7 +99,20 @@ export default function MacroeconomicsTab({ data, timeFilter, customRange, timeF
                     const d = await res.json();
                     if (d.indices) {
                         const live = Object.values(d.indices);
-                        if (live.length > 0) setIndices(live);
+                        if (live.length > 0) {
+                            const liveMap = Object.fromEntries(live.map(x => [x.id, x]));
+                            setIndices(prev => {
+                                // Merge: update matched rows with live data, keep others as fallback
+                                const merged = prev.map(idx =>
+                                    liveMap[idx.id] ? { ...idx, ...liveMap[idx.id] } : idx
+                                );
+                                // Append any live indices not yet in state
+                                live.forEach(liveIdx => {
+                                    if (!merged.find(m => m.id === liveIdx.id)) merged.push(liveIdx);
+                                });
+                                return merged;
+                            });
+                        }
                     }
                 }
             } catch (e) {
@@ -382,7 +395,29 @@ function GlobalIndicatorsTable({ indices }) {
                             <td style={{ padding: '8px 16px', color: '#64748b', fontWeight: 500 }}>{row.region}</td>
                             <td style={{ padding: '8px 16px', textAlign: 'right', color: '#94a3b8', fontSize: '11px' }}>{row.date || 'N/A'}</td>
                             <td style={{ padding: '8px 16px', textAlign: 'right', fontWeight: 700, color: '#f8fafc', fontSize: '12px' }}>{typeof row.close === 'number' ? row.close.toLocaleString(undefined, { minimumFractionDigits: 2 }) : row.close}</td>
-                            <td style={{ padding: '8px 16px', textAlign: 'right', color: '#94a3b8' }}>{row.turnover ? `$${row.turnover.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : 'N/A'}</td>
+                            <td style={{ padding: '8px 16px', textAlign: 'right', color: '#94a3b8' }}>
+                                {row.turnover != null ? (
+                                    <div>
+                                        <div style={{ fontWeight: 600, color: '#cbd5e1' }}>
+                                            ${row.turnover.toLocaleString()}
+                                        </div>
+                                        {(row.turnoverChgYest != null || row.turnoverChg10d != null) && (
+                                            <div style={{ fontSize: '9px', marginTop: '2px', display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                                                {row.turnoverChgYest != null && (
+                                                    <span style={{ color: row.turnoverChgYest >= 0 ? '#22c55e' : '#ef4444' }}>
+                                                        {row.turnoverChgYest >= 0 ? '+' : ''}{row.turnoverChgYest}% vs D-1
+                                                    </span>
+                                                )}
+                                                {row.turnoverChg10d != null && (
+                                                    <span style={{ color: row.turnoverChg10d >= 0 ? '#22c55e' : '#ef4444' }}>
+                                                        {row.turnoverChg10d >= 0 ? '+' : ''}{row.turnoverChg10d}% vs 10d
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : 'N/A'}
+                            </td>
 
                             <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}` }}>
                                 {getValueWithIcon(row.d1, true)}

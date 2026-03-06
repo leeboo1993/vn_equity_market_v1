@@ -226,10 +226,12 @@ async function fetchOneYahoo(config) {
 
     const timestamps = result.timestamp || [];
     const closePrices = result.indicators?.quote?.[0]?.close || [];
+    const volumes = result.indicators?.quote?.[0]?.volume || [];
     const meta = result.meta || {};
+    const fxFactor = 1; // turnover in local currency mn (USD for US, JPY for Japan, etc.)
 
     const validPairs = timestamps
-        .map((ts, i) => ({ date: new Date(ts * 1000), close: closePrices[i] }))
+        .map((ts, i) => ({ date: new Date(ts * 1000), close: closePrices[i], vol: volumes[i] }))
         .filter(p => p.close != null && !isNaN(p.close));
 
     if (validPairs.length < 2) throw new Error('Insufficient data');
@@ -249,7 +251,16 @@ async function fetchOneYahoo(config) {
     const jan1 = new Date(new Date().getFullYear(), 0, 1).getTime();
     const ytdRef = [...validPairs].reverse().find(p => p.date.getTime() <= jan1)?.close ?? null;
 
-    const recentRange = closes.slice(-Math.min(20, closes.length));
+    const calcTurnover = (pair) => (pair?.vol && pair?.close) ? Math.round(pair.vol * pair.close / 1_000_000) : null;
+
+    const latestTurnover = calcTurnover(latest);
+    const yesterTurnover = calcTurnover(validPairs[validPairs.length - 2]);
+    const last10 = validPairs.slice(-11, -1); // 10 days before latest
+    const avg10dTurnover = last10.length > 0
+        ? Math.round(last10.reduce((s, p) => s + (calcTurnover(p) || 0), 0) / last10.filter(p => calcTurnover(p) != null).length)
+        : null;
+    const turnoverChgYest = (latestTurnover && yesterTurnover) ? calcPctChg(yesterTurnover, latestTurnover) : null;
+    const turnoverChg10d = (latestTurnover && avg10dTurnover) ? calcPctChg(avg10dTurnover, latestTurnover) : null;
     const dateStr = `${String(latest.date.getDate()).padStart(2, '0')}/${String(latest.date.getMonth() + 1).padStart(2, '0')}/${latest.date.getFullYear()}`;
 
     const rsiVals = closes.length >= 15 ? RSI.calculate({ values: closes, period: 14 }) : [];
@@ -278,7 +289,10 @@ async function fetchOneYahoo(config) {
         d6m: calcPctChg(findClose(182), latest.close),
         d12m: calcPctChg(findClose(365), latest.close),
         ytd: calcPctChg(ytdRef, latest.close),
-        turnover: null, pe, pb: null,
+        turnover: latestTurnover,
+        turnoverChgYest,
+        turnoverChg10d,
+        pe, pb: null,
         rsi: rsiVals.length ? Math.round(rsiVals[rsiVals.length - 1]) : null,
         ma20: maVals.length ? Math.round(maVals[maVals.length - 1]) : null,
         macd: macdVals.length ? parseFloat((macdVals[macdVals.length - 1]?.MACD || 0).toFixed(2)) : null,
