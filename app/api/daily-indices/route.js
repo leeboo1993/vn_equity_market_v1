@@ -1,6 +1,4 @@
 import { getSSIAccessToken } from '@/lib/data';
-import { NextResponse } from 'next/server';
-import yahooFinance from 'yahoo-finance2';
 import { RSI, MACD, SMA } from 'technicalindicators';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 
@@ -180,55 +178,67 @@ async function getYahooData() {
 
     for (const config of yahooIndices) {
         try {
-            const queryOptions = { period1: new Date(Date.now() - 150 * 24 * 60 * 60 * 1000) }; // 150 days
-            const chart = await yahooFinance.chart(config.yfId, queryOptions);
-            const quotes = chart.quotes;
+            // Use Yahoo Finance v8 HTTP API directly (avoids library version issues)
+            const period1 = Math.floor((Date.now() - 60 * 24 * 60 * 60 * 1000) / 1000); // 60 days ago
+            const period2 = Math.floor(Date.now() / 1000);
+            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(config.yfId)}?period1=${period1}&period2=${period2}&interval=1d`;
 
-            if (quotes && quotes.length > 0) {
-                const validQuotes = quotes.filter(q => q.close != null && !isNaN(q.close));
-                const latest = validQuotes[validQuotes.length - 1];
-                const prev = validQuotes[validQuotes.length - 2];
-                const closes = validQuotes.map(d => d.close);
+            const res = await fetch(url, {
+                headers: { 'User-Agent': 'Mozilla/5.0 (compatible; bot/1.0)' },
+                signal: AbortSignal.timeout(8000)
+            });
+            if (!res.ok) { console.error(`Yahoo HTTP ${res.status} for ${config.yfId}`); continue; }
 
-                const d1 = ((latest.close - prev.close) / prev.close) * 100;
+            const json = await res.json();
+            const result = json?.chart?.result?.[0];
+            if (!result) continue;
 
-                const recentRange = closes.slice(-20);
-                const support = Math.min(...recentRange);
-                const resistance = Math.max(...recentRange);
+            const timestamps = result.timestamp || [];
+            const closePrices = result.indicators?.quote?.[0]?.close || [];
+            const meta = result.meta || {};
 
-                // Fetch Proxy ETF stats for fundamentals
-                const proxySummary = await yahooFinance.quoteSummary(config.proxyId, { modules: ['summaryDetail', 'defaultKeyStatistics'] });
-                const pe = proxySummary.summaryDetail?.trailingPE || 25;
-                const pb = proxySummary.defaultKeyStatistics?.priceToBook || 4;
+            const validPairs = timestamps
+                .map((ts, i) => ({ date: new Date(ts * 1000), close: closePrices[i] }))
+                .filter(p => p.close != null && !isNaN(p.close));
 
-                let dateStr = "N/A";
-                if (latest.date) {
-                    const d = new Date(latest.date);
-                    dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-                }
+            if (validPairs.length < 2) continue;
 
-                results[config.id] = {
-                    id: config.id,
-                    name: config.name,
-                    region: config.region,
-                    date: dateStr,
-                    close: latest.close,
-                    d1: d1,
-                    turnover: (latest.volume * latest.close) / 1000000 || 0,
-                    pe: parseFloat(pe.toFixed(2)),
-                    pb: parseFloat(pb.toFixed(2)),
-                    rsi: Math.round(RSI.calculate({ values: closes, period: 14 }).pop() || 0),
-                    ma20: Math.round(SMA.calculate({ values: closes, period: 20 }).pop() || 0),
-                    macd: (MACD.calculate({
-                        values: closes, fastPeriod: 12, slowPeriod: 26, signalPeriod: 9, SimpleMAOscillator: false, SimpleMASignal: false
-                    }).pop()?.MACD || 0).toFixed(2),
-                    support: Math.round(support * 100) / 100,
-                    resistance: Math.round(resistance * 100) / 100,
-                    ytd: d1
-                };
-            }
+            const latest = validPairs[validPairs.length - 1];
+            const prev = validPairs[validPairs.length - 2];
+            const closes = validPairs.map(p => p.close);
+            const d1 = ((latest.close - prev.close) / prev.close) * 100;
+
+            const recentRange = closes.slice(-20);
+            const support = Math.min(...recentRange);
+            const resistance = Math.max(...recentRange);
+
+            const dateStr = `${String(latest.date.getDate()).padStart(2, '0')}/${String(latest.date.getMonth() + 1).padStart(2, '0')}/${latest.date.getFullYear()}`;
+
+            const rsiVals = closes.length >= 15 ? RSI.calculate({ values: closes, period: 14 }) : [];
+            const maVals = closes.length >= 20 ? SMA.calculate({ values: closes, period: 20 }) : [];
+            const macdVals = closes.length >= 27 ? MACD.calculate({ values: closes, fastPeriod: 12, slowPeriod: 26, signalPeriod: 9, SimpleMAOscillator: false, SimpleMASignal: false }) : [];
+
+            results[config.id] = {
+                id: config.id,
+                name: config.name,
+                region: config.region,
+                date: dateStr,
+                close: parseFloat(latest.close.toFixed(2)),
+                d1: parseFloat(d1.toFixed(2)),
+                turnover: null,
+                pe: meta.trailingPE ? parseFloat(meta.trailingPE.toFixed(2)) : null,
+                pb: null,
+                rsi: rsiVals.length ? Math.round(rsiVals[rsiVals.length - 1]) : null,
+                ma20: maVals.length ? Math.round(maVals[maVals.length - 1]) : null,
+                macd: macdVals.length ? parseFloat((macdVals[macdVals.length - 1]?.MACD || 0).toFixed(2)) : null,
+                support: Math.round(support * 100) / 100,
+                resistance: Math.round(resistance * 100) / 100,
+                ytd: parseFloat(d1.toFixed(2))
+            };
+
+            await new Promise(r => setTimeout(r, 300)); // throttle
         } catch (e) {
-            console.error(`Yahoo error for ${config.id}`, e);
+            console.error(`Yahoo error for ${config.yfId}:`, e.message);
         }
     }
     return results;
