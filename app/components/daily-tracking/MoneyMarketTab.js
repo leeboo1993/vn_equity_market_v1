@@ -61,7 +61,7 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
     const [depositTenor, setDepositTenor] = useState('12M');
     const [dataSource, setDataSource] = useState('Retail');
     const [selectedBanks, setSelectedBanks] = useState(['VCB', 'TCB', 'VPB', 'ACB', 'BID']);
-    const [goldSilverSelection, setGoldSilverSelection] = useState(['bar', 'silver_kg', 'ring']);
+    const [goldSilverSelection, setGoldSilverSelection] = useState(['bar', 'silver_kg']);
 
     // Toggles for charts
     const [hiddenInterbank, setHiddenInterbank] = useState(['1W', '1M', '1Y']);
