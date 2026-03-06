@@ -1,4 +1,5 @@
 import { getSSIAccessToken } from '@/lib/data';
+import { NextResponse } from 'next/server';
 import { RSI, MACD, SMA } from 'technicalindicators';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 
