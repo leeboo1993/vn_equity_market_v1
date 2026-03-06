@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import yahooFinance from 'yahoo-finance2';
 import { RSI, MACD, SMA } from 'technicalindicators';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
-import { auth } from '@/auth';
+
 
 const r2Client = new S3Client({
     region: "auto",
