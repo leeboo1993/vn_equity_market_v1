@@ -61,6 +61,7 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
     const [depositTenor, setDepositTenor] = useState('12M');
     const [dataSource, setDataSource] = useState('Retail');
     const [selectedBanks, setSelectedBanks] = useState(['VCB', 'TCB', 'VPB', 'ACB', 'BID']);
+    const [goldSilverSelection, setGoldSilverSelection] = useState(['bar', 'silver_bar']);
 
     useEffect(() => {
         setLoading(true);
@@ -105,6 +106,7 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
 
         return {
             gold: filterFn(data.gold),
+            silver: filterFn(data.silver),
             vcb_usd: data.vcb?.filter(d => d.ticker === 'USD' && d.date >= cutoffStr),
             vcb_all: data.vcb,
             black_market: filterFn(data.black_market),
@@ -133,14 +135,44 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
         return combined.sort((a, b) => a.date.localeCompare(b.date));
     }, [filteredData]);
 
-    // 2. Gold Comparison
+    // 2. Gold & Silver Comparison with DoD Change
     const goldSeries = useMemo(() => {
         if (!filteredData?.gold) return [];
-        return filteredData.gold.map(d => ({
-            date: d.date,
-            bar: parseFloat(d.bar_sell) || null,
-            ring: parseFloat(d.ring_sell) || null
-        })).filter(d => d.bar && d.ring);
+        const silverMap = new Map((filteredData.silver || []).map(s => [s.date, s]));
+
+        const series = filteredData.gold.map((d, i, arr) => {
+            const s = silverMap.get(d.date);
+            const prevD = arr[i - 1];
+            const prevS = i > 0 ? (filteredData.silver || []).find(sv => sv.date === prevD.date) : null;
+
+            const silver_mace = s ? parseFloat(s.silver_sell) : null;
+
+            const res = {
+                date: d.date,
+                bar: parseFloat(d.bar_sell) || null,
+                ring: parseFloat(d.ring_sell) || null,
+                silver_bar: silver_mace,
+                // 1 Mace = 3.75g. 1kg = 1000g. 1kg = 1000 / 3.75 ~ 266.67 maces? No.
+                // 1 Tael = 10 Mace = 37.5g. 1kg = 1000g.
+                // 1kg = 1000 / 37.5 Taels = 26.666... Taels.
+                // 1kg = 26.666... * 10 Mace = 266.666 Mace.
+                // Price per kg (Millions VND) = Price per Mace * 266.666
+                silver_kg: silver_mace ? silver_mace * 266.666 : null
+            };
+
+            // Calculate DoD Change %
+            if (prevD) {
+                if (res.bar && prevD.bar_sell) res.bar_dod = ((res.bar - parseFloat(prevD.bar_sell)) / parseFloat(prevD.bar_sell)) * 100;
+                if (res.ring && prevD.ring_sell) res.ring_dod = ((res.ring - parseFloat(prevD.ring_sell)) / parseFloat(prevD.ring_sell)) * 100;
+            }
+            if (prevS && silver_mace && prevS.silver_sell) {
+                res.silver_dod = ((silver_mace - parseFloat(prevS.silver_sell)) / parseFloat(prevS.silver_sell)) * 100;
+            }
+
+            return res;
+        });
+
+        return series.filter(d => d.bar || d.ring || d.silver_bar);
     }, [filteredData]);
 
     // 3. Deposit Rates
@@ -240,6 +272,18 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
         }).filter(f => f.sell);
     }, [data, fxBasket]);
 
+    const latestCommodities = useMemo(() => {
+        if (!goldSeries.length) return null;
+        const latest = goldSeries[goldSeries.length - 1];
+        return {
+            bar: latest.bar,
+            bar_dod: latest.bar_dod,
+            silver_kg: latest.silver_kg,
+            silver_dod: latest.silver_dod,
+            date: latest.date
+        };
+    }, [goldSeries]);
+
     const latestDates = useMemo(() => {
         if (!data) return {};
         const getLatest = (arr) => arr?.length ? arr[arr.length - 1].date : null;
@@ -256,6 +300,10 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
 
     const toggleBank = (bank) => {
         setSelectedBanks(prev => prev.includes(bank) ? prev.filter(b => b !== bank) : [...prev, bank]);
+    };
+
+    const toggleGoldSilver = (key) => {
+        setGoldSilverSelection(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
     };
 
     return (
@@ -331,26 +379,84 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                 </div>
             </div>
 
-            {/* Middle Row: Gold and Deposit */}
+            {/* Middle Row: Gold/Silver and Deposit */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
                 <div className="card" style={{ padding: '1.5rem', background: COLORS.card, border: `1px solid ${COLORS.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
                         <div>
-                            <h3 style={{ margin: 0, fontSize: '14px', color: COLORS.white }}>Gold Price (Sell)</h3>
-                            <p style={{ margin: '4px 0 0', fontSize: '11px', color: COLORS.text }}>Selling price per tael (Millions VND)</p>
+                            <h3 style={{ margin: 0, fontSize: '14px', color: COLORS.white }}>Commodities (Sell)</h3>
+                            <p style={{ margin: '4px 0 0', fontSize: '11px', color: COLORS.text }}>Gold (Tael) & Silver (Mace) in Millions VND</p>
                         </div>
-                        <div style={{ fontSize: '10px', color: COLORS.text, opacity: 0.8 }}>Latest: {formatDate(latestDates.gold) || '-'}</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
+                            <div style={{ fontSize: '10px', color: COLORS.text, opacity: 0.8 }}>Latest: {formatDate(latestDates.gold) || '-'}</div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', background: '#1a1a1a', padding: '2px', borderRadius: '4px', justifyContent: 'flex-end' }}>
+                                {[
+                                    { key: 'bar', label: 'Gold Bar' },
+                                    { key: 'ring', label: 'Gold Ring' },
+                                    { key: 'silver_bar', label: 'Silver' }
+                                ].map(item => (
+                                    <button
+                                        key={item.key}
+                                        onClick={() => toggleGoldSilver(item.key)}
+                                        style={{
+                                            border: 'none',
+                                            background: goldSilverSelection.includes(item.key) ? COLORS.teal : 'transparent',
+                                            color: goldSilverSelection.includes(item.key) ? COLORS.white : COLORS.text,
+                                            fontSize: '9px',
+                                            padding: '3px 6px',
+                                            borderRadius: '3px',
+                                            cursor: 'pointer'
+                                        }}
+                                    >{item.label}</button>
+                                ))}
+                            </div>
+                        </div>
                     </div>
+
+                    {/* Latest Price Cards for Silver preference */}
+                    {latestCommodities && (
+                        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+                            <div style={{ flex: 1, padding: '12px', background: '#161616', borderRadius: '8px', border: '1px solid #222', textAlign: 'center' }}>
+                                <div style={{ fontSize: '11px', color: COLORS.text, marginBottom: '4px' }}>Gold Bar (Millions/Tael)</div>
+                                <div style={{ fontSize: '18px', fontWeight: 700, color: COLORS.yellow }}>
+                                    {latestCommodities.bar?.toFixed(2)}
+                                </div>
+                                <div style={{ fontSize: '11px', color: latestCommodities.bar_dod >= 0 ? COLORS.teal : COLORS.red }}>
+                                    {latestCommodities.bar_dod >= 0 ? '▲' : '▼'} {Math.abs(latestCommodities.bar_dod || 0).toFixed(2)}%
+                                </div>
+                            </div>
+                            <div style={{ flex: 1, padding: '12px', background: '#161616', borderRadius: '8px', border: '1px solid #222', textAlign: 'center' }}>
+                                <div style={{ fontSize: '11px', color: COLORS.text, marginBottom: '4px' }}>Silver Bar (Millions/kg)</div>
+                                <div style={{ fontSize: '18px', fontWeight: 700, color: COLORS.blue }}>
+                                    {latestCommodities.silver_kg?.toFixed(2)}
+                                </div>
+                                <div style={{ fontSize: '11px', color: latestCommodities.silver_dod >= 0 ? COLORS.teal : COLORS.red }}>
+                                    {latestCommodities.silver_dod >= 0 ? '▲' : '▼'} {Math.abs(latestCommodities.silver_dod || 0).toFixed(2)}%
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     <div style={{ height: '280px' }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={goldSeries}>
                                 <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
                                 <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={axisDate} minTickGap={20} />
-                                <YAxis domain={[d => Math.floor(d * 0.98), d => Math.ceil(d * 1.02)]} stroke={COLORS.text} fontSize={10} tickFormatter={v => v.toLocaleString()} width={40} />
-                                <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px' }} formatter={v => v.toLocaleString()} labelFormatter={formatDate} />
+                                <YAxis domain={['auto', 'auto']} stroke={COLORS.text} fontSize={10} tickFormatter={v => v.toLocaleString()} width={40} />
+                                <Tooltip
+                                    contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px' }}
+                                    formatter={(v, name, props) => {
+                                        const unit = props.dataKey.includes('silver') ? '' : ''; // In Millions
+                                        const dodKey = `${props.dataKey}_dod`;
+                                        const dod = props.payload[dodKey];
+                                        const dodText = dod !== undefined ? ` (${dod >= 0 ? '+' : ''}${dod.toFixed(2)}%)` : '';
+                                        return [`${v.toLocaleString()}${unit}${dodText}`, name];
+                                    }}
+                                    labelFormatter={formatDate}
+                                />
                                 <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
-                                <Line type="monotone" dataKey="bar" name="SJC Bar" stroke={COLORS.yellow} dot={false} strokeWidth={2.5} />
-                                <Line type="monotone" dataKey="ring" name="9999 Ring" stroke={COLORS.teal} dot={false} strokeWidth={2.5} />
+                                {goldSilverSelection.includes('bar') && <Line type="monotone" dataKey="bar" name="Gold Bar" stroke={COLORS.yellow} dot={false} strokeWidth={2} connectNulls />}
+                                {goldSilverSelection.includes('ring') && <Line type="monotone" dataKey="ring" name="9999 Ring" stroke={COLORS.teal} dot={false} strokeWidth={2} connectNulls />}
+                                {goldSilverSelection.includes('silver_bar') && <Line type="monotone" dataKey="silver_bar" name="Silver Bar" stroke={COLORS.blue} dot={false} strokeWidth={2} connectNulls />}
                             </LineChart>
                         </ResponsiveContainer>
                     </div>
@@ -361,7 +467,6 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                         <div>
                             <h3 style={{ margin: 0, fontSize: '14px', color: COLORS.white }}>Deposit Rates</h3>
                             <p style={{ margin: '4px 0 0', fontSize: '11px', color: COLORS.text }}>Deposit interest rate (% p.a.) - Quoted on website</p>
-                            <div style={{ fontSize: '10px', color: COLORS.text, marginTop: '4px' }}>Latest: {formatDate(latestDates.deposit) || '-'}</div>
                         </div>
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                             <div style={{ display: 'flex', gap: '4px', background: '#1a1a1a', padding: '2px', borderRadius: '4px' }}>

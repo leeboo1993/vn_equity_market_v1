@@ -48,10 +48,11 @@ export async function GET(request) {
             return await response.Body.transformToString();
         };
 
-        const [goldFs, vcbFs, blackFs, depositF, economicsBody] = await Promise.all([
+        const [goldFs, vcbFs, blackFs, silverFs, depositF, economicsBody] = await Promise.all([
             fetchFiles('cafef_data/gold_price/', 5),
             fetchFiles('cafef_data/vcb_fx_data/', 1),
             fetchFiles('cafef_data/usd_black_market/', 1),
+            fetchFiles('cafef_data/silver_price/', 5),
             new Promise(async (resolve) => {
                 const listCommand = new ListObjectsV2Command({ Bucket: R2_BUCKET, Prefix: 'cafef_data/deposit_rate/deposit_rate_backup/' });
                 const res = await r2Client.send(listCommand);
@@ -101,6 +102,23 @@ export async function GET(request) {
                     if (goldData.length > 0) break;
                 }
             } catch (e) { console.error(`Failed to parse gold file ${f.Key}:`, e); }
+        }
+
+        let silverData = [];
+        for (const f of silverFs) {
+            try {
+                const body = await fetchBody(f.Key);
+                if (body.trim().startsWith('{')) {
+                    const parsed = JSON.parse(body);
+                    const dataObj = parsed.data || parsed.history || parsed;
+                    Object.entries(dataObj).forEach(([date, vals]) => {
+                        if (vals && typeof vals === 'object' && date.match(/^\d{4}|\d{2}-\d{2}-\d{2,4}$/)) {
+                            silverData.push({ date: normDate(date), ...vals });
+                        }
+                    });
+                    if (silverData.length > 0) break;
+                }
+            } catch (e) { console.error(`Failed to parse silver file ${f.Key}:`, e); }
         }
 
         let vcbData = [];
@@ -160,6 +178,7 @@ export async function GET(request) {
 
         return new Response(JSON.stringify({
             gold: goldData.sort((a, b) => a.date.localeCompare(b.date)),
+            silver: silverData.sort((a, b) => a.date.localeCompare(b.date)),
             vcb: vcbData,
             black_market: blackMarketData.sort((a, b) => a.date.localeCompare(b.date)),
             deposit_quote: depositTimeSeries,

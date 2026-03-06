@@ -64,7 +64,9 @@ export async function GET(request) {
                     code: item.itemCode,
                     name: item.itemName || item.itemNameEn || `Item ${item.itemCode}`,
                     nameEn: item.itemNameEn || '',
-                    value: item.value
+                    value: item.value,
+                    stmtType: item.stmtType,
+                    displayOrder: item.displayOrder
                 });
             }
         }

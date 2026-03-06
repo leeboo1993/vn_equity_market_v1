@@ -301,41 +301,7 @@ export default function DLEquityPage() {
                             <>
                                 {timeFilterControl}
                                 {/* Top Cards Row */}
-                                {topMetrics && (
-                                    <div className="card" style={{ padding: '0', minHeight: 'auto' }}>
-                                        <div style={{ padding: '12px 20px', borderBottom: '1px solid #222', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span style={{ fontWeight: 600, fontSize: '14px' }}>Vietnam Market</span>
-                                            <span style={{ color: '#00a884' }}>↗</span>
-                                        </div>
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0' }}>
-                                            <div style={{ padding: '20px', borderRight: '1px solid #222', textAlign: 'center' }}>
-                                                <div style={{ fontSize: '12px', color: '#888', marginBottom: '8px' }}>VN-Index</div>
-                                                <div style={{ fontSize: '24px', fontWeight: 700, color: '#00a884', marginBottom: '4px' }}>
-                                                    {fmtValue(topMetrics.vnindex)}
-                                                </div>
-                                                <div style={{ fontSize: '12px', color: '#aaa' }}>{fmtPct(topMetrics.vnindex_change)}</div>
-                                            </div>
-                                            <div style={{ padding: '20px', borderRight: '1px solid #222', textAlign: 'center' }}>
-                                                <div style={{ fontSize: '12px', color: '#888', marginBottom: '8px' }}>Breadth {'>'}MA50</div>
-                                                <div style={{ fontSize: '24px', fontWeight: 700, color: '#fff' }}>
-                                                    {topMetrics.breadth != null ? `${(topMetrics.breadth * 1).toFixed(1)}%` : '-'}
-                                                </div>
-                                            </div>
-                                            <div style={{ padding: '20px', borderRight: '1px solid #222', textAlign: 'center' }}>
-                                                <div style={{ fontSize: '12px', color: '#888', marginBottom: '8px' }}>15D O/P VNI</div>
-                                                <div style={{ fontSize: '24px', fontWeight: 700, color: '#e55353' }}>
-                                                    {topMetrics.outperform != null ? `${(topMetrics.outperform * 1).toFixed(1)}%` : '-'}
-                                                </div>
-                                            </div>
-                                            <div style={{ padding: '20px', textAlign: 'center' }}>
-                                                <div style={{ fontSize: '12px', color: '#888', marginBottom: '8px' }}>Net Foreign ex-DC</div>
-                                                <div style={{ fontSize: '24px', fontWeight: 700, color: '#00a884' }}>
-                                                    {fmtVol(topMetrics.netForeign)}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
+
 
                                 <MarketTab data={filteredMarketData} timeFilter={timeFilter} />
                             </>
