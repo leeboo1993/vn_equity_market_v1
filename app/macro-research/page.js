@@ -132,9 +132,8 @@ export default function MacroResearchPage() {
             </div>
         );
 
-        if (!data) return <div className="p-8 text-center text-gray-500">Data not available yet. Please run the update script.</div>;
-
-        const categoryData = activeTab === 'global' ? data.global : data.vietnam;
+        const econData = data || { global: {}, vietnam: {} };
+        const categoryData = activeTab === 'global' ? econData.global : econData.vietnam;
 
         if (!categoryData || Object.keys(categoryData).length === 0) {
             return (
