@@ -107,7 +107,7 @@ async function getSSIData(token) {
 
     const todayStr = formatDateSSI(now);
     const pastDate = new Date(now);
-    pastDate.setDate(now.getDate() - 100); // 100 days for TA calculation
+    pastDate.setDate(now.getDate() - 28); // SSI max range = 30 days
     const startDateStr = formatDateSSI(pastDate);
 
     const ssiIndices = INDEX_CONFIG.filter(i => i.source === 'ssi');
@@ -141,6 +141,7 @@ async function getSSIData(token) {
                             id: config.id,
                             name: config.name,
                             region: config.region,
+                            date: latest.TradingDate,
                             close: close,
                             d1: parseFloat(latest.RatioChange || 0),
                             turnover: parseFloat(latest.TotalMatchVal || 0) / 1000000 / 25400,
@@ -194,10 +195,17 @@ async function getYahooData() {
                 const pe = proxySummary.summaryDetail?.trailingPE || 25;
                 const pb = proxySummary.defaultKeyStatistics?.priceToBook || 4;
 
+                let dateStr = "N/A";
+                if (latest.date) {
+                    const d = new Date(latest.date);
+                    dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+                }
+
                 results[config.id] = {
                     id: config.id,
                     name: config.name,
                     region: config.region,
+                    date: dateStr,
                     close: latest.close,
                     d1: d1,
                     turnover: (latest.volume * latest.close) / 1000000 || 0,
@@ -221,11 +229,6 @@ async function getYahooData() {
 }
 
 export async function GET() {
-    const session = await auth();
-    if (!session) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     try {
         const token = await getSSIAccessToken();
 

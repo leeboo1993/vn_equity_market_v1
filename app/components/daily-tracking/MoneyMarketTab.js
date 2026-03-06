@@ -102,7 +102,7 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
             cutoffStr = customRange.from || '1900-01-01';
             if (customRange.to) toStr = customRange.to;
         } else {
-            let days = 3650;
+            let days = 365; // default to 1 year to avoid confusing old FX data
             if (timeFilter === '1M') days = 30;
             else if (timeFilter === '3M') days = 90;
             else if (timeFilter === '6M') days = 180;

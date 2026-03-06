@@ -237,7 +237,7 @@ export default function MacroeconomicsTab({ data, timeFilter, customRange, timeF
                         <div className="card" style={{ padding: '0', overflow: 'hidden', border: `1px solid ${COLORS.border}`, borderRadius: '12px', background: COLORS.cardBg }}>
                             <div style={{ padding: '1rem 1.25rem', borderBottom: `1px solid ${COLORS.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(30, 41, 59, 0.4)' }}>
                                 <div>
-                                    <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#f8fafc' }}>Market Pulse: Global Indicators</h3>
+                                    <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#f8fafc' }}>Global Indices</h3>
                                     <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#64748b' }}>Live Technical & Fundamental Benchmarks</p>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(16, 185, 129, 0.1)', padding: '4px 10px', borderRadius: '20px' }}>
@@ -336,14 +336,15 @@ function GlobalIndicatorsTable({ indices }) {
                     <tr style={{ background: 'rgba(30, 41, 59, 0.2)', textAlign: 'left', borderBottom: `1px solid ${COLORS.border}` }}>
                         <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1' }}>Index</th>
                         <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1' }}>Region</th>
+                        <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'right' }}>Date</th>
                         <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'right' }}>Price</th>
-                        <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'right' }}>Turnover (M USD)</th>
+                        <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'right' }}>Turnover<br />(USD mn)</th>
                         <th colSpan="2" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}` }}>Pulse Δ</th>
                         <th colSpan="2" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}` }}>Valuation</th>
                         <th colSpan="5" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}` }}>Technical Benchmarks</th>
                     </tr>
                     <tr style={{ background: 'rgba(30, 41, 59, 0.1)', textAlign: 'center', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: `1px solid ${COLORS.border}` }}>
-                        <th colSpan="4"></th>
+                        <th colSpan="5"></th>
                         <th style={{ padding: '6px', borderLeft: `1px solid ${COLORS.border}` }}>1 Day</th>
                         <th style={{ padding: '6px' }}>YTD</th>
                         <th style={{ padding: '6px', borderLeft: `1px solid ${COLORS.border}` }}>P/E</th>
@@ -360,6 +361,7 @@ function GlobalIndicatorsTable({ indices }) {
                         <tr key={i} style={{ borderBottom: `1px solid ${COLORS.border}`, transition: 'background 0.2s' }}>
                             <td style={{ padding: '8px 16px', fontWeight: 700, color: '#f1f5f9', fontSize: '13px' }}>{row.name}</td>
                             <td style={{ padding: '8px 16px', color: '#64748b', fontWeight: 500 }}>{row.region}</td>
+                            <td style={{ padding: '8px 16px', textAlign: 'right', color: '#94a3b8', fontSize: '11px' }}>{row.date || 'N/A'}</td>
                             <td style={{ padding: '8px 16px', textAlign: 'right', fontWeight: 700, color: '#f8fafc', fontSize: '12px' }}>{typeof row.close === 'number' ? row.close.toLocaleString(undefined, { minimumFractionDigits: 2 }) : row.close}</td>
                             <td style={{ padding: '8px 16px', textAlign: 'right', color: '#94a3b8' }}>{row.turnover ? `$${row.turnover.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : 'N/A'}</td>
 
