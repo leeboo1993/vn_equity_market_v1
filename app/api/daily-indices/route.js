@@ -135,7 +135,7 @@ async function getSSIData(token) {
 
     const todayStr = formatDateSSI(now);
     const pastDate = new Date(now);
-    pastDate.setDate(now.getDate() - 28); // SSI max range = 30 days
+    pastDate.setDate(now.getDate() - 30); // SSI max range = 30 days
     const startDateStr = formatDateSSI(pastDate);
 
     const ssiIndices = INDEX_CONFIG.filter(i => i.source === 'ssi');
@@ -164,9 +164,13 @@ async function getSSIData(token) {
                         const close = parseFloat(latest.IndexValue || 0);
 
                         const ratios = await getVNDirectRatios(config.vnDirectId);
-                        const rsiValues = closes.length >= 15 ? RSI.calculate({ values: closes, period: 14 }) : [];
-                        const maValues = closes.length >= 20 ? SMA.calculate({ values: closes, period: 20 }) : [];
+                        const rsiValues = closes.length >= 14 ? RSI.calculate({ values: closes, period: 14 }) : [];
+                        const maValues = closes.length >= 15 ? SMA.calculate({ values: closes, period: Math.min(20, closes.length) }) : [];
                         const macdValues = closes.length >= 27 ? MACD.calculate({ values: closes, fastPeriod: 12, slowPeriod: 26, signalPeriod: 9, SimpleMAOscillator: false, SimpleMASignal: false }) : [];
+
+                        // SSI only has 30 days — compute available period returns
+                        const prevClose = closes[0]; // earliest in window (≈30 days)
+                        const d1 = parseFloat(latest.RatioChange || 0);
 
                         results[config.id] = {
                             id: config.id,
@@ -174,16 +178,20 @@ async function getSSIData(token) {
                             region: config.region,
                             date: latest.TradingDate,
                             close: close,
-                            d1: parseFloat(latest.RatioChange || 0),
+                            d1,
+                            d1m: closes.length >= 20 ? calcPctChg(closes[closes.length - 20], close) : null,
+                            d3m: null, // SSI window too short
+                            d6m: null,
+                            d12m: null,
+                            ytd: null, // would need full year data
                             turnover: parseFloat(latest.TotalMatchVal || 0) / 1000000 / 25400,
                             pe: ratios.pe,
                             pb: ratios.pb,
-                            rsi: rsiValues.length ? Math.round(rsiValues.pop()) : null,
-                            ma20: maValues.length ? Math.round(maValues.pop()) : null,
-                            macd: macdValues.length ? (macdValues.pop()?.MACD || 0).toFixed(2) : null,
+                            rsi: rsiValues.length ? Math.round(rsiValues[rsiValues.length - 1]) : null,
+                            ma20: maValues.length ? Math.round(maValues[maValues.length - 1]) : null,
+                            macd: macdValues.length ? parseFloat((macdValues[macdValues.length - 1]?.MACD || 0).toFixed(2)) : null,
                             support: Math.round(support * 100) / 100,
                             resistance: Math.round(resistance * 100) / 100,
-                            ytd: parseFloat(latest.RatioChange || 0)
                         };
                     }
                 }
@@ -196,11 +204,13 @@ async function getSSIData(token) {
     return results;
 }
 
+const calcPctChg = (from, to) => from && to ? parseFloat(((to - from) / from * 100).toFixed(2)) : null;
+
 // Per-index result cache: serves stale data when live fetch fails
 const yahooCache = {};
 
 async function fetchOneYahoo(config) {
-    const period1 = Math.floor((Date.now() - 60 * 24 * 60 * 60 * 1000) / 1000);
+    const period1 = Math.floor((Date.now() - 400 * 24 * 60 * 60 * 1000) / 1000); // 400 days for 12M returns
     const period2 = Math.floor(Date.now() / 1000);
     const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(config.yfId)}?period1=${period1}&period2=${period2}&interval=1d`;
 
@@ -229,6 +239,16 @@ async function fetchOneYahoo(config) {
     const closes = validPairs.map(p => p.close);
     const d1 = ((latest.close - prev.close) / prev.close) * 100;
 
+    // Find close price approximately N calendar days ago
+    const findClose = (daysBack) => {
+        const target = Date.now() - daysBack * 24 * 60 * 60 * 1000;
+        return [...validPairs].reverse().find(p => p.date.getTime() <= target)?.close ?? null;
+    };
+
+    // YTD reference: last close on or before Jan 1
+    const jan1 = new Date(new Date().getFullYear(), 0, 1).getTime();
+    const ytdRef = [...validPairs].reverse().find(p => p.date.getTime() <= jan1)?.close ?? null;
+
     const recentRange = closes.slice(-Math.min(20, closes.length));
     const dateStr = `${String(latest.date.getDate()).padStart(2, '0')}/${String(latest.date.getMonth() + 1).padStart(2, '0')}/${latest.date.getFullYear()}`;
 
@@ -236,22 +256,34 @@ async function fetchOneYahoo(config) {
     const maVals = closes.length >= 20 ? SMA.calculate({ values: closes, period: 20 }) : [];
     const macdVals = closes.length >= 27 ? MACD.calculate({ values: closes, fastPeriod: 12, slowPeriod: 26, signalPeriod: 9, SimpleMAOscillator: false, SimpleMASignal: false }) : [];
 
+    // Fetch PE from Yahoo quoteSummary in parallel (best effort)
+    let pe = meta.trailingPE ? parseFloat(meta.trailingPE.toFixed(2)) : null;
+    try {
+        const sumUrl = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(config.yfId)}?modules=summaryDetail`;
+        const sumRes = await fetch(sumUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; bot/1.0)' }, signal: AbortSignal.timeout(5000) });
+        if (sumRes.ok) {
+            const sumJson = await sumRes.json();
+            const raw = sumJson?.quoteSummary?.result?.[0]?.summaryDetail?.trailingPE?.raw;
+            if (raw) pe = parseFloat(raw.toFixed(2));
+        }
+    } catch (_) { /* ignore */ }
+
     return {
-        id: config.id,
-        name: config.name,
-        region: config.region,
+        id: config.id, name: config.name, region: config.region,
         date: dateStr,
         close: parseFloat(latest.close.toFixed(2)),
         d1: parseFloat(d1.toFixed(2)),
-        turnover: null,
-        pe: meta.trailingPE ? parseFloat(meta.trailingPE.toFixed(2)) : null,
-        pb: null,
+        d1m: calcPctChg(findClose(30), latest.close),
+        d3m: calcPctChg(findClose(91), latest.close),
+        d6m: calcPctChg(findClose(182), latest.close),
+        d12m: calcPctChg(findClose(365), latest.close),
+        ytd: calcPctChg(ytdRef, latest.close),
+        turnover: null, pe, pb: null,
         rsi: rsiVals.length ? Math.round(rsiVals[rsiVals.length - 1]) : null,
         ma20: maVals.length ? Math.round(maVals[maVals.length - 1]) : null,
         macd: macdVals.length ? parseFloat((macdVals[macdVals.length - 1]?.MACD || 0).toFixed(2)) : null,
         support: Math.round(Math.min(...recentRange) * 100) / 100,
         resistance: Math.round(Math.max(...recentRange) * 100) / 100,
-        ytd: parseFloat(d1.toFixed(2)),
         stale: false
     };
 }

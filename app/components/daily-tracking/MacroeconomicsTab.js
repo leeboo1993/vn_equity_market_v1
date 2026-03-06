@@ -354,13 +354,17 @@ function GlobalIndicatorsTable({ indices }) {
                         <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'right' }}>Date</th>
                         <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'right' }}>Price</th>
                         <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'right' }}>Turnover<br />(USD mn)</th>
-                        <th colSpan="2" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}` }}>Pulse Δ</th>
+                        <th colSpan="6" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}` }}>Performance</th>
                         <th colSpan="2" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}` }}>Valuation</th>
                         <th colSpan="5" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}` }}>Technical Benchmarks</th>
                     </tr>
                     <tr style={{ background: 'rgba(30, 41, 59, 0.1)', textAlign: 'center', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: `1px solid ${COLORS.border}` }}>
                         <th colSpan="5"></th>
-                        <th style={{ padding: '6px', borderLeft: `1px solid ${COLORS.border}` }}>1 Day</th>
+                        <th style={{ padding: '6px', borderLeft: `1px solid ${COLORS.border}` }}>1D</th>
+                        <th style={{ padding: '6px' }}>1M</th>
+                        <th style={{ padding: '6px' }}>3M</th>
+                        <th style={{ padding: '6px' }}>6M</th>
+                        <th style={{ padding: '6px' }}>12M</th>
                         <th style={{ padding: '6px' }}>YTD</th>
                         <th style={{ padding: '6px', borderLeft: `1px solid ${COLORS.border}` }}>P/E</th>
                         <th style={{ padding: '6px' }}>P/B</th>
@@ -383,12 +387,14 @@ function GlobalIndicatorsTable({ indices }) {
                             <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}` }}>
                                 {getValueWithIcon(row.d1, true)}
                             </td>
-                            <td style={{ padding: '8px 16px', textAlign: 'right' }}>
-                                {getValueWithIcon(row.ytd, true)}
-                            </td>
+                            <td style={{ padding: '8px 10px', textAlign: 'right' }}>{row.d1m != null ? getValueWithIcon(row.d1m, true) : '–'}</td>
+                            <td style={{ padding: '8px 10px', textAlign: 'right' }}>{row.d3m != null ? getValueWithIcon(row.d3m, true) : '–'}</td>
+                            <td style={{ padding: '8px 10px', textAlign: 'right' }}>{row.d6m != null ? getValueWithIcon(row.d6m, true) : '–'}</td>
+                            <td style={{ padding: '8px 10px', textAlign: 'right' }}>{row.d12m != null ? getValueWithIcon(row.d12m, true) : '–'}</td>
+                            <td style={{ padding: '8px 10px', textAlign: 'right' }}>{row.ytd != null ? getValueWithIcon(row.ytd, true) : '–'}</td>
 
-                            <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}`, color: '#cbd5e1', fontWeight: 600 }}>{row.pe}x</td>
-                            <td style={{ padding: '8px 16px', textAlign: 'right', color: '#cbd5e1', fontWeight: 600 }}>{row.pb}x</td>
+                            <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}`, color: '#cbd5e1', fontWeight: 600 }}>{row.pe != null ? `${row.pe}x` : '–'}</td>
+                            <td style={{ padding: '8px 16px', textAlign: 'right', color: '#cbd5e1', fontWeight: 600 }}>{row.pb != null ? `${row.pb}x` : '–'}</td>
 
                             <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}`, color: '#f1f5f9' }}>{row.resistance != null ? row.resistance.toLocaleString() : '–'}</td>
                             <td style={{ padding: '8px 16px', textAlign: 'right', color: '#f1f5f9' }}>{row.support != null ? row.support.toLocaleString() : '–'}</td>
