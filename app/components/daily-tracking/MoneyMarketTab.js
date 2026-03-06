@@ -29,11 +29,11 @@ const COLORS = {
 };
 
 const BANK_COLORS = {
-    'VPB': '#008466', 'TCB': '#2962FF', 'MBB': '#7B1FA2', 'BID': '#D4A82F',
-    'VCB': '#00B8D4', 'CTG': '#C62828', 'ACB': '#1565C0', 'HDB': '#E65100',
-    'VIB': '#F9A825', 'MSB': '#EF6C00', 'STB': '#2E7D32', 'LPB': '#D32F2F',
-    'TPB': '#7B1FA2', 'SHB': '#F57C00', 'EIB': '#1976D2', 'OCB': '#388E3C',
-    'SSB': '#C2185B', 'ABB': '#0097A7'
+    'VPB': '#10b981', 'TCB': '#ef4444', 'MBB': '#8b5cf6', 'BID': '#f59e0b',
+    'VCB': '#0ea5e9', 'CTG': '#ec4899', 'ACB': '#3b82f6', 'HDB': '#f97316',
+    'VIB': '#eab308', 'MSB': '#14b8a6', 'STB': '#22c55e', 'LPB': '#6366f1',
+    'TPB': '#a855f7', 'SHB': '#f43f5e', 'EIB': '#0284c7', 'OCB': '#16a34a',
+    'SSB': '#d946ef', 'ABB': '#0891b2'
 };
 
 // DD/MM for chart X-axis ticks
@@ -61,10 +61,10 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
     const [depositTenor, setDepositTenor] = useState('12M');
     const [dataSource, setDataSource] = useState('Retail');
     const [selectedBanks, setSelectedBanks] = useState(['VCB', 'TCB', 'VPB', 'ACB', 'BID']);
-    const [goldSilverSelection, setGoldSilverSelection] = useState(['bar', 'silver_kg']);
+    const [goldSilverSelection, setGoldSilverSelection] = useState(['bar', 'silver_kg', 'ring']);
 
     // Toggles for charts
-    const [hiddenInterbank, setHiddenInterbank] = useState([]);
+    const [hiddenInterbank, setHiddenInterbank] = useState(['1W', '1M', '1Y']);
     const [hiddenTreasury, setHiddenTreasury] = useState([]);
 
     const toggleInterbank = (e) => {
@@ -404,6 +404,7 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', background: '#1a1a1a', padding: '2px', borderRadius: '4px', justifyContent: 'flex-end' }}>
                                 {[
                                     { key: 'bar', label: 'Gold Bar' },
+                                    { key: 'ring', label: 'Gold Ring' },
                                     { key: 'silver_kg', label: 'Silver Bar' }
                                 ].map(item => (
                                     <button
@@ -424,29 +425,7 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                         </div>
                     </div>
 
-                    {/* Latest Price Cards for Silver preference */}
-                    {latestCommodities && (
-                        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
-                            <div style={{ flex: 1, padding: '12px', background: '#161616', borderRadius: '8px', border: '1px solid #222', textAlign: 'center' }}>
-                                <div style={{ fontSize: '11px', color: COLORS.text, marginBottom: '4px' }}>Gold Bar (Millions/Tael)</div>
-                                <div style={{ fontSize: '18px', fontWeight: 700, color: COLORS.yellow }}>
-                                    {latestCommodities.bar?.toFixed(2)}
-                                </div>
-                                <div style={{ fontSize: '11px', color: latestCommodities.bar_dod >= 0 ? COLORS.teal : COLORS.red }}>
-                                    {latestCommodities.bar_dod >= 0 ? '▲' : '▼'} {Math.abs(latestCommodities.bar_dod || 0).toFixed(2)}%
-                                </div>
-                            </div>
-                            <div style={{ flex: 1, padding: '12px', background: '#161616', borderRadius: '8px', border: '1px solid #222', textAlign: 'center' }}>
-                                <div style={{ fontSize: '11px', color: COLORS.text, marginBottom: '4px' }}>Silver Bar (Millions/kg)</div>
-                                <div style={{ fontSize: '18px', fontWeight: 700, color: COLORS.blue }}>
-                                    {latestCommodities.silver_kg?.toFixed(2)}
-                                </div>
-                                <div style={{ fontSize: '11px', color: latestCommodities.silver_dod >= 0 ? COLORS.teal : COLORS.red }}>
-                                    {latestCommodities.silver_dod >= 0 ? '▲' : '▼'} {Math.abs(latestCommodities.silver_dod || 0).toFixed(2)}%
-                                </div>
-                            </div>
-                        </div>
-                    )}
+
                     <div style={{ height: '280px' }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={goldSeries}>
@@ -466,6 +445,7 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                                 />
                                 <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
                                 {goldSilverSelection.includes('bar') && <Line type="monotone" dataKey="bar" name="Gold Bar" stroke={COLORS.yellow} dot={false} strokeWidth={2} connectNulls />}
+                                {goldSilverSelection.includes('ring') && <Line type="monotone" dataKey="ring" name="Gold Ring" stroke={COLORS.teal} dot={false} strokeWidth={2} connectNulls />}
                                 {goldSilverSelection.includes('silver_kg') && <Line type="monotone" dataKey="silver_kg" name="Silver Bar" stroke={COLORS.blue} dot={false} strokeWidth={2} connectNulls />}
                             </LineChart>
                         </ResponsiveContainer>
