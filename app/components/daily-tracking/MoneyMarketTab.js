@@ -159,17 +159,14 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
             const prevD = arr[i - 1];
             const prevS = i > 0 ? (filteredData.silver || []).find(sv => sv.date === prevD.date) : null;
 
-            const silver_tael = s ? parseFloat(s.silver_sell) : null;
+            const silver_raw = s ? parseFloat(s.silver_sell) : null;
 
             const res = {
                 date: d.date,
                 bar: parseFloat(d.bar_sell) || null,
                 ring: parseFloat(d.ring_sell) || null,
-                silver_bar: silver_tael,
-                // 1 Tael = 37.5g. 1kg = 1000g.
-                // 1kg = 1000 / 37.5 Taels = 26.6666... Taels.
-                // Price per kg (Millions VND) = Price per Tael * 26.6666
-                silver_kg: silver_tael ? silver_tael * 26.6666 : null
+                // The python scraper now fetches the 1Kilo rate directly.
+                silver_kg: silver_raw
             };
 
             // Calculate DoD Change %
@@ -177,8 +174,8 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                 if (res.bar && prevD.bar_sell) res.bar_dod = ((res.bar - parseFloat(prevD.bar_sell)) / parseFloat(prevD.bar_sell)) * 100;
                 if (res.ring && prevD.ring_sell) res.ring_dod = ((res.ring - parseFloat(prevD.ring_sell)) / parseFloat(prevD.ring_sell)) * 100;
             }
-            if (prevS && silver_tael && prevS.silver_sell) {
-                res.silver_dod = ((silver_tael - parseFloat(prevS.silver_sell)) / parseFloat(prevS.silver_sell)) * 100;
+            if (prevS && silver_raw && prevS.silver_sell) {
+                res.silver_dod = ((silver_raw - parseFloat(prevS.silver_sell)) / parseFloat(prevS.silver_sell)) * 100;
             }
 
             return res;
@@ -396,8 +393,8 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                 <div className="card" style={{ padding: '1.5rem', background: COLORS.card, border: `1px solid ${COLORS.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
                         <div>
-                            <h3 style={{ margin: 0, fontSize: '14px', color: COLORS.white }}>Commodities (Sell)</h3>
-                            <p style={{ margin: '4px 0 0', fontSize: '11px', color: COLORS.text }}>Gold (Tael) & Silver (Mace) in Millions VND</p>
+                            <h3 style={{ margin: 0, fontSize: '14px', color: COLORS.white }}>Gold & Silver price</h3>
+                            <p style={{ margin: '4px 0 0', fontSize: '11px', color: COLORS.text }}>Gold (Tael) & Silver (kg) in Millions VND</p>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
                             <div style={{ fontSize: '10px', color: COLORS.text, opacity: 0.8 }}>Latest: {formatDate(latestDates.gold) || '-'}</div>
@@ -446,7 +443,7 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                                 <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
                                 {goldSilverSelection.includes('bar') && <Line type="monotone" dataKey="bar" name="Gold Bar" stroke={COLORS.yellow} dot={false} strokeWidth={2} connectNulls />}
                                 {goldSilverSelection.includes('ring') && <Line type="monotone" dataKey="ring" name="Gold Ring" stroke={COLORS.teal} dot={false} strokeWidth={2} connectNulls />}
-                                {goldSilverSelection.includes('silver_kg') && <Line type="monotone" dataKey="silver_kg" name="Silver Bar" stroke={COLORS.blue} dot={false} strokeWidth={2} connectNulls />}
+                                {goldSilverSelection.includes('silver_kg') && <Line type="monotone" dataKey="silver_kg" name="Silver Bar" stroke={COLORS.blue} dot={data?.silver?.length === 1 ? { r: 3, fill: COLORS.blue } : false} strokeWidth={2} connectNulls />}
                             </LineChart>
                         </ResponsiveContainer>
                     </div>
@@ -559,7 +556,32 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                             <h3 style={{ margin: 0, fontSize: '14px', color: COLORS.white }}>State Treasury, OMO & CITAD</h3>
                             <p style={{ margin: '4px 0 0', fontSize: '11px', color: COLORS.text }}>Liquidity injection/absorption (Billion VND)</p>
                         </div>
-                        <div style={{ fontSize: '10px', color: COLORS.text, opacity: 0.8 }}>Latest: {formatDate(latestDates.liquidity) || '-'}</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
+                            <div style={{ fontSize: '10px', color: COLORS.text, opacity: 0.8 }}>Latest: {formatDate(latestDates.liquidity) || '-'}</div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', background: '#1a1a1a', padding: '2px', borderRadius: '4px', justifyContent: 'flex-end' }}>
+                                {['CITAD', 'OMO', 'State Treasury'].map(key => {
+                                    const isVisible = !hiddenTreasury.includes(key);
+                                    let color = COLORS.blue;
+                                    if (key === 'OMO') color = COLORS.yellow;
+                                    if (key === 'State Treasury') color = COLORS.teal;
+                                    return (
+                                        <button
+                                            key={key}
+                                            onClick={() => toggleTreasury({ dataKey: key })}
+                                            style={{
+                                                border: 'none',
+                                                background: isVisible ? color : 'transparent',
+                                                color: isVisible ? COLORS.white : COLORS.text,
+                                                fontSize: '9px',
+                                                padding: '3px 6px',
+                                                borderRadius: '3px',
+                                                cursor: 'pointer'
+                                            }}
+                                        >{key}</button>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     </div>
                     <div style={{ height: '280px' }}>
                         <ResponsiveContainer width="100%" height="100%">
@@ -574,7 +596,6 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                                 <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={axisDate} minTickGap={20} />
                                 <YAxis stroke={COLORS.text} fontSize={10} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} domain={[d => Math.floor(d * 1.2), d => Math.ceil(d * 1.2)]} width={45} />
                                 <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px' }} formatter={v => v.toLocaleString()} labelFormatter={formatDate} />
-                                <Legend onClick={toggleTreasury} wrapperStyle={{ fontSize: '10px', paddingTop: '10px', cursor: 'pointer' }} iconType="circle" />
                                 <Area hide={hiddenTreasury.includes('State Treasury')} type="monotone" dataKey="State Treasury" stroke={COLORS.teal} fill="url(#colorTreasury)" strokeWidth={2} dot={false} connectNulls />
                                 <Area hide={hiddenTreasury.includes('OMO')} type="monotone" dataKey="OMO" stroke={COLORS.yellow} fill="transparent" strokeWidth={2} dot={false} connectNulls />
                                 <Area hide={hiddenTreasury.includes('CITAD')} type="monotone" dataKey="CITAD" stroke={COLORS.blue} fill="transparent" strokeWidth={2} dot={false} connectNulls />
@@ -589,7 +610,33 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                             <h3 style={{ margin: 0, fontSize: '14px', color: COLORS.white }}>Interbank Rates</h3>
                             <p style={{ margin: '4px 0 0', fontSize: '11px', color: COLORS.text }}>Overnight to 1-Year interbank rates (% p.a.)</p>
                         </div>
-                        <div style={{ fontSize: '10px', color: COLORS.text, opacity: 0.8 }}>Latest: {formatDate(latestDates.interbank) || '-'}</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
+                            <div style={{ fontSize: '10px', color: COLORS.text, opacity: 0.8 }}>Latest: {formatDate(latestDates.interbank) || '-'}</div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', background: '#1a1a1a', padding: '2px', borderRadius: '4px', justifyContent: 'flex-end' }}>
+                                {['1M', '1W', '1Y', 'O/N'].map(key => {
+                                    const isVisible = !hiddenInterbank.includes(key);
+                                    let color = COLORS.red; // default O/N
+                                    if (key === '1M') color = COLORS.blue;
+                                    if (key === '1W') color = COLORS.teal;
+                                    if (key === '1Y') color = COLORS.purple;
+                                    return (
+                                        <button
+                                            key={key}
+                                            onClick={() => toggleInterbank({ dataKey: key })}
+                                            style={{
+                                                border: 'none',
+                                                background: isVisible ? color : 'transparent',
+                                                color: isVisible ? COLORS.white : COLORS.text,
+                                                fontSize: '9px',
+                                                padding: '3px 6px',
+                                                borderRadius: '3px',
+                                                cursor: 'pointer'
+                                            }}
+                                        >{key}</button>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     </div>
                     <div style={{ height: '280px' }}>
                         <ResponsiveContainer width="100%" height="100%">
@@ -607,7 +654,6 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                                     width={40}
                                 />
                                 <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px' }} formatter={v => `${v}%`} labelFormatter={formatDate} />
-                                <Legend onClick={toggleInterbank} wrapperStyle={{ fontSize: '10px', paddingTop: '10px', cursor: 'pointer' }} iconType="circle" />
                                 <Line hide={hiddenInterbank.includes('O/N')} type="monotone" dataKey="O/N" stroke={COLORS.red} strokeWidth={2.5} dot={false} connectNulls />
                                 <Line hide={hiddenInterbank.includes('1W')} type="monotone" dataKey="1W" stroke={COLORS.teal} strokeWidth={2.5} dot={false} connectNulls />
                                 <Line hide={hiddenInterbank.includes('1M')} type="monotone" dataKey="1M" stroke={COLORS.blue} strokeWidth={2.5} dot={false} connectNulls />
