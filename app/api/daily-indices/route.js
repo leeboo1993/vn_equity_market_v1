@@ -129,13 +129,16 @@ async function getSSIData(token) {
                     const latest = sorted[sorted.length - 1];
                     const closes = sorted.map(d => parseFloat(d.IndexValue || 0)).filter(v => !isNaN(v));
 
-                    if (closes.length > 20) {
-                        const recentRange = closes.slice(-20);
+                    if (closes.length > 2) {
+                        const recentRange = closes.slice(-Math.min(20, closes.length));
                         const support = Math.min(...recentRange);
                         const resistance = Math.max(...recentRange);
                         const close = parseFloat(latest.IndexValue || 0);
 
                         const ratios = await getVNDirectRatios(config.vnDirectId);
+                        const rsiValues = closes.length >= 15 ? RSI.calculate({ values: closes, period: 14 }) : [];
+                        const maValues = closes.length >= 20 ? SMA.calculate({ values: closes, period: 20 }) : [];
+                        const macdValues = closes.length >= 27 ? MACD.calculate({ values: closes, fastPeriod: 12, slowPeriod: 26, signalPeriod: 9, SimpleMAOscillator: false, SimpleMASignal: false }) : [];
 
                         results[config.id] = {
                             id: config.id,
@@ -147,11 +150,9 @@ async function getSSIData(token) {
                             turnover: parseFloat(latest.TotalMatchVal || 0) / 1000000 / 25400,
                             pe: ratios.pe,
                             pb: ratios.pb,
-                            rsi: Math.round(RSI.calculate({ values: closes, period: 14 }).pop() || 0),
-                            ma20: Math.round(SMA.calculate({ values: closes, period: 20 }).pop() || 0),
-                            macd: (MACD.calculate({
-                                values: closes, fastPeriod: 12, slowPeriod: 26, signalPeriod: 9, SimpleMAOscillator: false, SimpleMASignal: false
-                            }).pop()?.MACD || 0).toFixed(2),
+                            rsi: rsiValues.length ? Math.round(rsiValues.pop()) : null,
+                            ma20: maValues.length ? Math.round(maValues.pop()) : null,
+                            macd: macdValues.length ? (macdValues.pop()?.MACD || 0).toFixed(2) : null,
                             support: Math.round(support * 100) / 100,
                             resistance: Math.round(resistance * 100) / 100,
                             ytd: parseFloat(latest.RatioChange || 0)
