@@ -86,13 +86,13 @@ async function getSSIData(token) {
 
     const dNow = new Date();
     const todayStr = formatDate(dNow);
-    const dPast = new Date(dNow.getTime() - 28 * 24 * 60 * 60 * 1000);
+    const dPast = new Date(dNow.getTime() - 400 * 24 * 60 * 60 * 1000);
     const startStr = formatDate(dPast);
 
     for (const config of ssiIndices) {
         try {
             await sleep(1000); // 1s delay to avoid 429 on SSI
-            const url = `https://fc-data.ssi.com.vn/api/v2/Market/DailyIndex?indexId=${config.ssiId}&fromDate=${startStr}&toDate=${todayStr}&pageIndex=1&pageSize=100`;
+            const url = `https://fc-data.ssi.com.vn/api/v2/Market/DailyIndex?indexId=${config.ssiId}&fromDate=${startStr}&toDate=${todayStr}&pageIndex=1&pageSize=500`;
             const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` }, signal: AbortSignal.timeout(8000) });
             if (!res.ok) continue;
             const pData = await res.json();
@@ -103,8 +103,29 @@ async function getSSIData(token) {
                     return new Date(`${y1}-${m1}-${d1}`) - new Date(`${y2}-${m2}-${d2}`);
                 });
                 const latest = sorted[sorted.length - 1];
+                const prev = sorted[sorted.length - 2];
                 const closes = sorted.map(d => parseFloat(d.IndexValue)).filter(v => !isNaN(v));
                 if (closes.length < 2) continue;
+
+                const findVal = (days, key = 'IndexValue') => {
+                    const t = new Date(dNow.getTime() - days * 24 * 3600 * 1000);
+                    return [...sorted].reverse().find(d => {
+                        const [dd, mm, yy] = d.TradingDate.split('/');
+                        return new Date(`${yy}-${mm}-${dd}`) <= t;
+                    })?.[key] ?? null;
+                };
+
+                const jan1 = new Date(new Date().getFullYear(), 0, 1);
+                const ytdRef = [...sorted].reverse().find(d => {
+                    const [dd, mm, yy] = d.TradingDate.split('/');
+                    return new Date(`${yy}-${mm}-${dd}`) <= jan1;
+                })?.IndexValue ?? null;
+
+                const getTOVal = (entry) => parseFloat(entry?.TotalMatchVal || 0) / 1000000 / 25400; // USD mn
+                const toCur = getTOVal(latest);
+                const toYest = getTOVal(prev);
+                const last10Entries = sorted.slice(-11, -1);
+                const toAvg = last10Entries.length > 0 ? last10Entries.reduce((s, e) => s + getTOVal(e), 0) / last10Entries.length : null;
 
                 const ratios = await getValuationRatios(config.id);
                 const rsi = RSI.calculate({ values: closes, period: 14 });
@@ -116,8 +137,14 @@ async function getSSIData(token) {
                     date: latest.TradingDate,
                     close: parseFloat(latest.IndexValue),
                     d1: parseFloat(latest.RatioChange),
-                    d1m: closes.length >= 20 ? calcPctChg(closes[closes.length - 20], parseFloat(latest.IndexValue)) : null,
-                    turnover: parseFloat(latest.TotalMatchVal || 0) / 1000000 / 25400,
+                    d1m: calcPctChg(findVal(30), parseFloat(latest.IndexValue)),
+                    d3m: calcPctChg(findVal(91), parseFloat(latest.IndexValue)),
+                    d6m: calcPctChg(findVal(182), parseFloat(latest.IndexValue)),
+                    d12m: calcPctChg(findVal(365), parseFloat(latest.IndexValue)),
+                    ytd: calcPctChg(ytdRef, parseFloat(latest.IndexValue)),
+                    turnover: toCur,
+                    turnoverChgYest: calcPctChg(toYest, toCur),
+                    turnoverChg10d: calcPctChg(toAvg, toCur),
                     pe: ratios.pe, pb: ratios.pb,
                     rsi: rsi.length ? Math.round(rsi[rsi.length - 1]) : null,
                     ma20: ma.length ? Math.round(ma[ma.length - 1]) : null,

@@ -62,12 +62,12 @@ const TrendIcon = ({ trend }) => {
 // Initial Mock Data (Fallback if API fails) — grouped by region
 const INITIAL_INDICES = [
     // Vietnam
-    { id: 'VNINDEX', name: 'VN-Index', region: 'Vietnam', close: 1767.84, turnover: 474, d1: -2.25, ytd: 10.0, pe: 14.97, pb: 1.7, resistance: 1850, support: 1750, rsi: 52, ma20: null, macd: null, date: 'N/A' },
-    { id: 'HNXINDEX', name: 'HNX-Index', region: 'Vietnam', close: 253.64, turnover: 44, d1: -0.5, ytd: 3.0, pe: 16.1, pb: 1.3, resistance: 260, support: 245, rsi: 50, ma20: null, macd: null, date: 'N/A' },
-    { id: 'VN30', name: 'VN30', region: 'Vietnam', close: 1904.19, turnover: 250, d1: -2.0, ytd: 8.0, pe: 14.97, pb: 1.7, resistance: 1950, support: 1850, rsi: 52, ma20: null, macd: null, date: 'N/A' },
+    { id: 'VNINDEX', name: 'VN-Index', region: 'Vietnam', close: 1176.84, turnover: 474, turnoverChgYest: -2.5, turnoverChg10d: 5.2, d1: -2.25, d1m: 1.2, d3m: 3.5, d6m: 5.0, d12m: 10.0, ytd: 10.0, pe: 14.9, pb: 1.7, resistance: 1200, support: 1150, rsi: 52, ma20: 1160, macd: 5.2, date: 'N/A' },
+    { id: 'HNXINDEX', name: 'HNX-Index', region: 'Vietnam', close: 253.64, turnover: 44, turnoverChgYest: -1.2, turnoverChg10d: 3.0, d1: -0.5, d1m: 0.8, d3m: 2.1, d6m: 3.5, d12m: 8.0, ytd: 3.0, pe: 16.1, pb: 1.3, resistance: 260, support: 245, rsi: 50, ma20: 250, macd: 1.2, date: 'N/A' },
+    { id: 'VN30', name: 'VN30', region: 'Vietnam', close: 1904.19, turnover: 250, turnoverChgYest: -3.0, turnoverChg10d: 4.5, d1: -2.0, d1m: 1.0, d3m: 3.2, d6m: 4.8, d12m: 9.0, ytd: 8.0, pe: 14.9, pb: 1.7, resistance: 1950, support: 1850, rsi: 52, ma20: 1880, macd: 4.5, date: 'N/A' },
     // USA
-    { id: 'SPX', name: 'S&P 500', region: 'USA', close: 5700, turnover: 65000, d1: -0.9, ytd: 8.0, pe: 26.0, pb: 5.0, resistance: 6000, support: 5600, rsi: 55, ma20: null, macd: null, date: 'N/A' },
-    { id: 'NASDAQ', name: 'Nasdaq', region: 'USA', close: 18000, turnover: 50000, d1: -1.2, ytd: 6.0, pe: 32.0, pb: 7.0, resistance: 19000, support: 17500, rsi: 52, ma20: null, macd: null, date: 'N/A' },
+    { id: 'SPX', name: 'S&P 500', region: 'USA', close: 5700, turnover: 65000, turnoverChgYest: 0.5, turnoverChg10d: 1.2, d1: -0.9, d1m: 2.1, d3m: 5.2, d6m: 10.5, d12m: 15.0, ytd: 8.0, pe: 26.0, pb: 5.0, resistance: 6000, support: 5600, rsi: 55, ma20: 5650, macd: 12.5, date: 'N/A' },
+    { id: 'NASDAQ', name: 'Nasdaq', region: 'USA', close: 18000, turnover: 50000, turnoverChgYest: 0.2, turnoverChg10d: 0.8, d1: -1.2, d1m: 1.5, d3m: 4.8, d6m: 9.5, d12m: 14.0, ytd: 6.0, pe: 32.0, pb: 7.0, resistance: 19000, support: 17500, rsi: 52, ma20: 17800, macd: 25.0, date: 'N/A' },
     { id: 'DJI', name: 'Dow Jones', region: 'USA', close: 43000, turnover: 14000, d1: -0.5, ytd: 5.0, pe: 22.0, pb: 5.0, resistance: 45000, support: 42000, rsi: 54, ma20: null, macd: null, date: 'N/A' },
     // Europe
     { id: 'FTSE', name: 'FTSE 100', region: 'UK', close: 8288, turnover: 2800, d1: 0.1, ytd: 5.0, pe: 14.0, pb: 1.9, resistance: 8500, support: 8100, rsi: 53, ma20: null, macd: null, date: 'N/A' },
@@ -395,28 +395,34 @@ function GlobalIndicatorsTable({ indices }) {
                             <td style={{ padding: '8px 16px', color: '#64748b', fontWeight: 500 }}>{row.region}</td>
                             <td style={{ padding: '8px 16px', textAlign: 'right', color: '#94a3b8', fontSize: '11px' }}>{row.date || 'N/A'}</td>
                             <td style={{ padding: '8px 16px', textAlign: 'right', fontWeight: 700, color: '#f8fafc', fontSize: '12px' }}>{typeof row.close === 'number' ? row.close.toLocaleString(undefined, { minimumFractionDigits: 2 }) : row.close}</td>
-                            <td style={{ padding: '8px 16px', textAlign: 'right', color: '#94a3b8' }}>
+                            <td style={{ padding: '8px 16px', textAlign: 'right', borderBottom: `1px solid ${COLORS.border}` }}>
                                 {row.turnover != null ? (
-                                    <div>
-                                        <div style={{ fontWeight: 600, color: '#cbd5e1' }}>
-                                            ${row.turnover.toLocaleString()}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end', minHeight: '44px', justifyContent: 'center' }}>
+                                        <div style={{ fontWeight: 700, color: '#f8fafc', fontSize: '13px' }}>
+                                            ${row.turnover.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                         </div>
-                                        {(row.turnoverChgYest != null || row.turnoverChg10d != null) && (
-                                            <div style={{ fontSize: '9px', marginTop: '2px', display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-                                                {row.turnoverChgYest != null && (
-                                                    <span style={{ color: row.turnoverChgYest >= 0 ? '#22c55e' : '#ef4444' }}>
-                                                        {row.turnoverChgYest >= 0 ? '+' : ''}{row.turnoverChgYest}% vs D-1
-                                                    </span>
-                                                )}
-                                                {row.turnoverChg10d != null && (
-                                                    <span style={{ color: row.turnoverChg10d >= 0 ? '#22c55e' : '#ef4444' }}>
-                                                        {row.turnoverChg10d >= 0 ? '+' : ''}{row.turnoverChg10d}% vs 10d
-                                                    </span>
-                                                )}
-                                            </div>
-                                        )}
+                                        <div style={{ fontSize: '9px', fontWeight: 500 }}>
+                                            {row.turnoverChgYest != null ? (
+                                                <span style={{ color: row.turnoverChgYest >= 0 ? COLORS.green : COLORS.red }}>
+                                                    {row.turnoverChgYest >= 0 ? '+' : ''}{row.turnoverChgYest.toFixed(2)}% vs D-1
+                                                </span>
+                                            ) : (
+                                                <span style={{ color: '#4b5563' }}>N/A vs D-1</span>
+                                            )}
+                                        </div>
+                                        <div style={{ fontSize: '9px', fontWeight: 500 }}>
+                                            {row.turnoverChg10d != null ? (
+                                                <span style={{ color: row.turnoverChg10d >= 0 ? COLORS.green : COLORS.red }}>
+                                                    {row.turnoverChg10d >= 0 ? '+' : ''}{row.turnoverChg10d.toFixed(2)}% vs 10d
+                                                </span>
+                                            ) : (
+                                                <span style={{ color: '#4b5563' }}>N/A vs 10d</span>
+                                            )}
+                                        </div>
                                     </div>
-                                ) : 'N/A'}
+                                ) : (
+                                    <div style={{ color: '#4b5563', fontWeight: 500, fontSize: '12px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>N/A</div>
+                                )}
                             </td>
 
                             <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}` }}>
