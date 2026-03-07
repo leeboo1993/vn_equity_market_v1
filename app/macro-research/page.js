@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import MacroChart from '../components/MacroChart';
 import MacroKPICard from '../components/MacroKPICard';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function MacroResearchPage() {
     const [data, setData] = useState(null);
@@ -58,7 +59,7 @@ export default function MacroResearchPage() {
     const renderArticles = () => {
         if (loading) return (
             <div className="flex h-64 items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00ff7f]"></div>
+                <LoadingSpinner />
             </div>
         );
 
@@ -128,7 +129,7 @@ export default function MacroResearchPage() {
     const renderEconomics = () => {
         if (loading) return (
             <div className="flex h-64 items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00ff7f]"></div>
+                <LoadingSpinner />
             </div>
         );
 
