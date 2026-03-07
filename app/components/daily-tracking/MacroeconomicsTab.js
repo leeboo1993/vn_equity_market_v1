@@ -68,20 +68,20 @@ const INITIAL_INDICES = [
     // USA
     { id: 'SPX', name: 'S&P 500', region: 'USA', close: 5700, turnover: 65000, turnover5dAvg: 64000, turnoverVs5d: 1.5, turnover10dAvg: 63000, turnoverVs10d: 3.2, turnover1mAvg: 62000, turnoverVs1m: 4.8, d1: -0.9, d1m: 2.1, d3m: 5.2, d6m: 10.5, d12m: 15.0, ytd: 8.0, pe: 26.0, pb: 5.0, resistance: 6000, support: 5600, rsi: 55, ma20: 5650, macd: 12.5, date: 'N/A' },
     { id: 'NASDAQ', name: 'Nasdaq', region: 'USA', close: 18000, turnover: 50000, turnover5dAvg: 49000, turnoverVs5d: 2.0, turnover10dAvg: 48000, turnoverVs10d: 4.1, turnover1mAvg: 47000, turnoverVs1m: 6.3, d1: -1.2, d1m: 1.5, d3m: 4.8, d6m: 9.5, d12m: 14.0, ytd: 6.0, pe: 32.0, pb: 7.0, resistance: 19000, support: 17500, rsi: 52, ma20: 17800, macd: 25.0, date: 'N/A' },
-    { id: 'DJI', name: 'Dow Jones', region: 'USA', close: 43000, turnover: 14000, d1: -0.5, ytd: 5.0, pe: 22.0, pb: 5.0, resistance: 45000, support: 42000, rsi: 54, ma20: null, macd: null, date: 'N/A' },
+    { id: 'DJI', name: 'Dow Jones', region: 'USA', close: 43000, turnover: 14000, turnover5dAvg: 13800, turnoverVs5d: 1.4, turnover10dAvg: 13500, turnoverVs10d: 3.7, turnover1mAvg: 13000, turnoverVs1m: 7.7, d1: -0.5, ytd: 5.0, pe: 22.0, pb: 5.0, resistance: 45000, support: 42000, rsi: 54, ma20: 42500, macd: 85.0, date: 'N/A' },
     // Europe
-    { id: 'FTSE', name: 'FTSE 100', region: 'UK', close: 8288, turnover: 2800, d1: 0.1, ytd: 5.0, pe: 14.0, pb: 1.9, resistance: 8500, support: 8100, rsi: 53, ma20: null, macd: null, date: 'N/A' },
-    { id: 'DAX', name: 'DAX', region: 'Germany', close: 22000, turnover: 5000, d1: 0.4, ytd: 14.0, pe: 17.0, pb: 1.8, resistance: 23000, support: 21000, rsi: 60, ma20: null, macd: null, date: 'N/A' },
-    { id: 'CAC40', name: 'CAC 40', region: 'France', close: 8200, turnover: 3500, d1: 0.2, ytd: 8.0, pe: 16.0, pb: 1.7, resistance: 8500, support: 8000, rsi: 55, ma20: null, macd: null, date: 'N/A' },
+    { id: 'FTSE', name: 'FTSE 100', region: 'UK', close: 8288, turnover: 2800, turnover5dAvg: 2750, turnoverVs5d: 1.8, turnover10dAvg: 2700, turnoverVs10d: 3.7, turnover1mAvg: 2600, turnoverVs1m: 7.7, d1: 0.1, ytd: 5.0, pe: 14.0, pb: 1.9, resistance: 8500, support: 8100, rsi: 53, ma20: 8200, macd: 12.0, date: 'N/A' },
+    { id: 'DAX', name: 'DAX', region: 'Germany', close: 22000, turnover: 5000, turnover5dAvg: 4900, turnoverVs5d: 2.0, turnover10dAvg: 4800, turnoverVs10d: 4.2, turnover1mAvg: 4700, turnoverVs1m: 6.4, d1: 0.4, ytd: 14.0, pe: 17.0, pb: 1.8, resistance: 23000, support: 21000, rsi: 60, ma20: 21500, macd: 150.0, date: 'N/A' },
+    { id: 'CAC40', name: 'CAC 40', region: 'France', close: 8200, turnover: 3500, turnover5dAvg: 3400, turnoverVs5d: 2.9, turnover10dAvg: 3300, turnoverVs10d: 6.1, turnover1mAvg: 3200, turnoverVs1m: 9.4, d1: 0.2, ytd: 8.0, pe: 16.0, pb: 1.7, resistance: 8500, support: 8000, rsi: 55, ma20: 8100, macd: 25.0, date: 'N/A' },
     // China
-    { id: 'SSE', name: 'Shanghai (SSE)', region: 'China', close: 3300, turnover: 40000, d1: 0.3, ytd: 2.0, pe: 13.0, pb: 1.3, resistance: 3500, support: 3100, rsi: 51, ma20: null, macd: null, date: 'N/A' },
-    { id: 'CSI300', name: 'CSI 300', region: 'China', close: 3900, turnover: 35000, d1: 0.5, ytd: 3.0, pe: 14.0, pb: 1.5, resistance: 4100, support: 3700, rsi: 53, ma20: null, macd: null, date: 'N/A' },
-    { id: 'HSI', name: 'Hang Seng', region: 'Hong Kong', close: 25000, turnover: 7000, d1: 1.0, ytd: 12.0, pe: 10.0, pb: 1.0, resistance: 27000, support: 24000, rsi: 58, ma20: null, macd: null, date: 'N/A' },
+    { id: 'SSE', name: 'Shanghai (SSE)', region: 'China', close: 3300, turnover: 40000, turnover5dAvg: 39000, turnoverVs5d: 2.6, turnover10dAvg: 38000, turnoverVs10d: 5.3, turnover1mAvg: 37000, turnoverVs1m: 8.1, d1: 0.3, ytd: 2.0, pe: 13.0, pb: 1.3, resistance: 3500, support: 3100, rsi: 51, ma20: 3200, macd: 10.0, date: 'N/A' },
+    { id: 'CSI300', name: 'CSI 300', region: 'China', close: 3900, turnover: 35000, turnover5dAvg: 34000, turnoverVs5d: 2.9, turnover10dAvg: 33000, turnoverVs10d: 6.1, turnover1mAvg: 32000, turnoverVs1m: 9.4, d1: 0.5, ytd: 3.0, pe: 14.0, pb: 1.5, resistance: 4100, support: 3700, rsi: 53, ma20: 3800, macd: 15.0, date: 'N/A' },
+    { id: 'HSI', name: 'Hang Seng', region: 'Hong Kong', close: 25000, turnover: 7000, turnover5dAvg: 6800, turnoverVs5d: 2.9, turnover10dAvg: 6600, turnoverVs10d: 6.1, turnover1mAvg: 6400, turnoverVs1m: 9.4, d1: 1.0, ytd: 12.0, pe: 10.0, pb: 1.0, resistance: 27000, support: 24000, rsi: 58, ma20: 24500, macd: 120.0, date: 'N/A' },
     // Asia
-    { id: 'N225', name: 'Nikkei 225', region: 'Japan', close: 38000, turnover: 18000, d1: 0.4, ytd: 10.0, pe: 23.0, pb: 2.1, resistance: 40000, support: 36000, rsi: 54, ma20: null, macd: null, date: 'N/A' },
-    { id: 'KOSPI', name: 'KOSPI', region: 'Korea', close: 2600, turnover: 8000, d1: 0.2, ytd: 3.0, pe: 12.0, pb: 1.0, resistance: 2800, support: 2500, rsi: 50, ma20: null, macd: null, date: 'N/A' },
-    { id: 'ASX200', name: 'ASX 200', region: 'Australia', close: 8200, turnover: 5000, d1: 0.1, ytd: 4.0, pe: 18.0, pb: 2.2, resistance: 8500, support: 8000, rsi: 52, ma20: null, macd: null, date: 'N/A' },
-    { id: 'STI', name: 'STI', region: 'Singapore', close: 3900, turnover: 1200, d1: 0.3, ytd: 5.0, pe: 14.0, pb: 1.3, resistance: 4000, support: 3700, rsi: 53, ma20: null, macd: null, date: 'N/A' },
+    { id: 'N225', name: 'Nikkei 225', region: 'Japan', close: 38000, turnover: 18000, turnover5dAvg: 17500, turnoverVs5d: 2.9, turnover10dAvg: 17000, turnoverVs10d: 5.9, turnover1mAvg: 16500, turnoverVs1m: 9.1, d1: 0.4, ytd: 10.0, pe: 23.0, pb: 2.1, resistance: 40000, support: 36000, rsi: 54, ma20: 37500, macd: 250.0, date: 'N/A' },
+    { id: 'KOSPI', name: 'KOSPI', region: 'Korea', close: 2600, turnover: 8000, turnover5dAvg: 7800, turnoverVs5d: 2.6, turnover10dAvg: 7600, turnoverVs10d: 5.3, turnover1mAvg: 7400, turnoverVs1m: 8.1, d1: 0.2, ytd: 3.0, pe: 12.0, pb: 1.0, resistance: 2800, support: 2500, rsi: 50, ma20: 2550, macd: 15.0, date: 'N/A' },
+    { id: 'ASX200', name: 'ASX 200', region: 'Australia', close: 8200, turnover: 5000, turnover5dAvg: 4900, turnoverVs5d: 2.0, turnover10dAvg: 4800, turnoverVs10d: 4.2, turnover1mAvg: 4700, turnoverVs1m: 6.4, d1: 0.1, ytd: 4.0, pe: 18.0, pb: 2.2, resistance: 8500, support: 8000, rsi: 52, ma20: 8100, macd: 30.0, date: 'N/A' },
+    { id: 'STI', name: 'STI', region: 'Singapore', close: 3900, turnover: 1200, turnover5dAvg: 1150, turnoverVs5d: 4.3, turnover10dAvg: 1100, turnoverVs10d: 9.1, turnover1mAvg: 1050, turnoverVs1m: 14.3, d1: 0.3, ytd: 5.0, pe: 14.0, pb: 1.3, resistance: 4000, support: 3700, rsi: 53, ma20: 3850, macd: 10.0, date: 'N/A' },
 ];
 
 export default function MacroeconomicsTab({ data, timeFilter, customRange, timeFilterControl }) {
@@ -408,8 +408,8 @@ function GlobalIndicatorsTable({ indices }) {
                                 {row.turnover5dAvg != null ? (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
                                         <div style={{ fontWeight: 600, color: '#cbd5e1' }}>${Math.round(row.turnover5dAvg).toLocaleString()}</div>
-                                        <div style={{ fontSize: '9px', fontWeight: 700, color: row.turnoverVs5d >= 0 ? COLORS.green : COLORS.red }}>
-                                            {row.turnoverVs5d >= 0 ? '+' : ''}{row.turnoverVs5d.toFixed(1)}%
+                                        <div style={{ fontSize: '9px', fontWeight: 700, color: (row.turnoverVs5d || 0) >= 0 ? COLORS.green : COLORS.red }}>
+                                            {row.turnoverVs5d != null ? `${row.turnoverVs5d >= 0 ? '+' : ''}${row.turnoverVs5d.toFixed(1)}%` : '–'}
                                         </div>
                                     </div>
                                 ) : '–'}
@@ -418,8 +418,8 @@ function GlobalIndicatorsTable({ indices }) {
                                 {row.turnover10dAvg != null ? (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
                                         <div style={{ fontWeight: 600, color: '#cbd5e1' }}>${Math.round(row.turnover10dAvg).toLocaleString()}</div>
-                                        <div style={{ fontSize: '9px', fontWeight: 700, color: row.turnoverVs10d >= 0 ? COLORS.green : COLORS.red }}>
-                                            {row.turnoverVs10d >= 0 ? '+' : ''}{row.turnoverVs10d.toFixed(1)}%
+                                        <div style={{ fontSize: '9px', fontWeight: 700, color: (row.turnoverVs10d || 0) >= 0 ? COLORS.green : COLORS.red }}>
+                                            {row.turnoverVs10d != null ? `${row.turnoverVs10d >= 0 ? '+' : ''}${row.turnoverVs10d.toFixed(1)}%` : '–'}
                                         </div>
                                     </div>
                                 ) : '–'}
@@ -428,8 +428,8 @@ function GlobalIndicatorsTable({ indices }) {
                                 {row.turnover1mAvg != null ? (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
                                         <div style={{ fontWeight: 600, color: '#cbd5e1' }}>${Math.round(row.turnover1mAvg).toLocaleString()}</div>
-                                        <div style={{ fontSize: '9px', fontWeight: 700, color: row.turnoverVs1m >= 0 ? COLORS.green : COLORS.red }}>
-                                            {row.turnoverVs1m >= 0 ? '+' : ''}{row.turnoverVs1m.toFixed(1)}%
+                                        <div style={{ fontSize: '9px', fontWeight: 700, color: (row.turnoverVs1m || 0) >= 0 ? COLORS.green : COLORS.red }}>
+                                            {row.turnoverVs1m != null ? `${row.turnoverVs1m >= 0 ? '+' : ''}${row.turnoverVs1m.toFixed(1)}%` : '–'}
                                         </div>
                                     </div>
                                 ) : '–'}

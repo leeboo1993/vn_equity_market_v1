@@ -169,7 +169,7 @@ async function getSSIData(token) {
 const globalCache = {};
 async function fetchFromStooq(stooqId) {
     const url = `https://stooq.com/q/d/l/?s=${encodeURIComponent(stooqId)}&i=d`;
-    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000), cache: 'no-store' });
+    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(15000), cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const text = await res.text();
     const lines = text.trim().split('\n');
