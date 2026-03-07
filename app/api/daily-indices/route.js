@@ -86,14 +86,14 @@ async function getSSIData(token) {
 
     const dNow = new Date();
     const todayStr = formatDate(dNow);
-    const dPast = new Date(dNow.getTime() - 400 * 24 * 60 * 60 * 1000);
+    const dPast = new Date(dNow.getTime() - 29 * 24 * 60 * 60 * 1000); // 30 days max range for SSI
     const startStr = formatDate(dPast);
 
     for (const config of ssiIndices) {
         try {
             await sleep(1000); // 1s delay to avoid 429 on SSI
-            const url = `https://fc-data.ssi.com.vn/api/v2/Market/DailyIndex?indexId=${config.ssiId}&fromDate=${startStr}&toDate=${todayStr}&pageIndex=1&pageSize=500`;
-            const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` }, signal: AbortSignal.timeout(8000) });
+            const url = `https://fc-data.ssi.com.vn/api/v2/Market/DailyIndex?indexId=${config.ssiId}&fromDate=${startStr}&toDate=${todayStr}&pageIndex=1&pageSize=1000`;
+            const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` }, signal: AbortSignal.timeout(15000) });
             if (!res.ok) continue;
             const pData = await res.json();
             if (pData.data && pData.data.length > 0) {
@@ -122,16 +122,26 @@ async function getSSIData(token) {
                 })?.IndexValue ?? null;
 
                 const getTOVal = (entry) => parseFloat(entry?.TotalMatchVal || 0) / 1000000 / 25400; // USD mn
+                const getTOVnd = (entry) => parseFloat(entry?.TotalMatchVal || 0) / 1_000_000_000; // VND bn
                 const toCur = getTOVal(latest);
+                const toVnd = getTOVnd(latest);
 
                 const getAvgVal = (n) => {
                     const slice = sorted.slice(-Math.min(n + 1, sorted.length), -1);
                     return slice.length > 0 ? slice.reduce((s, e) => s + getTOVal(e), 0) / slice.length : null;
                 };
+                const getAvgVnd = (n) => {
+                    const slice = sorted.slice(-Math.min(n + 1, sorted.length), -1);
+                    return slice.length > 0 ? slice.reduce((s, e) => s + getTOVnd(e), 0) / slice.length : null;
+                };
 
                 const to5dAvg = getAvgVal(5);
                 const to10dAvg = getAvgVal(10);
                 const to1mAvg = getAvgVal(22);
+
+                const to5dAvgVnd = getAvgVnd(5);
+                const to10dAvgVnd = getAvgVnd(10);
+                const to1mAvgVnd = getAvgVnd(22);
 
                 const ratios = await getValuationRatios(config.id);
                 const rsi = RSI.calculate({ values: closes, period: 14 });
@@ -149,9 +159,13 @@ async function getSSIData(token) {
                     d12m: calcPctChg(findVal(365), parseFloat(latest.IndexValue)),
                     ytd: calcPctChg(ytdRef, parseFloat(latest.IndexValue)),
                     turnover: toCur,
+                    turnoverVnd: toVnd,
                     turnover5dAvg: to5dAvg, turnoverVs5d: calcPctChg(to5dAvg, toCur),
                     turnover10dAvg: to10dAvg, turnoverVs10d: calcPctChg(to10dAvg, toCur),
                     turnover1mAvg: to1mAvg, turnoverVs1m: calcPctChg(to1mAvg, toCur),
+                    turnover5dAvgVnd: to5dAvgVnd,
+                    turnover10dAvgVnd: to10dAvgVnd,
+                    turnover1mAvgVnd: to1mAvgVnd,
                     pe: ratios.pe, pb: ratios.pb,
                     rsi: rsi.length ? Math.round(rsi[rsi.length - 1]) : null,
                     ma20: ma.length ? Math.round(ma[ma.length - 1]) : null,

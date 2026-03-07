@@ -62,9 +62,9 @@ const TrendIcon = ({ trend }) => {
 // Initial Mock Data (Fallback if API fails) — grouped by region
 const INITIAL_INDICES = [
     // Vietnam
-    { id: 'VNINDEX', name: 'VN-Index', region: 'Vietnam', close: 1176.84, turnover: 474, turnover5dAvg: 450, turnoverVs5d: 5.3, turnover10dAvg: 440, turnoverVs10d: 7.7, turnover1mAvg: 420, turnoverVs1m: 12.8, d1: -2.25, d1m: 1.2, d3m: 3.5, d6m: 5.0, d12m: 10.0, ytd: 10.0, pe: 14.9, pb: 1.7, resistance: 1200, support: 1150, rsi: 52, ma20: 1160, macd: 5.2, date: 'N/A' },
-    { id: 'HNXINDEX', name: 'HNX-Index', region: 'Vietnam', close: 253.64, turnover: 44, turnover5dAvg: 42, turnoverVs5d: 4.8, turnover10dAvg: 40, turnoverVs10d: 10.0, turnover1mAvg: 38, turnoverVs1m: 15.7, d1: -0.5, d1m: 0.8, d3m: 2.1, d6m: 3.5, d12m: 8.0, ytd: 3.0, pe: 16.1, pb: 1.3, resistance: 260, support: 245, rsi: 50, ma20: 250, macd: 1.2, date: 'N/A' },
-    { id: 'VN30', name: 'VN30', region: 'Vietnam', close: 1904.19, turnover: 250, turnover5dAvg: 240, turnoverVs5d: 4.2, turnover10dAvg: 235, turnoverVs10d: 6.4, turnover1mAvg: 220, turnoverVs1m: 13.6, d1: -2.0, d1m: 1.0, d3m: 3.2, d6m: 4.8, d12m: 9.0, ytd: 8.0, pe: 14.9, pb: 1.7, resistance: 1950, support: 1850, rsi: 52, ma20: 1880, macd: 4.5, date: 'N/A' },
+    { id: 'VNINDEX', name: 'VN-Index', region: 'Vietnam', close: 1176.84, turnover: 474, turnoverVnd: 12050, turnover5dAvg: 450, turnover5dAvgVnd: 11500, turnoverVs5d: 5.3, turnover10dAvg: 440, turnover10dAvgVnd: 11200, turnoverVs10d: 7.7, turnover1mAvg: 420, turnover1mAvgVnd: 10800, turnoverVs1m: 12.8, d1: -2.25, d1m: 1.2, d3m: 3.5, d6m: 5.0, d12m: 10.0, ytd: 10.0, pe: 14.9, pb: 1.7, resistance: 1200, support: 1150, rsi: 52, ma20: 1160, macd: 5.2, date: 'N/A' },
+    { id: 'HNXINDEX', name: 'HNX-Index', region: 'Vietnam', close: 253.64, turnover: 44, turnoverVnd: 1120, turnover5dAvg: 42, turnover5dAvgVnd: 1080, turnoverVs5d: 4.8, turnover10dAvg: 40, turnover10dAvgVnd: 1020, turnoverVs10d: 10.0, turnover1mAvg: 38, turnover1mAvgVnd: 980, turnoverVs1m: 15.7, d1: -0.5, d1m: 0.8, d3m: 2.1, d6m: 3.5, d12m: 8.0, ytd: 3.0, pe: 16.1, pb: 1.3, resistance: 260, support: 245, rsi: 50, ma20: 250, macd: 1.2, date: 'N/A' },
+    { id: 'VN30', name: 'VN30', region: 'Vietnam', close: 1904.19, turnover: 250, turnoverVnd: 6350, turnover5dAvg: 240, turnover5dAvgVnd: 6100, turnoverVs5d: 4.2, turnover10dAvg: 235, turnover10dAvgVnd: 5980, turnoverVs10d: 6.4, turnover1mAvg: 220, turnover1mAvgVnd: 5600, turnoverVs1m: 13.6, d1: -2.0, d1m: 1.0, d3m: 3.2, d6m: 4.8, d12m: 9.0, ytd: 8.0, pe: 14.9, pb: 1.7, resistance: 1950, support: 1850, rsi: 52, ma20: 1880, macd: 4.5, date: 'N/A' },
     // USA
     { id: 'SPX', name: 'S&P 500', region: 'USA', close: 5700, turnover: 65000, turnover5dAvg: 64000, turnoverVs5d: 1.5, turnover10dAvg: 63000, turnoverVs10d: 3.2, turnover1mAvg: 62000, turnoverVs1m: 4.8, d1: -0.9, d1m: 2.1, d3m: 5.2, d6m: 10.5, d12m: 15.0, ytd: 8.0, pe: 26.0, pb: 5.0, resistance: 6000, support: 5600, rsi: 55, ma20: 5650, macd: 12.5, date: 'N/A' },
     { id: 'NASDAQ', name: 'Nasdaq', region: 'USA', close: 18000, turnover: 50000, turnover5dAvg: 49000, turnoverVs5d: 2.0, turnover10dAvg: 48000, turnoverVs10d: 4.1, turnover1mAvg: 47000, turnoverVs1m: 6.3, d1: -1.2, d1m: 1.5, d3m: 4.8, d6m: 9.5, d12m: 14.0, ytd: 6.0, pe: 32.0, pb: 7.0, resistance: 19000, support: 17500, rsi: 52, ma20: 17800, macd: 25.0, date: 'N/A' },
@@ -341,6 +341,12 @@ export default function MacroeconomicsTab({ data, timeFilter, customRange, timeF
 
 // PREMIUM INDICATORS TABLE
 function GlobalIndicatorsTable({ indices }) {
+    const formatVal = (val) => {
+        if (val == null || isNaN(val)) return '–';
+        if (Math.abs(val) < 100) return val.toFixed(1);
+        return Math.round(val).toLocaleString();
+    };
+
     const getValueWithIcon = (val, isPercent = false) => {
         const isPositive = val > 0;
         const isZero = val === 0;
@@ -366,7 +372,7 @@ function GlobalIndicatorsTable({ indices }) {
                         <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1' }}>Region</th>
                         <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'right' }}>Date</th>
                         <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'right' }}>Price</th>
-                        <th colSpan="4" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}` }}>Turnover (USD mn)</th>
+                        <th colSpan="4" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}` }}>Turnover</th>
                         <th colSpan="6" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}` }}>Performance</th>
                         <th colSpan="2" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}` }}>Valuation</th>
                         <th colSpan="5" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}` }}>Technical Benchmarks</th>
@@ -398,16 +404,25 @@ function GlobalIndicatorsTable({ indices }) {
                             <td style={{ padding: '8px 16px', fontWeight: 700, color: '#f1f5f9', fontSize: '13px' }}>{row.name}</td>
                             <td style={{ padding: '8px 16px', color: '#64748b', fontWeight: 500 }}>{row.region}</td>
                             <td style={{ padding: '8px 16px', textAlign: 'right', color: '#94a3b8', fontSize: '11px' }}>{row.date || 'N/A'}</td>
-                            <td style={{ padding: '8px 16px', textAlign: 'right', fontWeight: 700, color: '#f8fafc', fontSize: '12px' }}>{typeof row.close === 'number' ? row.close.toLocaleString(undefined, { minimumFractionDigits: 2 }) : row.close}</td>
+                            <td style={{ padding: '8px 16px', textAlign: 'right', fontWeight: 700, color: '#f8fafc', fontSize: '12px' }}>{formatVal(row.close)}</td>
                             <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}` }}>
                                 {row.turnover != null ? (
-                                    <span style={{ fontWeight: 700, color: '#f8fafc' }}>${Math.round(row.turnover).toLocaleString()}</span>
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                        <span style={{ fontWeight: 700, color: '#f8fafc' }}>
+                                            {row.region === 'Vietnam' ? `₫${formatVal(row.turnoverVnd)}B` : `$${formatVal(row.turnover)}M`}
+                                        </span>
+                                        {row.region === 'Vietnam' && (
+                                            <span style={{ fontSize: '9px', color: '#64748b' }}>${formatVal(row.turnover)}M</span>
+                                        )}
+                                    </div>
                                 ) : '–'}
                             </td>
                             <td style={{ padding: '8px 10px', textAlign: 'right' }}>
                                 {row.turnover5dAvg != null ? (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-                                        <div style={{ fontWeight: 600, color: '#cbd5e1' }}>${Math.round(row.turnover5dAvg).toLocaleString()}</div>
+                                        <div style={{ fontWeight: 600, color: '#cbd5e1' }}>
+                                            {row.region === 'Vietnam' ? `₫${formatVal(row.turnover5dAvgVnd)}B` : `$${formatVal(row.turnover5dAvg)}M`}
+                                        </div>
                                         <div style={{ fontSize: '9px', fontWeight: 700, color: (row.turnoverVs5d || 0) >= 0 ? COLORS.green : COLORS.red }}>
                                             {row.turnoverVs5d != null ? `${row.turnoverVs5d >= 0 ? '+' : ''}${row.turnoverVs5d.toFixed(1)}%` : '–'}
                                         </div>
@@ -417,7 +432,9 @@ function GlobalIndicatorsTable({ indices }) {
                             <td style={{ padding: '8px 10px', textAlign: 'right' }}>
                                 {row.turnover10dAvg != null ? (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-                                        <div style={{ fontWeight: 600, color: '#cbd5e1' }}>${Math.round(row.turnover10dAvg).toLocaleString()}</div>
+                                        <div style={{ fontWeight: 600, color: '#cbd5e1' }}>
+                                            {row.region === 'Vietnam' ? `₫${formatVal(row.turnover10dAvgVnd)}B` : `$${formatVal(row.turnover10dAvg)}M`}
+                                        </div>
                                         <div style={{ fontSize: '9px', fontWeight: 700, color: (row.turnoverVs10d || 0) >= 0 ? COLORS.green : COLORS.red }}>
                                             {row.turnoverVs10d != null ? `${row.turnoverVs10d >= 0 ? '+' : ''}${row.turnoverVs10d.toFixed(1)}%` : '–'}
                                         </div>
@@ -427,7 +444,9 @@ function GlobalIndicatorsTable({ indices }) {
                             <td style={{ padding: '8px 10px', textAlign: 'right' }}>
                                 {row.turnover1mAvg != null ? (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-                                        <div style={{ fontWeight: 600, color: '#cbd5e1' }}>${Math.round(row.turnover1mAvg).toLocaleString()}</div>
+                                        <div style={{ fontWeight: 600, color: '#cbd5e1' }}>
+                                            {row.region === 'Vietnam' ? `₫${formatVal(row.turnover1mAvgVnd)}B` : `$${formatVal(row.turnover1mAvg)}M`}
+                                        </div>
                                         <div style={{ fontSize: '9px', fontWeight: 700, color: (row.turnoverVs1m || 0) >= 0 ? COLORS.green : COLORS.red }}>
                                             {row.turnoverVs1m != null ? `${row.turnoverVs1m >= 0 ? '+' : ''}${row.turnoverVs1m.toFixed(1)}%` : '–'}
                                         </div>
@@ -444,14 +463,14 @@ function GlobalIndicatorsTable({ indices }) {
                             <td style={{ padding: '8px 10px', textAlign: 'right' }}>{row.d12m != null ? getValueWithIcon(row.d12m, true) : '–'}</td>
                             <td style={{ padding: '8px 10px', textAlign: 'right' }}>{row.ytd != null ? getValueWithIcon(row.ytd, true) : '–'}</td>
 
-                            <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}`, color: '#cbd5e1', fontWeight: 600 }}>{row.pe != null ? `${row.pe}x` : '–'}</td>
-                            <td style={{ padding: '8px 16px', textAlign: 'right', color: '#cbd5e1', fontWeight: 600 }}>{row.pb != null ? `${row.pb}x` : '–'}</td>
+                            <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}`, color: '#cbd5e1', fontWeight: 600 }}>{row.pe != null ? `${formatVal(row.pe)}x` : '–'}</td>
+                            <td style={{ padding: '8px 16px', textAlign: 'right', color: '#cbd5e1', fontWeight: 600 }}>{row.pb != null ? `${formatVal(row.pb)}x` : '–'}</td>
 
-                            <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}`, color: '#f1f5f9' }}>{row.resistance != null ? row.resistance.toLocaleString() : '–'}</td>
-                            <td style={{ padding: '8px 16px', textAlign: 'right', color: '#f1f5f9' }}>{row.support != null ? row.support.toLocaleString() : '–'}</td>
-                            <td style={{ padding: '8px 16px', textAlign: 'right', fontWeight: 700, color: row.rsi > 70 ? COLORS.red : (row.rsi < 30 ? COLORS.green : '#cbd5e1') }}>{row.rsi ?? '–'}</td>
-                            <td style={{ padding: '8px 16px', textAlign: 'right', color: '#94a3b8' }}>{row.ma20 != null ? row.ma20.toLocaleString() : '–'}</td>
-                            <td style={{ padding: '8px 16px', textAlign: 'right', color: row.macd != null ? (String(row.macd).startsWith('-') ? COLORS.red : COLORS.green) : '#94a3b8', fontWeight: 600 }}>{row.macd ?? '–'}</td>
+                            <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}`, color: '#f1f5f9' }}>{formatVal(row.resistance)}</td>
+                            <td style={{ padding: '8px 16px', textAlign: 'right', color: '#f1f5f9' }}>{formatVal(row.support)}</td>
+                            <td style={{ padding: '8px 16px', textAlign: 'right', fontWeight: 700, color: row.rsi > 70 ? COLORS.red : (row.rsi < 30 ? COLORS.green : '#cbd5e1') }}>{formatVal(row.rsi)}</td>
+                            <td style={{ padding: '8px 16px', textAlign: 'right', color: '#94a3b8' }}>{formatVal(row.ma20)}</td>
+                            <td style={{ padding: '8px 16px', textAlign: 'right', color: row.macd != null ? (String(row.macd).startsWith('-') ? COLORS.red : COLORS.green) : '#94a3b8', fontWeight: 600 }}>{formatVal(row.macd)}</td>
                         </tr>
                     ))}
                 </tbody>
