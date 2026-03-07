@@ -123,9 +123,15 @@ async function getSSIData(token) {
 
                 const getTOVal = (entry) => parseFloat(entry?.TotalMatchVal || 0) / 1000000 / 25400; // USD mn
                 const toCur = getTOVal(latest);
-                const toYest = getTOVal(prev);
-                const last10Entries = sorted.slice(-11, -1);
-                const toAvg = last10Entries.length > 0 ? last10Entries.reduce((s, e) => s + getTOVal(e), 0) / last10Entries.length : null;
+
+                const getAvgVal = (n) => {
+                    const slice = sorted.slice(-Math.min(n + 1, sorted.length), -1);
+                    return slice.length > 0 ? slice.reduce((s, e) => s + getTOVal(e), 0) / slice.length : null;
+                };
+
+                const to5dAvg = getAvgVal(5);
+                const to10dAvg = getAvgVal(10);
+                const to1mAvg = getAvgVal(22);
 
                 const ratios = await getValuationRatios(config.id);
                 const rsi = RSI.calculate({ values: closes, period: 14 });
@@ -143,8 +149,9 @@ async function getSSIData(token) {
                     d12m: calcPctChg(findVal(365), parseFloat(latest.IndexValue)),
                     ytd: calcPctChg(ytdRef, parseFloat(latest.IndexValue)),
                     turnover: toCur,
-                    turnoverChgYest: calcPctChg(toYest, toCur),
-                    turnoverChg10d: calcPctChg(toAvg, toCur),
+                    turnover5dAvg: to5dAvg, turnoverVs5d: calcPctChg(to5dAvg, toCur),
+                    turnover10dAvg: to10dAvg, turnoverVs10d: calcPctChg(to10dAvg, toCur),
+                    turnover1mAvg: to1mAvg, turnoverVs1m: calcPctChg(to1mAvg, toCur),
                     pe: ratios.pe, pb: ratios.pb,
                     rsi: rsi.length ? Math.round(rsi[rsi.length - 1]) : null,
                     ma20: ma.length ? Math.round(ma[ma.length - 1]) : null,
@@ -186,9 +193,14 @@ function buildGlobalResult(config, pairs) {
     const ytdRef = [...pairs].reverse().find(p => new Date(p.date) <= jan1)?.close ?? null;
     const getTO = (p) => (p?.vol && p?.close && p.vol > 0) ? Math.round(p.vol * p.close / 1_000_000) : null;
     const toCur = getTO(latest);
-    const toYest = getTO(prev);
-    const last10 = pairs.slice(-11, -1).map(p => getTO(p)).filter(v => v != null);
-    const toAvg = last10.length > 0 ? Math.round(last10.reduce((s, v) => s + v, 0) / last10.length) : null;
+    const getAvgTO = (n) => {
+        const slice = pairs.slice(-Math.min(n + 1, pairs.length), -1).map(p => getTO(p)).filter(v => v != null);
+        return slice.length > 0 ? slice.reduce((s, v) => s + v, 0) / slice.length : null;
+    };
+    const to5dAvg = getAvgTO(5);
+    const to10dAvg = getAvgTO(10);
+    const to1mAvg = getAvgTO(21);
+
     const rsi = RSI.calculate({ values: closes, period: 14 });
     const ma = SMA.calculate({ values: closes, period: 20 });
     const macd = MACD.calculate({ values: closes, fastPeriod: 12, slowPeriod: 26, signalPeriod: 9 });
@@ -203,7 +215,10 @@ function buildGlobalResult(config, pairs) {
         d6m: calcPctChg(findClose(182), latest.close),
         d12m: calcPctChg(findClose(365), latest.close),
         ytd: calcPctChg(ytdRef, latest.close),
-        turnover: toCur, turnoverChgYest: calcPctChg(toYest, toCur), turnoverChg10d: calcPctChg(toAvg, toCur),
+        turnover: toCur,
+        turnover5dAvg: to5dAvg, turnoverVs5d: calcPctChg(to5dAvg, toCur),
+        turnover10dAvg: to10dAvg, turnoverVs10d: calcPctChg(to10dAvg, toCur),
+        turnover1mAvg: to1mAvg, turnoverVs1m: calcPctChg(to1mAvg, toCur),
         rsi: rsi.length ? Math.round(rsi[rsi.length - 1]) : null,
         ma20: ma.length ? Math.round(ma[ma.length - 1]) : null,
         macd: macd.length ? parseFloat((macd[macd.length - 1]?.MACD || 0).toFixed(2)) : null,
