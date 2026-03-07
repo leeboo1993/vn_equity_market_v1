@@ -1556,3 +1556,34 @@ body {
     min-height: 0;
   }
 }
+
+/* ===== DAILY TRACKING MOBILE OPTIMIZATIONS ===== */
+@media (max-width: 768px) {
+  .daily-tracking-container {
+    padding: 0.5rem !important;
+  }
+
+  .daily-tracking-container .card {
+    padding: 0.75rem !important;
+    min-height: auto !important;
+    border-radius: 12px !important;
+  }
+
+  .daily-tracking-container h3,
+  .daily-tracking-container h4 {
+    font-size: 13px !important;
+  }
+
+  .daily-tracking-container .recharts-responsive-container {
+    min-height: 180px;
+  }
+
+  .hidden-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hidden-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

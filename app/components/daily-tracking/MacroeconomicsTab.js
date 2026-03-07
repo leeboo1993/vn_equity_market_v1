@@ -261,7 +261,7 @@ export default function MacroeconomicsTab({ data, timeFilter, customRange, timeF
             {subTab === 'Global' && (
                 <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'start', flexWrap: 'wrap' }}>
                     {/* Main Indicators Table */}
-                    <div style={{ flex: '1 1 62%', minWidth: '750px' }}>
+                    <div style={{ flex: '1 1 500px', minWidth: '0', maxWidth: '100%' }}>
                         <div className="card" style={{ padding: '0', overflow: 'hidden', border: `1px solid ${COLORS.border}`, borderRadius: '12px', background: COLORS.cardBg }}>
                             <div style={{ padding: '1rem 1.25rem', borderBottom: `1px solid ${COLORS.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(30, 41, 59, 0.4)' }}>
                                 <div>
@@ -278,7 +278,7 @@ export default function MacroeconomicsTab({ data, timeFilter, customRange, timeF
                     </div>
 
                     {/* Economic Calendar Sidebar */}
-                    <div style={{ flex: '0 0 35%', minWidth: '420px', height: '680px' }}>
+                    <div style={{ flex: '1 1 350px', minWidth: '0', maxWidth: '100%', height: '600px' }}>
                         <div className="card" style={{ padding: '0', height: '100%', display: 'flex', flexDirection: 'column', border: `1px solid ${COLORS.border}`, borderRadius: '12px', background: COLORS.cardBg }}>
                             <div style={{ padding: '1rem', borderBottom: `1px solid ${COLORS.border}`, background: 'rgba(30, 41, 59, 0.4)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <h3 style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#f8fafc' }}>Economic Calendar</h3>
@@ -295,14 +295,14 @@ export default function MacroeconomicsTab({ data, timeFilter, customRange, timeF
             )}
 
             {subTab === 'Macro' && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '1.25rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
                     {[
                         { label: 'US 10Y Treasury Yield', symbol: 'TVC:US10Y' },
                         { label: 'DXY - US Dollar Index', symbol: 'CAPITALCOM:DXY' },
                         { label: 'Vietnam 10Y Bond Yield', symbol: 'TVC:VN10Y' },
                         { label: 'USD/VND', symbol: 'FX_IDC:USDVND' }
                     ].map(card => (
-                        <div key={card.label} className="card" style={{ padding: '0', height: '400px', border: `1px solid ${COLORS.border}`, borderRadius: '12px' }}>
+                        <div key={card.label} className="card" style={{ padding: '0', height: '350px', border: `1px solid ${COLORS.border}`, borderRadius: '12px' }}>
                             <div style={{ padding: '0.875rem 1rem', borderBottom: `1px solid ${COLORS.border}`, background: 'rgba(30, 41, 59, 0.4)' }}>
                                 <h3 style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#f8fafc' }}>{card.label}</h3>
                             </div>
@@ -319,7 +319,7 @@ export default function MacroeconomicsTab({ data, timeFilter, customRange, timeF
             )}
 
             {subTab === 'Commodity' && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '1.25rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
                     {[
                         { label: 'Gold', symbol: 'TVC:GOLD' },
                         { label: 'Crude Oil WTI', symbol: 'TVC:USOIL' },
@@ -358,7 +358,7 @@ function GlobalIndicatorsTable({ indices }) {
     };
 
     return (
-        <div style={{ overflowX: 'auto', background: COLORS.cardBg }}>
+        <div style={{ overflowX: 'auto', background: COLORS.cardBg, maxWidth: '100%' }} className="hidden-scrollbar">
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', color: '#94a3b8' }}>
                 <thead>
                     <tr style={{ background: 'rgba(30, 41, 59, 0.2)', textAlign: 'left', borderBottom: `1px solid ${COLORS.border}` }}>

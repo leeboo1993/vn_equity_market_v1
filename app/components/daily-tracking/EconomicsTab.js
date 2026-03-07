@@ -176,10 +176,10 @@ export default function EconomicsTab({ data, timeFilter }) {
     };
 
     return (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
 
             {/* CARD 1: Bank Deposit Rates */}
-            <div className="card" style={{ padding: '1.5rem', height: 'auto', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
+            <div className="card" style={{ padding: '1rem', height: 'auto', minHeight: '350px', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ marginBottom: '1rem' }}>
                     <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>Bank Deposit Rates</h3>
                 </div>
@@ -285,7 +285,7 @@ export default function EconomicsTab({ data, timeFilter }) {
 
 
             {/* CARD 2: State Treasury, OMO & CITAD */}
-            <div className="card" style={{ padding: '1.5rem', height: '400px', display: 'flex', flexDirection: 'column' }}>
+            <div className="card" style={{ padding: '1rem', height: '350px', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ marginBottom: '1rem' }}>
                     <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>State Treasury, OMO & CITAD</h3>
                 </div>
@@ -307,7 +307,7 @@ export default function EconomicsTab({ data, timeFilter }) {
             </div>
 
             {/* CARD 3: Interbank Rates */}
-            <div className="card" style={{ padding: '1.5rem', height: '400px', display: 'flex', flexDirection: 'column' }}>
+            <div className="card" style={{ padding: '1rem', height: '350px', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ marginBottom: '1rem' }}>
                     <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>Interbank Rates</h3>
                 </div>
@@ -329,7 +329,7 @@ export default function EconomicsTab({ data, timeFilter }) {
             </div>
 
             {/* CARD 4: TradingView Economic Calendar */}
-            <div className="card" style={{ padding: '0', height: '400px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div className="card" style={{ padding: '0', height: '350px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 <div id="tradingview-economic-calendar" style={{ width: '100%', height: '100%' }}>
                     {/* The TradingView script will be injected here via a client component or effect, 
                         but Next.js App Router (Server Components by default) often requires a dedicated wrapper component for external scripts.
@@ -338,8 +338,8 @@ export default function EconomicsTab({ data, timeFilter }) {
                 </div>
             </div>
 
-            {/* CARD 5: Global Equities Mini Chart (Like the SPX500 user screenshot) */}
-            <div className="card" style={{ padding: '0', height: '400px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            {/* CARD 5: Global Equities Mini Chart */}
+            <div className="card" style={{ padding: '0', height: '350px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 <div id="tradingview-mini-chart" style={{ width: '100%', height: '100%' }}>
                     <TradingViewMiniChartWidget />
                 </div>

@@ -152,18 +152,18 @@ export default function MarketTab({ data, timeFilter }) {
     }, [data, selectedSector]); // Add selectedSector dependency if data would change based on it
 
     const renderFlowChart = (title, dataKey, color) => (
-        <div className="card" style={{ padding: '1rem', flex: 1, minWidth: '300px', background: COLORS.card, border: `1px solid ${COLORS.border}` }}>
-            <h4 style={{ margin: '0 0 1rem 0', fontSize: '12px', color: COLORS.white, fontWeight: 500 }}>{title}</h4>
-            <div style={{ height: '140px' }}>
+        <div className="card" style={{ padding: '0.75rem', flex: 1, minWidth: '140px', background: COLORS.card, border: `1px solid ${COLORS.border}` }}>
+            <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '11px', color: COLORS.white, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</h4>
+            <div style={{ height: '100px' }}>
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={investorFlowData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
                         <XAxis dataKey="date" hide />
                         <YAxis hide domain={['auto', 'auto']} />
                         <Tooltip
-                            contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px', color: '#fff' }}
+                            contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '10px', color: '#fff' }}
                             itemStyle={{ color: '#fff' }}
-                            formatter={(value) => [`${value.toFixed(1)}B`, 'Net Value']}
+                            formatter={(value) => [`${value.toFixed(1)}B`, 'Net']}
                         />
                         <Bar dataKey={dataKey}>
                             {investorFlowData.map((entry, index) => (
@@ -173,11 +173,13 @@ export default function MarketTab({ data, timeFilter }) {
                     </BarChart>
                 </ResponsiveContainer>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '10px', color: COLORS.text }}>
-                <span>{dtFormatter(investorFlowData[0]?.date)}</span>
-                <span>Latest: <span style={{ fontWeight: 700, color: investorFlowData[investorFlowData.length - 1]?.[dataKey] >= 0 ? COLORS.teal : COLORS.red }}>
-                    {investorFlowData[investorFlowData.length - 1]?.[dataKey]?.toFixed(1)}B
-                </span></span>
+            <div style={{ display: 'flex', flexDirection: 'column', marginTop: '4px', fontSize: '9px', color: COLORS.text }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>{dtFormatter(investorFlowData[0]?.date)}</span>
+                    <span style={{ fontWeight: 700, color: investorFlowData[investorFlowData.length - 1]?.[dataKey] >= 0 ? COLORS.teal : COLORS.red }}>
+                        {investorFlowData[investorFlowData.length - 1]?.[dataKey]?.toFixed(1)}B
+                    </span>
+                </div>
             </div>
         </div>
     );
@@ -209,15 +211,15 @@ export default function MarketTab({ data, timeFilter }) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                     {/* Investor Flow Row */}
                     <h3 style={{ margin: '0', fontSize: '14px', fontWeight: 600, color: COLORS.white }}>Investor Flow</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-                        {renderFlowChart('Foreign Net (ex-DC)', 'foreignExDC', COLORS.teal)}
-                        {renderFlowChart('Dragon Capital (DC)', 'dc', COLORS.blue)}
-                        {renderFlowChart('Prop Net (Deriv Proxy)', 'prop', COLORS.blue)}
-                        {renderFlowChart('Domestic Individual', 'individual', COLORS.teal)}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.75rem' }}>
+                        {renderFlowChart('Foreign Net', 'foreignExDC', COLORS.teal)}
+                        {renderFlowChart('Dragon Capital', 'dc', COLORS.blue)}
+                        {renderFlowChart('Prop Net', 'prop', COLORS.blue)}
+                        {renderFlowChart('Indiv.', 'individual', COLORS.teal)}
                     </div>
 
                     {/* Sector Analytics Grid */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 3fr) minmax(0, 2fr)', gap: '1.5rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.25rem' }}>
                         {/* Sector Lead/Lag Scatter */}
                         <div className="card" style={{ padding: '1.5rem', background: COLORS.card, border: `1px solid ${COLORS.border}` }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>

@@ -183,58 +183,66 @@ export default function DLEquityPage() {
 
     const timeFilterControl = (
         <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-            {['1M', '3M', '6M', 'YTD', '1Y', 'ALL'].map(t => (
-                <button
-                    key={t}
-                    onClick={() => handlePreset(t)}
-                    style={{
-                        background: timeFilter === t ? '#00a884' : 'transparent',
-                        color: timeFilter === t ? '#fff' : '#aaa',
-                        border: `1px solid ${timeFilter === t ? '#00a884' : '#333'}`,
-                        padding: '6px 16px',
-                        borderRadius: '20px',
-                        fontSize: '12px',
-                        fontWeight: timeFilter === t ? 600 : 400,
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                    }}
-                >
-                    {t}
-                </button>
-            ))}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '4px' }}>
-                <span style={{ fontSize: '11px', color: '#666' }}>From</span>
-                <input
-                    type="date"
-                    value={customFrom}
-                    onChange={e => handleCustomFrom(e.target.value)}
-                    style={{
-                        background: '#1a1a1a',
-                        border: `1px solid ${timeFilter === 'CUSTOM' && customFrom ? '#00a884' : '#333'}`,
-                        color: '#ccc',
-                        borderRadius: '6px',
-                        padding: '4px 8px',
-                        fontSize: '11px',
-                        cursor: 'pointer',
-                        colorScheme: 'dark'
-                    }}
-                />
-                <span style={{ fontSize: '11px', color: '#666' }}>To</span>
-                <input
-                    type="date"
-                    value={customTo}
-                    onChange={e => handleCustomTo(e.target.value)}
-                    style={{
-                        background: '#1a1a1a',
-                        border: `1px solid ${timeFilter === 'CUSTOM' && customTo ? '#00a884' : '#333'}`,
-                        color: '#ccc',
-                        borderRadius: '6px',
-                        padding: '4px 8px',
-                        fontSize: '11px',
-                        cursor: 'pointer',
-                        colorScheme: 'dark'
-                    }}
-                />
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap', overflowX: 'auto', paddingBottom: '4px', maxWidth: '100%' }} className="hidden-scrollbar">
+                {['1M', '3M', '6M', 'YTD', '1Y', 'ALL'].map(t => (
+                    <button
+                        key={t}
+                        onClick={() => handlePreset(t)}
+                        style={{
+                            background: timeFilter === t ? '#00a884' : 'transparent',
+                            color: timeFilter === t ? '#fff' : '#aaa',
+                            border: `1px solid ${timeFilter === t ? '#00a884' : '#333'}`,
+                            padding: '6px 14px',
+                            borderRadius: '20px',
+                            fontSize: '11px',
+                            fontWeight: timeFilter === t ? 600 : 400,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0
+                        }}
+                    >
+                        {t}
+                    </button>
+                ))}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '0px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ fontSize: '10px', color: '#666' }}>From</span>
+                    <input
+                        type="date"
+                        value={customFrom}
+                        onChange={e => handleCustomFrom(e.target.value)}
+                        style={{
+                            background: '#1a1a1a',
+                            border: `1px solid ${timeFilter === 'CUSTOM' && customFrom ? '#00a884' : '#333'}`,
+                            color: '#ccc',
+                            borderRadius: '6px',
+                            padding: '4px 6px',
+                            fontSize: '10px',
+                            cursor: 'pointer',
+                            colorScheme: 'dark'
+                        }}
+                    />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ fontSize: '10px', color: '#666' }}>To</span>
+                    <input
+                        type="date"
+                        value={customTo}
+                        onChange={e => handleCustomTo(e.target.value)}
+                        style={{
+                            background: '#1a1a1a',
+                            border: `1px solid ${timeFilter === 'CUSTOM' && customTo ? '#00a884' : '#333'}`,
+                            color: '#ccc',
+                            borderRadius: '6px',
+                            padding: '4px 6px',
+                            fontSize: '10px',
+                            cursor: 'pointer',
+                            colorScheme: 'dark'
+                        }}
+                    />
+                </div>
             </div>
         </div>
     );
@@ -262,9 +270,8 @@ export default function DLEquityPage() {
                 </div>
             </header>
 
-            <div style={{ padding: '0 1.5rem', borderBottom: '1px solid #222', background: '#0a0a0a', display: 'flex', gap: '2rem' }}>
+            <div className="hidden-scrollbar" style={{ padding: '0 1rem', borderBottom: '1px solid #222', background: '#0a0a0a', display: 'flex', gap: '1.25rem', overflowX: 'auto', whiteSpace: 'nowrap' }}>
                 {availableTabs.map(tab => (
-
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
@@ -273,12 +280,13 @@ export default function DLEquityPage() {
                             border: 'none',
                             borderBottom: activeTab === tab ? '2px solid #00a884' : '2px solid transparent',
                             color: activeTab === tab ? '#00a884' : '#888',
-                            padding: '12px 4px',
-                            fontSize: '14px',
+                            padding: '12px 2px',
+                            fontSize: '13px',
                             fontWeight: activeTab === tab ? 600 : 400,
                             cursor: 'pointer',
                             transition: 'all 0.2s',
-                            marginBottom: '-1px'
+                            marginBottom: '-1px',
+                            flexShrink: 0
                         }}
                     >
                         {tab}
@@ -286,7 +294,7 @@ export default function DLEquityPage() {
                 ))}
             </div>
 
-            <div style={{ padding: '1.5rem', background: '#0a0a0a', minHeight: 'calc(100vh - 105px)' }}>
+            <div className="daily-tracking-container" style={{ padding: '1rem', background: '#0a0a0a', minHeight: 'calc(100vh - 105px)' }}>
                 {error ? (
                     <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>
                         <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⚠️</div>
