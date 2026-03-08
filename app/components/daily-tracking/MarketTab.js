@@ -238,8 +238,9 @@ export default function MarketTab({ data, timeFilter }) {
                             <Tooltip
                                 contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '12px', color: '#fff' }}
                                 itemStyle={{ color: '#fff' }}
-                                formatter={(value, name) => [`${value.toFixed(1)}B`, name]}
+                                formatter={(value, name) => [`${value.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}B`, name]}
                                 labelFormatter={dtFormatter}
+                                separator=" : "
                             />
                             <Line hide={hiddenSeries.foreignTotal} type="monotone" dataKey="foreignTotal" name="Foreign Total" stroke="#10b981" strokeDasharray="4 4" strokeWidth={2} dot={false} />
                             {isAdmin && <Line hide={hiddenSeries.foreignExDC} type="monotone" dataKey="foreignExDC" name="Foreign (ex DC)" stroke="#10b981" strokeWidth={2} dot={false} />}
@@ -255,7 +256,7 @@ export default function MarketTab({ data, timeFilter }) {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'flex', gap: '2rem', borderBottom: `1px solid ${COLORS.border}`, marginBottom: '0.5rem' }}>
+            <div className="hidden-scrollbar" style={{ display: 'flex', gap: '1rem', borderBottom: `1px solid ${COLORS.border}`, marginBottom: '0.5rem', overflowX: 'auto', whiteSpace: 'nowrap' }}>
                 {['Equity', 'Money'].map(t => (
                     <button
                         key={t}
