@@ -37,6 +37,16 @@ const BANK_COLORS = {
     'SSB': '#d946ef', 'ABB': '#0891b2'
 };
 
+const TENOR_COLORS = {
+    '1Y': '#0ea5e9', // lighter blue
+    '2Y': '#3b82f6', // blue
+    '3Y': '#8b5cf6', // purple
+    '5Y': '#d946ef', // fuchsia
+    '7Y': '#f59e0b', // yellow
+    '10Y': '#00a884', // teal (default)
+    '15Y': '#ef4444'  // red
+};
+
 // DD/MM for chart X-axis ticks
 const axisDate = (dateStr) => {
     if (!dateStr) return '';
@@ -69,7 +79,7 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
     const [hiddenTreasury, setHiddenTreasury] = useState([]);
 
     // Gov Bond States
-    const [bondTenor, setBondTenor] = useState('10Y');
+    const [bondTenors, setBondTenors] = useState(['10Y']);
     const [bondBands, setBondBands] = useState(['1SD', '2SD']); // which bands to show
 
     const toggleInterbank = (e) => {
@@ -84,6 +94,15 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
 
     const toggleBondBand = (band) => {
         setBondBands(prev => prev.includes(band) ? prev.filter(b => b !== band) : [...prev, band]);
+    };
+
+    const toggleBondTenor = (tenor) => {
+        setBondTenors(prev => {
+            if (prev.includes(tenor)) {
+                return prev.length === 1 ? prev : prev.filter(t => t !== tenor);
+            }
+            return [...prev, tenor];
+        });
     };
 
     useEffect(() => {
@@ -692,45 +711,50 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                         <div style={{ fontSize: '10px', color: COLORS.text, opacity: 0.8 }}>Latest: {formatDate(latestDates.bonds) || '-'}</div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'flex-end' }}>
                             <div style={{ display: 'flex', gap: '4px', background: '#1a1a1a', padding: '2px', borderRadius: '4px', flexWrap: 'wrap' }}>
-                                {['1Y', '2Y', '3Y', '5Y', '7Y', '10Y', '15Y'].map(t => (
-                                    <button
-                                        key={t}
-                                        onClick={() => setBondTenor(t)}
-                                        style={{
-                                            border: 'none',
-                                            background: bondTenor === t ? COLORS.teal : 'transparent',
-                                            color: bondTenor === t ? COLORS.white : COLORS.text,
-                                            fontSize: '10px',
-                                            padding: '4px 8px',
-                                            borderRadius: '4px',
-                                            cursor: 'pointer'
-                                        }}
-                                    >{t}</button>
-                                ))}
-                            </div>
-                            <div style={{ display: 'flex', gap: '4px', background: '#1a1a1a', padding: '2px', borderRadius: '4px', flexWrap: 'wrap' }}>
-                                {['1SD', '2SD', '3SD'].map(b => {
-                                    const isActive = bondBands.includes(b);
-                                    let color = COLORS.purple;
-                                    if (b === '2SD') color = COLORS.blue;
-                                    if (b === '3SD') color = COLORS.yellow;
+                                {['1Y', '2Y', '3Y', '5Y', '7Y', '10Y', '15Y'].map(t => {
+                                    const isActive = bondTenors.includes(t);
                                     return (
                                         <button
-                                            key={b}
-                                            onClick={() => toggleBondBand(b)}
+                                            key={t}
+                                            onClick={() => toggleBondTenor(t)}
                                             style={{
-                                                border: `1px solid ${isActive ? color : 'transparent'}`,
-                                                background: isActive ? color + '22' : 'transparent',
-                                                color: isActive ? color : COLORS.text,
+                                                border: 'none',
+                                                background: isActive ? TENOR_COLORS[t] : 'transparent',
+                                                color: isActive ? COLORS.white : COLORS.text,
                                                 fontSize: '10px',
-                                                padding: '3px 8px',
+                                                padding: '4px 8px',
                                                 borderRadius: '4px',
                                                 cursor: 'pointer'
                                             }}
-                                        >+/- {b}</button>
+                                        >{t}</button>
                                     );
                                 })}
                             </div>
+                            {bondTenors.length === 1 && (
+                                <div style={{ display: 'flex', gap: '4px', background: '#1a1a1a', padding: '2px', borderRadius: '4px', flexWrap: 'wrap' }}>
+                                    {['1SD', '2SD', '3SD'].map(b => {
+                                        const isActive = bondBands.includes(b);
+                                        let color = COLORS.purple;
+                                        if (b === '2SD') color = COLORS.blue;
+                                        if (b === '3SD') color = COLORS.yellow;
+                                        return (
+                                            <button
+                                                key={b}
+                                                onClick={() => toggleBondBand(b)}
+                                                style={{
+                                                    border: `1px solid ${isActive ? color : 'transparent'}`,
+                                                    background: isActive ? color + '22' : 'transparent',
+                                                    color: isActive ? color : COLORS.text,
+                                                    fontSize: '10px',
+                                                    padding: '3px 8px',
+                                                    borderRadius: '4px',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >+/- {b}</button>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -756,23 +780,29 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                             />
                             <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
 
-                            {/* Mean Line */}
-                            <Line type="monotone" dataKey={`${bondTenor}_mean30d`} name={`${bondTenor} Mean (30D)`} stroke={COLORS.gray} strokeWidth={1} strokeDasharray="3 3" dot={false} connectNulls />
+                            {bondTenors.length === 1 && (
+                                <>
+                                    {/* Mean Line */}
+                                    <Line type="monotone" dataKey={`${bondTenors[0]}_mean30d`} name={`${bondTenors[0]} Mean (30D)`} stroke={COLORS.gray} strokeWidth={1} strokeDasharray="3 3" dot={false} connectNulls />
 
-                            {/* Standard Deviation Bands - 3SD */}
-                            {bondBands.includes('3SD') && <Line type="monotone" dataKey={`${bondTenor}_sd3_up`} name={`${bondTenor} + 3SD`} stroke={COLORS.yellow} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
-                            {bondBands.includes('3SD') && <Line type="monotone" dataKey={`${bondTenor}_sd3_down`} name={`${bondTenor} - 3SD`} stroke={COLORS.yellow} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
+                                    {/* Standard Deviation Bands - 3SD */}
+                                    {bondBands.includes('3SD') && <Line type="monotone" dataKey={`${bondTenors[0]}_sd3_up`} name={`${bondTenors[0]} + 3SD`} stroke={COLORS.yellow} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
+                                    {bondBands.includes('3SD') && <Line type="monotone" dataKey={`${bondTenors[0]}_sd3_down`} name={`${bondTenors[0]} - 3SD`} stroke={COLORS.yellow} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
 
-                            {/* Standard Deviation Bands - 2SD */}
-                            {bondBands.includes('2SD') && <Line type="monotone" dataKey={`${bondTenor}_sd2_up`} name={`${bondTenor} + 2SD`} stroke={COLORS.blue} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
-                            {bondBands.includes('2SD') && <Line type="monotone" dataKey={`${bondTenor}_sd2_down`} name={`${bondTenor} - 2SD`} stroke={COLORS.blue} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
+                                    {/* Standard Deviation Bands - 2SD */}
+                                    {bondBands.includes('2SD') && <Line type="monotone" dataKey={`${bondTenors[0]}_sd2_up`} name={`${bondTenors[0]} + 2SD`} stroke={COLORS.blue} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
+                                    {bondBands.includes('2SD') && <Line type="monotone" dataKey={`${bondTenors[0]}_sd2_down`} name={`${bondTenors[0]} - 2SD`} stroke={COLORS.blue} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
 
-                            {/* Standard Deviation Bands - 1SD */}
-                            {bondBands.includes('1SD') && <Line type="monotone" dataKey={`${bondTenor}_sd1_up`} name={`${bondTenor} + 1SD`} stroke={COLORS.purple} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
-                            {bondBands.includes('1SD') && <Line type="monotone" dataKey={`${bondTenor}_sd1_down`} name={`${bondTenor} - 1SD`} stroke={COLORS.purple} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
+                                    {/* Standard Deviation Bands - 1SD */}
+                                    {bondBands.includes('1SD') && <Line type="monotone" dataKey={`${bondTenors[0]}_sd1_up`} name={`${bondTenors[0]} + 1SD`} stroke={COLORS.purple} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
+                                    {bondBands.includes('1SD') && <Line type="monotone" dataKey={`${bondTenors[0]}_sd1_down`} name={`${bondTenors[0]} - 1SD`} stroke={COLORS.purple} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
+                                </>
+                            )}
 
-                            {/* Main Yield Line */}
-                            <Line type="monotone" dataKey={bondTenor} name={`${bondTenor} Yield`} stroke={COLORS.teal} strokeWidth={2.5} dot={false} connectNulls />
+                            {/* Main Yield Lines */}
+                            {bondTenors.map((tenor) => (
+                                <Line key={tenor} type="monotone" dataKey={tenor} name={`${tenor} Yield`} stroke={TENOR_COLORS[tenor] || COLORS.teal} strokeWidth={2.5} dot={false} connectNulls />
+                            ))}
 
                         </ComposedChart>
                     </ResponsiveContainer>
