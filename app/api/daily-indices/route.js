@@ -40,7 +40,37 @@ async function getIndexConfig() {
 
 const calcPctChg = (from, to) => from && to ? parseFloat(((to - from) / from * 100).toFixed(2)) : null;
 
-// ── Valuation ────────────────────────────────────────────────────────────────
+function calculateTechRating(trend, macd, rsi, d1, turnoverVs5d) {
+    let score = 0;
+
+    // MA Trend
+    if (trend === 'up') score += 1;
+    else if (trend === 'down') score -= 1;
+
+    // MACD
+    if (macd != null) {
+        if (macd > 0) score += 1;
+        else if (macd < 0) score -= 1;
+    }
+
+    // RSI
+    if (rsi != null) {
+        if (rsi > 50 && rsi < 70) score += 1;
+        else if (rsi < 50 && rsi > 30) score -= 1;
+    }
+
+    // Volume Confirmation
+    if (d1 != null && turnoverVs5d != null) {
+        if (d1 > 0 && turnoverVs5d > 0) score += 1;
+        else if (d1 < 0 && turnoverVs5d > 0) score -= 1;
+    }
+
+    if (score >= 3) return 'Strong Bullish';
+    if (score >= 1) return 'Bullish';
+    if (score <= -3) return 'Strong Bearish';
+    if (score <= -1) return 'Bearish';
+    return 'Neutral';
+}
 let cachedRatios = null;
 let cachedRatiosTime = 0;
 
@@ -73,7 +103,39 @@ async function getValuationRatios(symbol) {
 }
 
 // ── SSI (Vietnam) ────────────────────────────────────────────────────────────
-async function getSSIData(token) {
+async function fetchHistoricSSIPrice(symbol, date, token) {
+    const formatDate = (d) => {
+        const dd = String(d.getDate()).padStart(2, '0');
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        return `${dd}/${mm}/${d.getFullYear()}`;
+    };
+
+    // Use a 5-day window to catch weekends/holidays
+    const toDate = new Date(date);
+    const fromDate = new Date(date.getTime() - 5 * 24 * 60 * 60 * 1000);
+    const url = `https://fc-data.ssi.com.vn/api/v2/Market/DailyIndex?indexId=${symbol}&fromDate=${formatDate(fromDate)}&toDate=${formatDate(toDate)}&pageIndex=1&pageSize=10`;
+
+    try {
+        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` }, signal: AbortSignal.timeout(10000), cache: 'no-store' });
+        if (!res.ok) return null;
+        const pData = await res.json();
+        if (pData.data && pData.data.length > 0) {
+            const sorted = pData.data.sort((a, b) => {
+                const [d1, m1, y1] = a.TradingDate.split('/');
+                const [d2, m2, y2] = b.TradingDate.split('/');
+                return new Date(`${y1}-${m1}-${d1}`) - new Date(`${y2}-${m2}-${d2}`);
+            });
+            return parseFloat(sorted[sorted.length - 1].IndexValue);
+        }
+    } catch (e) { }
+    return null;
+}
+
+let pendingSSIPromise = null;
+let cachedSSIData = null;
+let lastSSIFetchTime = 0;
+
+async function executeSSIFetch(token) {
     const configList = await getIndexConfig();
     const ssiIndices = configList.filter(i => i.source === 'ssi');
     const results = {};
@@ -86,42 +148,69 @@ async function getSSIData(token) {
 
     const dNow = new Date();
     const todayStr = formatDate(dNow);
-    const dPast = new Date(dNow.getTime() - 29 * 24 * 60 * 60 * 1000); // 30 days max range for SSI
+    const dMid = new Date(dNow.getTime() - 29 * 24 * 60 * 60 * 1000);
+    const midStr = formatDate(dMid);
+
+    const dPast = new Date(dNow.getTime() - 58 * 24 * 60 * 60 * 1000);
     const startStr = formatDate(dPast);
+    const midPrev1Str = formatDate(new Date(dMid.getTime() - 1 * 24 * 60 * 60 * 1000));
+
+    console.log(`[SSI] Fetching current data from ${startStr} to ${todayStr}`);
+    if (!token) console.warn("[SSI] No token provided!");
 
     for (const config of ssiIndices) {
         try {
             await sleep(1000); // 1s delay to avoid 429 on SSI
-            const url = `https://fc-data.ssi.com.vn/api/v2/Market/DailyIndex?indexId=${config.ssiId}&fromDate=${startStr}&toDate=${todayStr}&pageIndex=1&pageSize=1000`;
-            const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` }, signal: AbortSignal.timeout(15000) });
-            if (!res.ok) continue;
-            const pData = await res.json();
-            if (pData.data && pData.data.length > 0) {
-                const sorted = pData.data.sort((a, b) => {
+            const url1 = `https://fc-data.ssi.com.vn/api/v2/Market/DailyIndex?indexId=${config.ssiId}&fromDate=${midStr}&toDate=${todayStr}&pageIndex=1&pageSize=1000`;
+            const res1 = await fetch(url1, { headers: { 'Authorization': `Bearer ${token}` }, signal: AbortSignal.timeout(15000), cache: 'no-store' });
+
+            await sleep(1000);
+            const url2 = `https://fc-data.ssi.com.vn/api/v2/Market/DailyIndex?indexId=${config.ssiId}&fromDate=${startStr}&toDate=${midPrev1Str}&pageIndex=1&pageSize=1000`;
+            const res2 = await fetch(url2, { headers: { 'Authorization': `Bearer ${token}` }, signal: AbortSignal.timeout(15000), cache: 'no-store' });
+
+            if (!res1.ok || !res2.ok) {
+                console.error(`[SSI] Fetch failed for ${config.id}`);
+                continue;
+            }
+
+            const pData1 = await res1.json();
+            const pData2 = await res2.json();
+
+            let combinedData = [];
+            if (pData1.data) combinedData = combinedData.concat(pData1.data);
+            if (pData2.data) combinedData = combinedData.concat(pData2.data);
+
+            console.log(`[SSI] Received ${combinedData.length} total items for ${config.id}`);
+            if (combinedData.length > 0) {
+                const sorted = combinedData.sort((a, b) => {
                     const [d1, m1, y1] = a.TradingDate.split('/');
                     const [d2, m2, y2] = b.TradingDate.split('/');
                     return new Date(`${y1}-${m1}-${d1}`) - new Date(`${y2}-${m2}-${d2}`);
                 });
                 const latest = sorted[sorted.length - 1];
-                const prev = sorted[sorted.length - 2];
                 const closes = sorted.map(d => parseFloat(d.IndexValue)).filter(v => !isNaN(v));
                 if (closes.length < 2) continue;
 
-                const findVal = (days, key = 'IndexValue') => {
-                    const t = new Date(dNow.getTime() - days * 24 * 3600 * 1000);
-                    return [...sorted].reverse().find(d => {
-                        const [dd, mm, yy] = d.TradingDate.split('/');
-                        return new Date(`${yy}-${mm}-${dd}`) <= t;
-                    })?.[key] ?? null;
-                };
+                const curPrice = parseFloat(latest.IndexValue);
 
-                const jan1 = new Date(new Date().getFullYear(), 0, 1);
-                const ytdRef = [...sorted].reverse().find(d => {
-                    const [dd, mm, yy] = d.TradingDate.split('/');
-                    return new Date(`${yy}-${mm}-${dd}`) <= jan1;
-                })?.IndexValue ?? null;
+                // Fetch historical anchors sequentially to avoid 429
+                const anchors = [
+                    { key: 'p1m', date: new Date(dNow.getTime() - 30 * 24 * 3600 * 1000) },
+                    { key: 'p3m', date: new Date(dNow.getTime() - 91 * 24 * 3600 * 1000) },
+                    { key: 'p6m', date: new Date(dNow.getTime() - 182 * 24 * 3600 * 1000) },
+                    { key: 'p12m', date: new Date(dNow.getTime() - 365 * 24 * 3600 * 1000) },
+                    { key: 'pytd', date: new Date(dNow.getFullYear(), 0, 1) }
+                ];
 
-                const getTOVal = (entry) => parseFloat(entry?.TotalMatchVal || 0) / 1000000 / 25400; // USD mn
+                const historicPrices = {};
+                for (const anchor of anchors) {
+                    await sleep(1100); // Wait > 1s for SSI quota
+                    historicPrices[anchor.key] = await fetchHistoricSSIPrice(config.ssiId, anchor.date, token);
+                }
+
+                const { p1m, p3m, p6m, p12m, pytd } = historicPrices;
+
+                const getTOVal = (entry) => parseFloat(entry?.TotalMatchVal || 0) / 1000000000 / 25400; // USD bn
                 const getTOVnd = (entry) => parseFloat(entry?.TotalMatchVal || 0) / 1_000_000_000; // VND bn
                 const toCur = getTOVal(latest);
                 const toVnd = getTOVnd(latest);
@@ -145,38 +234,92 @@ async function getSSIData(token) {
 
                 const ratios = await getValuationRatios(config.id);
                 const rsi = RSI.calculate({ values: closes, period: 14 });
-                const ma = SMA.calculate({ values: closes, period: Math.min(20, closes.length) });
+                const ma20 = SMA.calculate({ values: closes, period: Math.min(20, closes.length) });
+                const ma5 = SMA.calculate({ values: closes, period: Math.min(5, closes.length) });
+                const macd = MACD.calculate({ values: closes, fastPeriod: 12, slowPeriod: 26, signalPeriod: 9 });
                 const recent = closes.slice(-Math.min(20, closes.length));
+
+                const curMA20 = ma20.length ? ma20[ma20.length - 1] : null;
+                const curMA5 = ma5.length ? ma5[ma5.length - 1] : null;
+                const prevMA5 = ma5.length > 1 ? ma5[ma5.length - 2] : null;
+
+                let trend = 'neutral';
+                if (curMA5 && curMA20 && prevMA5) {
+                    const isMA5Up = curMA5 > prevMA5;
+                    const diffPct = ((curMA5 - curMA20) / curMA20) * 100;
+                    const isNear = Math.abs(diffPct) <= 0.5;
+
+                    if (isMA5Up && (diffPct > 0 || isNear)) {
+                        trend = 'up';
+                    } else if (!isMA5Up && (diffPct < 0 || isNear)) {
+                        trend = 'down';
+                    }
+                }
+
+                const finalD1 = parseFloat(latest.RatioChange);
+                const finalTurnoverVs5d = calcPctChg(to5dAvg, toCur);
+                const finalMacd = macd.length ? parseFloat((macd[macd.length - 1]?.MACD || 0).toFixed(2)) : null;
+                const finalRsi = rsi.length ? Math.round(rsi[rsi.length - 1]) : null;
+                const techRating = calculateTechRating(trend, finalMacd, finalRsi, finalD1, finalTurnoverVs5d);
 
                 results[config.id] = {
                     id: config.id, name: config.name, region: config.region,
                     date: latest.TradingDate,
-                    close: parseFloat(latest.IndexValue),
-                    d1: parseFloat(latest.RatioChange),
-                    d1m: calcPctChg(findVal(30), parseFloat(latest.IndexValue)),
-                    d3m: calcPctChg(findVal(91), parseFloat(latest.IndexValue)),
-                    d6m: calcPctChg(findVal(182), parseFloat(latest.IndexValue)),
-                    d12m: calcPctChg(findVal(365), parseFloat(latest.IndexValue)),
-                    ytd: calcPctChg(ytdRef, parseFloat(latest.IndexValue)),
+                    close: curPrice,
+                    d1: finalD1,
+                    d1m: calcPctChg(p1m, curPrice),
+                    d3m: calcPctChg(p3m, curPrice),
+                    d6m: calcPctChg(p6m, curPrice),
+                    d12m: calcPctChg(p12m, curPrice),
+                    ytd: calcPctChg(pytd, curPrice),
                     turnover: toCur,
                     turnoverVnd: toVnd,
-                    turnover5dAvg: to5dAvg, turnoverVs5d: calcPctChg(to5dAvg, toCur),
+                    turnover5dAvg: to5dAvg, turnoverVs5d: finalTurnoverVs5d,
                     turnover10dAvg: to10dAvg, turnoverVs10d: calcPctChg(to10dAvg, toCur),
                     turnover1mAvg: to1mAvg, turnoverVs1m: calcPctChg(to1mAvg, toCur),
                     turnover5dAvgVnd: to5dAvgVnd,
                     turnover10dAvgVnd: to10dAvgVnd,
                     turnover1mAvgVnd: to1mAvgVnd,
                     pe: ratios.pe, pb: ratios.pb,
-                    rsi: rsi.length ? Math.round(rsi[rsi.length - 1]) : null,
-                    ma20: ma.length ? Math.round(ma[ma.length - 1]) : null,
+                    rsi: finalRsi,
+                    ma5: curMA5 ? Math.round(curMA5) : null,
+                    ma20: curMA20 ? Math.round(curMA20) : null,
+                    macd: finalMacd,
+                    trend: trend,
+                    techRating: techRating,
                     support: Math.round(Math.min(...recent) * 100) / 100,
                     resistance: Math.round(Math.max(...recent) * 100) / 100,
                     stale: false
                 };
             }
-        } catch (e) { console.error(`SSI Fail ${config.id}:`, e.message); }
+        } catch (e) { console.error(`Error processing SSI index ${config.id}:`, e); }
     }
+    console.log(`[SSI] Final vnResults keys: ${Object.keys(results).join(', ')}`);
     return results;
+}
+
+async function getSSIData(token) {
+    const now = Date.now();
+    // Cache for 60 seconds
+    if (cachedSSIData && now - lastSSIFetchTime < 60000) {
+        return cachedSSIData;
+    }
+    if (pendingSSIPromise) {
+        return pendingSSIPromise;
+    }
+
+    pendingSSIPromise = (async () => {
+        try {
+            const data = await executeSSIFetch(token);
+            cachedSSIData = data;
+            lastSSIFetchTime = Date.now();
+            return data;
+        } finally {
+            pendingSSIPromise = null;
+        }
+    })();
+
+    return pendingSSIPromise;
 }
 
 // ... (fetchFromStooq, buildGlobalResult, fetchOneGlobal, getGlobalData same as before)
@@ -205,7 +348,7 @@ function buildGlobalResult(config, pairs) {
     };
     const jan1 = new Date(new Date().getFullYear(), 0, 1);
     const ytdRef = [...pairs].reverse().find(p => new Date(p.date) <= jan1)?.close ?? null;
-    const getTO = (p) => (p?.vol && p?.close && p.vol > 0) ? Math.round(p.vol * p.close / 1_000_000) : null;
+    const getTO = (p) => (p?.vol && p?.close && p.vol > 0) ? (p.vol * p.close / 1000000000000) : null;
     const toCur = getTO(latest);
     const getAvgTO = (n) => {
         const slice = pairs.slice(-Math.min(n + 1, pairs.length), -1).map(p => getTO(p)).filter(v => v != null);
@@ -216,26 +359,54 @@ function buildGlobalResult(config, pairs) {
     const to1mAvg = getAvgTO(21);
 
     const rsi = RSI.calculate({ values: closes, period: 14 });
-    const ma = SMA.calculate({ values: closes, period: 20 });
+    const ma20 = SMA.calculate({ values: closes, period: Math.min(20, closes.length) });
+    const ma5 = SMA.calculate({ values: closes, period: Math.min(5, closes.length) });
     const macd = MACD.calculate({ values: closes, fastPeriod: 12, slowPeriod: 26, signalPeriod: 9 });
+
+    const curMA20 = ma20.length ? ma20[ma20.length - 1] : null;
+    const curMA5 = ma5.length ? ma5[ma5.length - 1] : null;
+    const prevMA5 = ma5.length > 1 ? ma5[ma5.length - 2] : null;
+
+    let trend = 'neutral';
+    if (curMA5 && curMA20 && prevMA5) {
+        const isMA5Up = curMA5 > prevMA5;
+        const diffPct = ((curMA5 - curMA20) / curMA20) * 100;
+        const isNear = Math.abs(diffPct) <= 0.5;
+
+        if (isMA5Up && (diffPct > 0 || isNear)) {
+            trend = 'up';
+        } else if (!isMA5Up && (diffPct < 0 || isNear)) {
+            trend = 'down';
+        }
+    }
     const d = new Date(latest.date);
     const dateStr = !isNaN(d) ? `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}` : latest.date;
+
+    const finalD1 = calcPctChg(prev.close, latest.close);
+    const finalTurnoverVs5d = calcPctChg(to5dAvg, toCur);
+    const finalRsi = rsi.length ? Math.round(rsi[rsi.length - 1]) : null;
+    const finalMacd = macd.length ? parseFloat((macd[macd.length - 1]?.MACD || 0).toFixed(2)) : null;
+    const techRating = calculateTechRating(trend, finalMacd, finalRsi, finalD1, finalTurnoverVs5d);
+
     return {
         id: config.id, name: config.name, region: config.region, date: dateStr,
         close: parseFloat(latest.close.toFixed(2)),
-        d1: calcPctChg(prev.close, latest.close),
+        d1: finalD1,
         d1m: calcPctChg(findClose(30), latest.close),
         d3m: calcPctChg(findClose(91), latest.close),
         d6m: calcPctChg(findClose(182), latest.close),
         d12m: calcPctChg(findClose(365), latest.close),
         ytd: calcPctChg(ytdRef, latest.close),
         turnover: toCur,
-        turnover5dAvg: to5dAvg, turnoverVs5d: calcPctChg(to5dAvg, toCur),
+        turnover5dAvg: to5dAvg, turnoverVs5d: finalTurnoverVs5d,
         turnover10dAvg: to10dAvg, turnoverVs10d: calcPctChg(to10dAvg, toCur),
         turnover1mAvg: to1mAvg, turnoverVs1m: calcPctChg(to1mAvg, toCur),
-        rsi: rsi.length ? Math.round(rsi[rsi.length - 1]) : null,
-        ma20: ma.length ? Math.round(ma[ma.length - 1]) : null,
-        macd: macd.length ? parseFloat((macd[macd.length - 1]?.MACD || 0).toFixed(2)) : null,
+        rsi: finalRsi,
+        ma5: curMA5 ? Math.round(curMA5) : null,
+        ma20: curMA20 ? Math.round(curMA20) : null,
+        macd: finalMacd,
+        trend: trend,
+        techRating: techRating,
         support: Math.round(Math.min(...closes.slice(-20)) * 100) / 100,
         resistance: Math.round(Math.max(...closes.slice(-20)) * 100) / 100,
         stale: false

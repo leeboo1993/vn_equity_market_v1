@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useSession } from 'next-auth/react';
 import {
     BarChart,
     Bar,
@@ -22,6 +23,8 @@ import {
     Area
 } from 'recharts';
 import MoneyMarketTab from './MoneyMarketTab';
+import MarketBreadthChart from './MarketBreadthChart';
+import PropArbitrageChart from './PropArbitrageChart';
 
 const COLORS = {
     teal: '#00a884',
@@ -47,17 +50,26 @@ const fmtVol = (v) => {
 };
 
 export default function MarketTab({ data, timeFilter }) {
+    const { data: session } = useSession();
+    const isAdmin = session?.user?.role === 'admin';
+
     const [selectedSector, setSelectedSector] = useState(null);
     const [subTab, setSubTab] = useState('Equity');
+    const [hiddenSeries, setHiddenSeries] = useState({
+        foreignTotal: false,
+        foreignExDC: false,
+        dc: false,
+        prop: false,
+        individual: false
+    });
 
     // 1. Process Investor Flow Data
     const investorFlowData = useMemo(() => {
         if (!data?.vn_index) return [];
-        // Extract last 15 days for the flow charts
+        // Use the full filtered window (data is already filtered by filteredMarketData in page.js)
         const sorted = [...data.vn_index].sort((a, b) => a.date.localeCompare(b.date));
-        const recent = sorted.slice(-15);
 
-        return recent.map(d => {
+        return sorted.map(d => {
             const foreignTotal = d.foreign_net_value || 0;
             const dc = d.dc_foreign_flow || 0;
 
@@ -151,38 +163,95 @@ export default function MarketTab({ data, timeFilter }) {
         });
     }, [data, selectedSector]); // Add selectedSector dependency if data would change based on it
 
-    const renderFlowChart = (title, dataKey, color) => (
-        <div className="card" style={{ padding: '0.75rem', flex: 1, minWidth: '140px', background: COLORS.card, border: `1px solid ${COLORS.border}` }}>
-            <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '11px', color: COLORS.white, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</h4>
-            <div style={{ height: '100px' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={investorFlowData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
-                        <XAxis dataKey="date" hide />
-                        <YAxis hide domain={['auto', 'auto']} />
-                        <Tooltip
-                            contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '10px', color: '#fff' }}
-                            itemStyle={{ color: '#fff' }}
-                            formatter={(value) => [`${value.toFixed(1)}B`, 'Net']}
-                        />
-                        <Bar dataKey={dataKey}>
-                            {investorFlowData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry[dataKey] >= 0 ? COLORS.teal : COLORS.red} />
-                            ))}
-                        </Bar>
-                    </BarChart>
-                </ResponsiveContainer>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', marginTop: '4px', fontSize: '9px', color: COLORS.text }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>{dtFormatter(investorFlowData[0]?.date)}</span>
-                    <span style={{ fontWeight: 700, color: investorFlowData[investorFlowData.length - 1]?.[dataKey] >= 0 ? COLORS.teal : COLORS.red }}>
-                        {investorFlowData[investorFlowData.length - 1]?.[dataKey]?.toFixed(1)}B
-                    </span>
+    const handleLegendClick = (e) => {
+        const { dataKey } = e;
+        setHiddenSeries(prev => ({
+            ...prev,
+            [dataKey]: !prev[dataKey]
+        }));
+    };
+
+    // Vietnam Market KPIs
+    const vietnamKpi = useMemo(() => {
+        if (!data?.vn_index?.length) return null;
+        const sorted = [...data.vn_index].sort((a, b) => a.date.localeCompare(b.date));
+        const latest = sorted[sorted.length - 1];
+
+        // Get the latest foreignExDC from investorFlowData
+        let latestForeignExDC = 0;
+        if (investorFlowData?.length) {
+            latestForeignExDC = investorFlowData[investorFlowData.length - 1].foreignExDC || 0;
+        }
+
+        return {
+            vnindex: latest.vnindex,
+            change: latest.vnindex_change_pct,
+            breadth: latest.breadth_above_ma50,
+            outperform: latest.pct_outperform_vni_7d,
+            foreignExDC: latestForeignExDC
+        };
+    }, [data, investorFlowData]);
+
+    const renderCombinedFlowChart = () => {
+        const legendItems = [
+            { key: 'foreignTotal', name: 'Foreign Total', color: '#10b981', adminOnly: false },
+            { key: 'foreignExDC', name: 'Foreign (ex DC)', color: '#10b981', adminOnly: true },
+            { key: 'dc', name: 'Dragon Capital', color: '#3b82f6', adminOnly: true },
+            { key: 'prop', name: 'Proprietary', color: '#8b5cf6', adminOnly: false },
+            { key: 'individual', name: 'Retails', color: '#f59e0b', adminOnly: false }
+        ].filter(item => !item.adminOnly || isAdmin);
+
+        return (
+            <div className="card" style={{ padding: '1rem', background: COLORS.card, border: `1px solid ${COLORS.border}` }}>
+                {/* Custom Pill Toggles */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', marginBottom: '1rem' }}>
+                    {legendItems.map(item => {
+                        const isVisible = !hiddenSeries[item.key];
+                        const activeColor = item.color;
+                        return (
+                            <button
+                                key={item.key}
+                                onClick={() => handleLegendClick({ dataKey: item.key })}
+                                style={{
+                                    border: `1px solid ${isVisible ? activeColor : COLORS.border}`,
+                                    background: isVisible ? activeColor + '22' : 'transparent',
+                                    color: isVisible ? activeColor : COLORS.text,
+                                    fontSize: '11px',
+                                    fontWeight: 500,
+                                    padding: '4px 12px',
+                                    borderRadius: '20px',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease'
+                                }}
+                            >
+                                {item.name}
+                            </button>
+                        );
+                    })}
+                </div>
+                <div style={{ height: '300px' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={investorFlowData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
+                            <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={dtFormatter} minTickGap={30} />
+                            <YAxis stroke={COLORS.text} fontSize={10} tickFormatter={(v) => `${(v / 1000).toFixed(1)}k B`} />
+                            <Tooltip
+                                contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '12px', color: '#fff' }}
+                                itemStyle={{ color: '#fff' }}
+                                formatter={(value, name) => [`${value.toFixed(1)}B`, name]}
+                                labelFormatter={dtFormatter}
+                            />
+                            <Line hide={hiddenSeries.foreignTotal} type="monotone" dataKey="foreignTotal" name="Foreign Total" stroke="#10b981" strokeDasharray="4 4" strokeWidth={2} dot={false} />
+                            {isAdmin && <Line hide={hiddenSeries.foreignExDC} type="monotone" dataKey="foreignExDC" name="Foreign (ex DC)" stroke="#10b981" strokeWidth={2} dot={false} />}
+                            {isAdmin && <Line hide={hiddenSeries.dc} type="monotone" dataKey="dc" name="Dragon Capital" stroke="#3b82f6" strokeWidth={2} dot={false} />}
+                            <Line hide={hiddenSeries.prop} type="monotone" dataKey="prop" name="Proprietary" stroke="#8b5cf6" strokeWidth={2} dot={false} />
+                            <Line hide={hiddenSeries.individual} type="monotone" dataKey="individual" name="Retails" stroke="#f59e0b" strokeWidth={2} dot={false} />
+                        </LineChart>
+                    </ResponsiveContainer>
                 </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -209,13 +278,21 @@ export default function MarketTab({ data, timeFilter }) {
 
             {subTab === 'Equity' ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    {/* Vietnam Market KPI & Charts */}
+                    {vietnamKpi && (
+                        <div className="card" style={{ padding: '1.5rem', background: COLORS.card, border: `1px solid ${COLORS.border}`, marginBottom: '0.5rem' }}>
+                            <h2 style={{ margin: '0 0 1.5rem 0', fontSize: '18px', fontWeight: 600, color: COLORS.white }}>Vietnam Market</h2>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
+                                <MarketBreadthChart data={data?.vn_index} />
+                                <PropArbitrageChart data={data?.derivatives_prop} />
+                            </div>
+                        </div>
+                    )}
+
                     {/* Investor Flow Row */}
-                    <h3 style={{ margin: '0', fontSize: '14px', fontWeight: 600, color: COLORS.white }}>Investor Flow</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.75rem' }}>
-                        {renderFlowChart('Foreign Net', 'foreignExDC', COLORS.teal)}
-                        {renderFlowChart('Dragon Capital', 'dc', COLORS.blue)}
-                        {renderFlowChart('Prop Net', 'prop', COLORS.blue)}
-                        {renderFlowChart('Indiv.', 'individual', COLORS.teal)}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        <h3 style={{ margin: '0', fontSize: '14px', fontWeight: 600, color: COLORS.white }}>Investor Flow</h3>
+                        {renderCombinedFlowChart()}
                     </div>
 
                     {/* Sector Analytics Grid */}
@@ -315,12 +392,13 @@ export default function MarketTab({ data, timeFilter }) {
                 </div>
             ) : (
                 <MoneyMarketTab timeFilter={timeFilter} />
-            )}
+            )
+            }
 
             <style jsx>{`
                 .card { border-radius: 12px; transition: transform 0.2s; }
                 .card:hover { transform: translateY(-2px); }
             `}</style>
-        </div>
+        </div >
     );
 }

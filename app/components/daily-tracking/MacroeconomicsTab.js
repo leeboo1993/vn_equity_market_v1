@@ -78,10 +78,10 @@ const INITIAL_INDICES = [
     { id: 'CSI300', name: 'CSI 300', region: 'China', close: 3900, turnover: 35000, turnover5dAvg: 34000, turnoverVs5d: 2.9, turnover10dAvg: 33000, turnoverVs10d: 6.1, turnover1mAvg: 32000, turnoverVs1m: 9.4, d1: 0.5, ytd: 3.0, pe: 14.0, pb: 1.5, resistance: 4100, support: 3700, rsi: 53, ma20: 3800, macd: 15.0, date: 'N/A' },
     { id: 'HSI', name: 'Hang Seng', region: 'Hong Kong', close: 25000, turnover: 7000, turnover5dAvg: 6800, turnoverVs5d: 2.9, turnover10dAvg: 6600, turnoverVs10d: 6.1, turnover1mAvg: 6400, turnoverVs1m: 9.4, d1: 1.0, ytd: 12.0, pe: 10.0, pb: 1.0, resistance: 27000, support: 24000, rsi: 58, ma20: 24500, macd: 120.0, date: 'N/A' },
     // Asia
-    { id: 'N225', name: 'Nikkei 225', region: 'Japan', close: 38000, turnover: 18000, turnover5dAvg: 17500, turnoverVs5d: 2.9, turnover10dAvg: 17000, turnoverVs10d: 5.9, turnover1mAvg: 16500, turnoverVs1m: 9.1, d1: 0.4, ytd: 10.0, pe: 23.0, pb: 2.1, resistance: 40000, support: 36000, rsi: 54, ma20: 37500, macd: 250.0, date: 'N/A' },
-    { id: 'KOSPI', name: 'KOSPI', region: 'Korea', close: 2600, turnover: 8000, turnover5dAvg: 7800, turnoverVs5d: 2.6, turnover10dAvg: 7600, turnoverVs10d: 5.3, turnover1mAvg: 7400, turnoverVs1m: 8.1, d1: 0.2, ytd: 3.0, pe: 12.0, pb: 1.0, resistance: 2800, support: 2500, rsi: 50, ma20: 2550, macd: 15.0, date: 'N/A' },
-    { id: 'ASX200', name: 'ASX 200', region: 'Australia', close: 8200, turnover: 5000, turnover5dAvg: 4900, turnoverVs5d: 2.0, turnover10dAvg: 4800, turnoverVs10d: 4.2, turnover1mAvg: 4700, turnoverVs1m: 6.4, d1: 0.1, ytd: 4.0, pe: 18.0, pb: 2.2, resistance: 8500, support: 8000, rsi: 52, ma20: 8100, macd: 30.0, date: 'N/A' },
-    { id: 'STI', name: 'STI', region: 'Singapore', close: 3900, turnover: 1200, turnover5dAvg: 1150, turnoverVs5d: 4.3, turnover10dAvg: 1100, turnoverVs10d: 9.1, turnover1mAvg: 1050, turnoverVs1m: 14.3, d1: 0.3, ytd: 5.0, pe: 14.0, pb: 1.3, resistance: 4000, support: 3700, rsi: 53, ma20: 3850, macd: 10.0, date: 'N/A' },
+    { id: 'N225', name: 'Nikkei 225', region: 'Japan', close: 38000, turnover: 18000, turnover5dAvg: 17500, turnoverVs5d: 2.9, turnover10dAvg: 17000, turnoverVs10d: 5.9, turnover1mAvg: 16500, turnoverVs1m: 9.1, d1: 0.4, ytd: 10.0, pe: 23.0, pb: 2.1, resistance: 40000, support: 36000, rsi: 54, ma5: 38000, ma20: 37500, macd: 250.0, techRating: 'Neutral', date: 'N/A' },
+    { id: 'KOSPI', name: 'KOSPI', region: 'Korea', close: 2600, turnover: 8000, turnover5dAvg: 7800, turnoverVs5d: 2.6, turnover10dAvg: 7600, turnoverVs10d: 5.3, turnover1mAvg: 7400, turnoverVs1m: 8.1, d1: 0.2, ytd: 3.0, pe: 12.0, pb: 1.0, resistance: 2800, support: 2500, rsi: 50, ma5: 2600, ma20: 2550, macd: 15.0, techRating: 'Neutral', date: 'N/A' },
+    { id: 'ASX200', name: 'ASX 200', region: 'Australia', close: 8200, turnover: 5000, turnover5dAvg: 4900, turnoverVs5d: 2.0, turnover10dAvg: 4800, turnoverVs10d: 4.2, turnover1mAvg: 4700, turnoverVs1m: 6.4, d1: 0.1, ytd: 4.0, pe: 18.0, pb: 2.2, resistance: 8500, support: 8000, rsi: 52, ma5: 8200, ma20: 8100, macd: 30.0, techRating: 'Neutral', date: 'N/A' },
+    { id: 'STI', name: 'STI', region: 'Singapore', close: 3900, turnover: 1200, turnover5dAvg: 1150, turnoverVs5d: 4.3, turnover10dAvg: 1100, turnoverVs10d: 9.1, turnover1mAvg: 1050, turnoverVs1m: 14.3, d1: 0.3, ytd: 5.0, pe: 14.0, pb: 1.3, resistance: 4000, support: 3700, rsi: 53, ma5: 3900, ma20: 3850, macd: 10.0, techRating: 'Neutral', date: 'N/A' },
 ];
 
 export default function MacroeconomicsTab({ data, timeFilter, customRange, timeFilterControl }) {
@@ -94,10 +94,11 @@ export default function MacroeconomicsTab({ data, timeFilter, customRange, timeF
         const fetchLiveIndices = async () => {
             setLoadingIndices(true);
             try {
-                const res = await fetch('/api/daily-indices');
+                const res = await fetch(`/api/daily-indices?t=${Date.now()}`, { cache: 'no-store' });
                 if (res.ok) {
                     const d = await res.json();
                     if (d.indices) {
+                        console.log('[FRONTEND] Received indices:', Object.keys(d.indices));
                         const live = Object.values(d.indices);
                         if (live.length > 0) {
                             const liveMap = Object.fromEntries(live.map(x => [x.id, x]));
@@ -230,7 +231,7 @@ export default function MacroeconomicsTab({ data, timeFilter, customRange, timeF
 
     const renderSubTabs = () => (
         <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem', borderBottom: `1px solid ${COLORS.border}`, paddingBottom: '10px' }}>
-            {['Global', 'Macro', 'Money market', 'Commodity'].map(t => (
+            {['Global', 'Macro', 'Money market', 'Commodity', 'Crypto'].map(t => (
                 <button
                     key={t}
                     onClick={() => setSubTab(t)}
@@ -256,7 +257,7 @@ export default function MacroeconomicsTab({ data, timeFilter, customRange, timeF
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {renderSubTabs()}
 
-            {(subTab === 'Macro' || subTab === 'Money market' || subTab === 'Commodity') && timeFilterControl}
+            {(subTab === 'Macro' || subTab === 'Money market' || subTab === 'Commodity' || subTab === 'Crypto') && timeFilterControl}
 
             {subTab === 'Global' && (
                 <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'start', flexWrap: 'wrap' }}>
@@ -324,15 +325,39 @@ export default function MacroeconomicsTab({ data, timeFilter, customRange, timeF
                         { label: 'Gold', symbol: 'TVC:GOLD' },
                         { label: 'Crude Oil WTI', symbol: 'TVC:USOIL' },
                         { label: 'Copper', symbol: 'COMEX:HG1!' },
-                        { label: 'Natural Gas', symbol: 'NYMEX:NG1!' }
+                        { label: 'Natural Gas', symbol: 'NYMEX:NG1!' },
+                        { label: 'Silver', symbol: 'TVC:SILVER' },
+                        { label: 'Wheat', symbol: 'CBOT:ZW1!' }
                     ].map(card => (
-                        <div key={card.label} className="card" style={{ padding: '0', height: '400px', border: `1px solid ${COLORS.border}`, borderRadius: '12px' }}>
+                        <div key={card.label} className="card" style={{ padding: '0', height: '400px', border: `1px solid ${COLORS.border}`, borderRadius: '12px', overflow: 'hidden' }}>
                             <div style={{ padding: '0.875rem 1rem', borderBottom: `1px solid ${COLORS.border}`, background: 'rgba(30, 41, 59, 0.4)' }}>
                                 <h3 style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#f8fafc' }}>{card.label}</h3>
                             </div>
                             <TradingViewMiniChartWidget symbol={card.symbol} timeFilter={timeFilter} />
                         </div>
                     ))}
+                </div>
+            )}
+
+            {subTab === 'Crypto' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+                        {[
+                            { label: 'Bitcoin (BTC)', symbol: 'BINANCE:BTCUSDT' },
+                            { label: 'Ethereum (ETH)', symbol: 'BINANCE:ETHUSDT' },
+                            { label: 'BNB', symbol: 'BINANCE:BNBUSDT' },
+                            { label: 'Solana (SOL)', symbol: 'BINANCE:SOLUSDT' },
+                            { label: 'XRP', symbol: 'BINANCE:XRPUSDT' },
+                            { label: 'USDT Dominance', symbol: 'CRYPTOCAP:USDT.D' }
+                        ].map(card => (
+                            <div key={card.label} className="card" style={{ padding: '0', height: '400px', border: `1px solid ${COLORS.border}`, borderRadius: '12px', overflow: 'hidden' }}>
+                                <div style={{ padding: '0.875rem 1rem', borderBottom: `1px solid ${COLORS.border}`, background: 'rgba(30, 41, 59, 0.4)' }}>
+                                    <h3 style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#f8fafc' }}>{card.label}</h3>
+                                </div>
+                                <TradingViewMiniChartWidget symbol={card.symbol} timeFilter={timeFilter} />
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
         </div>
@@ -363,120 +388,180 @@ function GlobalIndicatorsTable({ indices }) {
         );
     };
 
+    const getTechRatingColor = (rating) => {
+        if (!rating) return '#94a3b8';
+        switch (rating) {
+            case 'Strong Bullish': return COLORS.green;
+            case 'Bullish': return '#4ade80';
+            case 'Strong Bearish': return COLORS.red;
+            case 'Bearish': return '#f87171';
+            default: return '#94a3b8';
+        }
+    };
+
     return (
-        <div style={{ overflowX: 'auto', background: COLORS.cardBg, maxWidth: '100%' }} className="hidden-scrollbar">
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', color: '#94a3b8' }}>
-                <thead>
-                    <tr style={{ background: 'rgba(30, 41, 59, 0.2)', textAlign: 'left', borderBottom: `1px solid ${COLORS.border}` }}>
-                        <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1' }}>Index</th>
-                        <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1' }}>Region</th>
-                        <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'right' }}>Date</th>
-                        <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'right' }}>Price</th>
-                        <th colSpan="4" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}` }}>Turnover</th>
-                        <th colSpan="6" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}` }}>Performance</th>
-                        <th colSpan="2" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}` }}>Valuation</th>
-                        <th colSpan="5" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}` }}>Technical Benchmarks</th>
-                    </tr>
-                    <tr style={{ background: 'rgba(30, 41, 59, 0.1)', textAlign: 'center', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: `1px solid ${COLORS.border}` }}>
-                        <th colSpan="4"></th>
-                        <th style={{ padding: '6px', borderLeft: `1px solid ${COLORS.border}` }}>Value</th>
-                        <th style={{ padding: '6px' }}>5D Avg</th>
-                        <th style={{ padding: '6px' }}>10D Avg</th>
-                        <th style={{ padding: '6px' }}>1M Avg</th>
-                        <th style={{ padding: '6px', borderLeft: `1px solid ${COLORS.border}` }}>1D</th>
-                        <th style={{ padding: '6px' }}>1M</th>
-                        <th style={{ padding: '6px' }}>3M</th>
-                        <th style={{ padding: '6px' }}>6M</th>
-                        <th style={{ padding: '6px' }}>12M</th>
-                        <th style={{ padding: '6px' }}>YTD</th>
-                        <th style={{ padding: '6px', borderLeft: `1px solid ${COLORS.border}` }}>P/E</th>
-                        <th style={{ padding: '6px' }}>P/B</th>
-                        <th style={{ padding: '6px', borderLeft: `1px solid ${COLORS.border}` }}>Resistance</th>
-                        <th style={{ padding: '6px' }}>Support</th>
-                        <th style={{ padding: '6px' }}>RSI</th>
-                        <th style={{ padding: '6px' }}>MA(20)</th>
-                        <th style={{ padding: '6px' }}>MACD</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {indices.map((row, i) => (
-                        <tr key={i} style={{ borderBottom: `1px solid ${COLORS.border}`, transition: 'background 0.2s' }}>
-                            <td style={{ padding: '8px 16px', fontWeight: 700, color: '#f1f5f9', fontSize: '13px' }}>{row.name}</td>
-                            <td style={{ padding: '8px 16px', color: '#64748b', fontWeight: 500 }}>{row.region}</td>
-                            <td style={{ padding: '8px 16px', textAlign: 'right', color: '#94a3b8', fontSize: '11px' }}>{row.date || 'N/A'}</td>
-                            <td style={{ padding: '8px 16px', textAlign: 'right', fontWeight: 700, color: '#f8fafc', fontSize: '12px' }}>{formatVal(row.close)}</td>
-                            <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}` }}>
-                                {row.turnover != null ? (
-                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                        <span style={{ fontWeight: 700, color: '#f8fafc' }}>
-                                            {row.region === 'Vietnam' ? `₫${formatVal(row.turnoverVnd)}B` : `$${formatVal(row.turnover)}M`}
-                                        </span>
-                                        {row.region === 'Vietnam' && (
-                                            <span style={{ fontSize: '9px', color: '#64748b' }}>${formatVal(row.turnover)}M</span>
-                                        )}
-                                    </div>
-                                ) : '–'}
-                            </td>
-                            <td style={{ padding: '8px 10px', textAlign: 'right' }}>
-                                {row.turnover5dAvg != null ? (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-                                        <div style={{ fontWeight: 600, color: '#cbd5e1' }}>
-                                            {row.region === 'Vietnam' ? `₫${formatVal(row.turnover5dAvgVnd)}B` : `$${formatVal(row.turnover5dAvg)}M`}
-                                        </div>
-                                        <div style={{ fontSize: '9px', fontWeight: 700, color: (row.turnoverVs5d || 0) >= 0 ? COLORS.green : COLORS.red }}>
-                                            {row.turnoverVs5d != null ? `${row.turnoverVs5d >= 0 ? '+' : ''}${row.turnoverVs5d.toFixed(1)}%` : '–'}
-                                        </div>
-                                    </div>
-                                ) : '–'}
-                            </td>
-                            <td style={{ padding: '8px 10px', textAlign: 'right' }}>
-                                {row.turnover10dAvg != null ? (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-                                        <div style={{ fontWeight: 600, color: '#cbd5e1' }}>
-                                            {row.region === 'Vietnam' ? `₫${formatVal(row.turnover10dAvgVnd)}B` : `$${formatVal(row.turnover10dAvg)}M`}
-                                        </div>
-                                        <div style={{ fontSize: '9px', fontWeight: 700, color: (row.turnoverVs10d || 0) >= 0 ? COLORS.green : COLORS.red }}>
-                                            {row.turnoverVs10d != null ? `${row.turnoverVs10d >= 0 ? '+' : ''}${row.turnoverVs10d.toFixed(1)}%` : '–'}
-                                        </div>
-                                    </div>
-                                ) : '–'}
-                            </td>
-                            <td style={{ padding: '8px 10px', textAlign: 'right' }}>
-                                {row.turnover1mAvg != null ? (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-                                        <div style={{ fontWeight: 600, color: '#cbd5e1' }}>
-                                            {row.region === 'Vietnam' ? `₫${formatVal(row.turnover1mAvgVnd)}B` : `$${formatVal(row.turnover1mAvg)}M`}
-                                        </div>
-                                        <div style={{ fontSize: '9px', fontWeight: 700, color: (row.turnoverVs1m || 0) >= 0 ? COLORS.green : COLORS.red }}>
-                                            {row.turnoverVs1m != null ? `${row.turnoverVs1m >= 0 ? '+' : ''}${row.turnoverVs1m.toFixed(1)}%` : '–'}
-                                        </div>
-                                    </div>
-                                ) : '–'}
-                            </td>
-
-                            <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}` }}>
-                                {getValueWithIcon(row.d1, true)}
-                            </td>
-                            <td style={{ padding: '8px 10px', textAlign: 'right' }}>{row.d1m != null ? getValueWithIcon(row.d1m, true) : '–'}</td>
-                            <td style={{ padding: '8px 10px', textAlign: 'right' }}>{row.d3m != null ? getValueWithIcon(row.d3m, true) : '–'}</td>
-                            <td style={{ padding: '8px 10px', textAlign: 'right' }}>{row.d6m != null ? getValueWithIcon(row.d6m, true) : '–'}</td>
-                            <td style={{ padding: '8px 10px', textAlign: 'right' }}>{row.d12m != null ? getValueWithIcon(row.d12m, true) : '–'}</td>
-                            <td style={{ padding: '8px 10px', textAlign: 'right' }}>{row.ytd != null ? getValueWithIcon(row.ytd, true) : '–'}</td>
-
-                            <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}`, color: '#cbd5e1', fontWeight: 600 }}>{row.pe != null ? `${formatVal(row.pe)}x` : '–'}</td>
-                            <td style={{ padding: '8px 16px', textAlign: 'right', color: '#cbd5e1', fontWeight: 600 }}>{row.pb != null ? `${formatVal(row.pb)}x` : '–'}</td>
-
-                            <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}`, color: '#f1f5f9' }}>{formatVal(row.resistance)}</td>
-                            <td style={{ padding: '8px 16px', textAlign: 'right', color: '#f1f5f9' }}>{formatVal(row.support)}</td>
-                            <td style={{ padding: '8px 16px', textAlign: 'right', fontWeight: 700, color: row.rsi > 70 ? COLORS.red : (row.rsi < 30 ? COLORS.green : '#cbd5e1') }}>{formatVal(row.rsi)}</td>
-                            <td style={{ padding: '8px 16px', textAlign: 'right', color: '#94a3b8' }}>{formatVal(row.ma20)}</td>
-                            <td style={{ padding: '8px 16px', textAlign: 'right', color: row.macd != null ? (String(row.macd).startsWith('-') ? COLORS.red : COLORS.green) : '#94a3b8', fontWeight: 600 }}>{formatVal(row.macd)}</td>
+        <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+            <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: '600px', background: COLORS.cardBg, maxWidth: '100%', position: 'relative' }}>
+                <table style={{ width: '100%', minWidth: 'max-content', borderCollapse: 'separate', borderSpacing: 0, fontSize: '11px', color: '#94a3b8' }}>
+                    <thead style={{ position: 'sticky', top: 0, zIndex: 12 }}>
+                        <tr style={{ background: '#1e293b', textAlign: 'left' }}>
+                            <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: 0, zIndex: 11, background: '#1e293b' }}>Index</th>
+                            <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '120px', zIndex: 11, background: '#1e293b' }}>Region</th>
+                            <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'right', borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '210px', zIndex: 11, background: '#1e293b' }}>Date</th>
+                            <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'right', borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '300px', zIndex: 11, background: '#1e293b' }}>Price</th>
+                            <th colSpan="4" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}` }}>Turnover</th>
+                            <th colSpan="6" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}` }}>Performance</th>
+                            <th colSpan="2" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}` }}>Valuation</th>
+                            <th colSpan="7" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}` }}>Technical Benchmarks</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                        <tr style={{ background: '#1e293b', textAlign: 'center', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                            <th style={{ borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: 0, zIndex: 11, background: '#1e293b' }}></th>
+                            <th style={{ borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '120px', zIndex: 11, background: '#1e293b' }}></th>
+                            <th style={{ borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '210px', zIndex: 11, background: '#1e293b' }}></th>
+                            <th style={{ borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '300px', zIndex: 11, background: '#1e293b' }}></th>
+                            <th style={{ padding: '6px', borderLeft: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}` }}>Value</th>
+                            <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>5D Avg</th>
+                            <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>10D Avg</th>
+                            <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>1M Avg</th>
+                            <th style={{ padding: '6px', borderLeft: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}` }}>1D</th>
+                            <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>1M</th>
+                            <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>3M</th>
+                            <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>6M</th>
+                            <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>12M</th>
+                            <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>YTD</th>
+                            <th style={{ padding: '6px', borderLeft: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}` }}>P/E</th>
+                            <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>P/B</th>
+                            <th style={{ padding: '6px', borderLeft: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}` }}>Resistance</th>
+                            <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>Support</th>
+                            <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>RSI</th>
+                            <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>MA(5)</th>
+                            <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>MA(20)</th>
+                            <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>MACD</th>
+                            <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>Signal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {indices.map((row, i) => (
+                            <tr key={i} className="table-row" style={{ borderBottom: `1px solid ${COLORS.border}`, transition: 'background 0.2s', '--row-bg': '#0f172a' }}>
+                                <td style={{ padding: '8px 16px', fontWeight: 700, color: '#f1f5f9', fontSize: '13px', position: 'sticky', left: 0, zIndex: 5, background: 'var(--row-bg, #0f172a)' }}>{row.name}</td>
+                                <td style={{ padding: '8px 16px', color: '#64748b', fontWeight: 500, position: 'sticky', left: '120px', zIndex: 5, background: 'var(--row-bg, #0f172a)' }}>{row.region}</td>
+                                <td style={{ padding: '8px 16px', textAlign: 'right', color: '#94a3b8', fontSize: '11px', position: 'sticky', left: '210px', zIndex: 5, background: 'var(--row-bg, #0f172a)' }}>{row.date === 'N/A' ? '–' : row.date}</td>
+                                <td style={{ padding: '8px 16px', textAlign: 'right', fontWeight: 700, color: '#f8fafc', fontSize: '12px', position: 'sticky', left: '300px', zIndex: 5, background: 'var(--row-bg, #0f172a)' }}>
+                                    {row.date === 'N/A' ? '–' : formatVal(row.close)}
+                                </td>
+                                <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}` }}>
+                                    {row.turnover != null && row.date !== 'N/A' ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                            <span style={{ fontWeight: 700, color: '#f8fafc' }}>
+                                                {row.region === 'Vietnam' ? `${formatVal(row.turnoverVnd)}B` : `$${formatVal(row.turnover)}B`}
+                                            </span>
+                                            {row.region === 'Vietnam' && (
+                                                <span style={{ fontSize: '9px', color: '#64748b' }}>${formatVal(row.turnover)}B</span>
+                                            )}
+                                        </div>
+                                    ) : '–'}
+                                </td>
+                                <td style={{ padding: '8px 10px', textAlign: 'right' }}>
+                                    {row.turnover5dAvg != null && row.date !== 'N/A' ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                                            <div style={{ fontWeight: 600, color: '#cbd5e1' }}>
+                                                {row.region === 'Vietnam' ? `${formatVal(row.turnover5dAvgVnd)}B` : `$${formatVal(row.turnover5dAvg)}B`}
+                                            </div>
+                                            <div style={{ fontSize: '9px', fontWeight: 700, color: (row.turnoverVs5d || 0) >= 0 ? COLORS.green : COLORS.red }}>
+                                                {row.turnoverVs5d != null ? `${row.turnoverVs5d >= 0 ? '+' : ''}${row.turnoverVs5d.toFixed(1)}%` : '–'}
+                                            </div>
+                                        </div>
+                                    ) : '–'}
+                                </td>
+                                <td style={{ padding: '8px 10px', textAlign: 'right' }}>
+                                    {row.turnover10dAvg != null && row.date !== 'N/A' ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                                            <div style={{ fontWeight: 600, color: '#cbd5e1' }}>
+                                                {row.region === 'Vietnam' ? `${formatVal(row.turnover10dAvgVnd)}B` : `$${formatVal(row.turnover10dAvg)}B`}
+                                            </div>
+                                            <div style={{ fontSize: '9px', fontWeight: 700, color: (row.turnoverVs10d || 0) >= 0 ? COLORS.green : COLORS.red }}>
+                                                {row.turnoverVs10d != null ? `${row.turnoverVs10d >= 0 ? '+' : ''}${row.turnoverVs10d.toFixed(1)}%` : '–'}
+                                            </div>
+                                        </div>
+                                    ) : '–'}
+                                </td>
+                                <td style={{ padding: '8px 10px', textAlign: 'right' }}>
+                                    {row.turnover1mAvg != null && row.date !== 'N/A' ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                                            <div style={{ fontWeight: 600, color: '#cbd5e1' }}>
+                                                {row.region === 'Vietnam' ? `${formatVal(row.turnover1mAvgVnd)}B` : `$${formatVal(row.turnover1mAvg)}B`}
+                                            </div>
+                                            <div style={{ fontSize: '9px', fontWeight: 700, color: (row.turnoverVs1m || 0) >= 0 ? COLORS.green : COLORS.red }}>
+                                                {row.turnoverVs1m != null ? `${row.turnoverVs1m >= 0 ? '+' : ''}${row.turnoverVs1m.toFixed(1)}%` : '–'}
+                                            </div>
+                                        </div>
+                                    ) : '–'}
+                                </td>
+
+                                <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}` }}>
+                                    {row.date !== 'N/A' ? getValueWithIcon(row.d1, true) : '–'}
+                                </td>
+                                <td style={{ padding: '8px 10px', textAlign: 'right' }}>{row.d1m != null && row.date !== 'N/A' ? getValueWithIcon(row.d1m, true) : '–'}</td>
+                                <td style={{ padding: '8px 10px', textAlign: 'right' }}>{row.d3m != null && row.date !== 'N/A' ? getValueWithIcon(row.d3m, true) : '–'}</td>
+                                <td style={{ padding: '8px 10px', textAlign: 'right' }}>{row.d6m != null && row.date !== 'N/A' ? getValueWithIcon(row.d6m, true) : '–'}</td>
+                                <td style={{ padding: '8px 10px', textAlign: 'right' }}>{row.d12m != null && row.date !== 'N/A' ? getValueWithIcon(row.d12m, true) : '–'}</td>
+                                <td style={{ padding: '8px 10px', textAlign: 'right' }}>{row.ytd != null && row.date !== 'N/A' ? getValueWithIcon(row.ytd, true) : '–'}</td>
+
+                                <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}`, color: '#cbd5e1', fontWeight: 600 }}>{row.pe != null && row.date !== 'N/A' ? `${formatVal(row.pe)}x` : '–'}</td>
+                                <td style={{ padding: '8px 16px', textAlign: 'right', color: '#cbd5e1', fontWeight: 600 }}>{row.pb != null && row.date !== 'N/A' ? `${formatVal(row.pb)}x` : '–'}</td>
+
+                                <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}`, color: '#f1f5f9' }}>{row.resistance != null && row.date !== 'N/A' ? formatVal(row.resistance) : '–'}</td>
+                                <td style={{ padding: '8px 16px', textAlign: 'right', color: '#f1f5f9' }}>{row.support != null && row.date !== 'N/A' ? formatVal(row.support) : '–'}</td>
+                                <td style={{ padding: '8px 16px', textAlign: 'right', fontWeight: 700, color: row.rsi > 70 ? COLORS.red : (row.rsi < 30 ? COLORS.green : '#cbd5e1') }}>{row.rsi != null && row.date !== 'N/A' ? formatVal(row.rsi) : '–'}</td>
+                                <td style={{ padding: '8px 16px', textAlign: 'right', fontWeight: 600, color: row.trend === 'up' ? COLORS.green : (row.trend === 'down' ? COLORS.red : '#94a3b8') }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
+                                        {row.ma5 != null && row.date !== 'N/A' ? formatVal(row.ma5) : '–'}
+                                        {row.trend === 'up' && <span style={{ fontSize: '10px' }}>▲</span>}
+                                        {row.trend === 'down' && <span style={{ fontSize: '10px' }}>▼</span>}
+                                    </div>
+                                </td>
+                                <td style={{ padding: '8px 16px', textAlign: 'right', color: '#94a3b8' }}>{row.ma20 != null && row.date !== 'N/A' ? formatVal(row.ma20) : '–'}</td>
+                                <td style={{ padding: '8px 16px', textAlign: 'right', color: row.macd != null ? (String(row.macd).startsWith('-') ? COLORS.red : COLORS.green) : '#94a3b8', fontWeight: 600 }}>{row.macd != null && row.date !== 'N/A' ? formatVal(row.macd) : '–'}</td>
+                                <td style={{ padding: '8px 16px', textAlign: 'right', fontWeight: 700, color: getTechRatingColor(row.techRating) }}>{row.techRating != null && row.date !== 'N/A' ? row.techRating : '–'}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            <div style={{ padding: '16px', fontSize: '11px', color: '#94a3b8', borderTop: `1px solid ${COLORS.border}`, display: 'flex', flexDirection: 'column', gap: '12px', background: 'rgba(30, 41, 59, 0.2)' }}>
+                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <strong>MA(5) Trend:</strong>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ color: COLORS.green }}>▲ Green:</span> Uptrend & above MA(20) (or near +/- 0.5%)
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ color: COLORS.red }}>▼ Red:</span> Downtrend & below MA(20) (or near +/- 0.5%)
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ color: '#94a3b8' }}>Grey:</span> Neutral (no clear trend crossover)
+                    </div>
+                </div>
+
+                <div style={{ borderTop: `1px dashed rgba(255,255,255,0.1)`, paddingTop: '12px' }}>
+                    <strong style={{ display: 'block', marginBottom: '6px', color: '#cbd5e1' }}>Technical Rating (Signal):</strong>
+                    <div style={{ lineHeight: '1.5' }}>
+                        The <strong>Signal</strong> grades each market from <em>Strong Bearish</em> to <em>Strong Bullish</em> based on a combined score of 4 technical pillars:
+                        <br />
+                        <span style={{ color: COLORS.green }}>+1 Point</span> each for: MA(5) uptrend, MACD &gt; 0, RSI in healthy uptrend (50-70), and positive price action confirmed by rising Volume (Turnover &gt; 5D Avg).
+                        <br />
+                        <span style={{ color: COLORS.red }}>-1 Point</span> each for: MA(5) downtrend, MACD &lt; 0, RSI in healthy downtrend (30-50), and negative price action confirmed by rising Volume.
+                    </div>
+                </div>
+            </div>
+
             <style jsx>{`
-                tr:hover { background-color: rgba(30, 41, 59, 0.6); }
+                .table-row:hover, .table-row:hover td {
+                    background-color: rgba(30, 41, 59, 1) !important;
+                    --row-bg: rgba(30, 41, 59, 1);
+                }
                 td, th { white-space: nowrap; }
             `}</style>
         </div>

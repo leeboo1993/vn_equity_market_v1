@@ -49,7 +49,7 @@ export async function GET(request) {
         };
 
         console.time('Fetch R2 Files');
-        const [goldFs, vcbFs, blackFs, silverFs, depositF, economicsBody] = await Promise.all([
+        const [goldFs, vcbFs, blackFs, silverFs, depositF, govBondFs, economicsBody] = await Promise.all([
             fetchFiles('cafef_data/gold_price/', 5),
             fetchFiles('cafef_data/vcb_fx_data/', 1),
             fetchFiles('cafef_data/usd_black_market/', 1),
@@ -61,6 +61,16 @@ export async function GET(request) {
                     return (res.Contents || []).filter(c => c.Key.endsWith('.json') && !c.Key.includes('_backup')).sort((a, b) => b.LastModified - a.LastModified).slice(0, 1);
                 } catch (e) {
                     console.error("Error fetching deposit rate files:", e);
+                    return [];
+                }
+            })(),
+            (async () => {
+                try {
+                    const listCommand = new ListObjectsV2Command({ Bucket: R2_BUCKET, Prefix: 'cafef_data/gov_bond_yield/' });
+                    const res = await r2Client.send(listCommand);
+                    return (res.Contents || []).filter(c => c.Key.endsWith('.json')).sort((a, b) => b.LastModified - a.LastModified).slice(0, 1);
+                } catch (e) {
+                    console.error("Error fetching gov bond files:", e);
                     return [];
                 }
             })(),
@@ -168,6 +178,57 @@ export async function GET(request) {
         }
         console.timeEnd('Parse Deposit Rates');
 
+        console.time('Parse Gov Bonds');
+        let govBondsTimeSeries = [];
+        if (govBondFs.length > 0) {
+            try {
+                const body = await fetchBody(govBondFs[0].Key);
+                const parsed = JSON.parse(body);
+                const dates = Object.keys(parsed).sort((a, b) => a.localeCompare(b));
+
+                const rawSeries = dates.map(date => {
+                    const dayData = parsed[date];
+                    const row = { date };
+                    for (const tenor of Object.keys(dayData)) {
+                        // use spot_rate_annual as yield
+                        row[tenor] = dayData[tenor]?.spot_rate_annual || null;
+                    }
+                    return row;
+                });
+
+                // Calculate trailing 30-day standard deviation and +/-1,2,3 SD bands
+                const windowSize = 30;
+                for (let i = 0; i < rawSeries.length; i++) {
+                    const row = { ...rawSeries[i] };
+                    const startIdx = Math.max(0, i - windowSize + 1);
+                    const windowData = rawSeries.slice(startIdx, i + 1);
+
+                    ['1M', '3M', '6M', '9M', '1Y', '2Y', '3Y', '5Y', '7Y', '10Y', '15Y', '20Y', '30Y'].forEach(tenor => {
+                        if (row[tenor] !== null && row[tenor] !== undefined) {
+                            const vals = windowData.map(d => d[tenor]).filter(v => v !== null && v !== undefined);
+                            if (vals.length > 1) {
+                                const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+                                const variance = vals.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (vals.length - 1);
+                                const sd = Math.sqrt(variance);
+                                row[`${tenor}_sd`] = sd;
+                                row[`${tenor}_mean30d`] = mean;
+                                row[`${tenor}_sd1_up`] = mean + 1 * sd;
+                                row[`${tenor}_sd1_down`] = mean - 1 * sd;
+                                row[`${tenor}_sd2_up`] = mean + 2 * sd;
+                                row[`${tenor}_sd2_down`] = mean - 2 * sd;
+                                row[`${tenor}_sd3_up`] = mean + 3 * sd;
+                                row[`${tenor}_sd3_down`] = mean - 3 * sd;
+                            }
+                        }
+                    });
+                    govBondsTimeSeries.push(row);
+                }
+            } catch (e) {
+                console.error("Error parsing gov bond file:", e);
+            }
+        }
+        console.timeEnd('Parse Gov Bonds');
+
         let treasury = [];
         let interbank = [];
         let dl_deposit = [];
@@ -188,6 +249,7 @@ export async function GET(request) {
             vcb: vcbData,
             black_market: blackMarketData.sort((a, b) => a.date.localeCompare(b.date)),
             deposit_quote: depositTimeSeries,
+            gov_bonds: govBondsTimeSeries,
             dl_deposit,
             treasury,
             interbank,

@@ -270,7 +270,7 @@ export default function DLEquityPage() {
                 </div>
             </header>
 
-            <div className="hidden-scrollbar" style={{ padding: '0 1rem', borderBottom: '1px solid #222', background: '#0a0a0a', display: 'flex', gap: '1.25rem', overflowX: 'auto', whiteSpace: 'nowrap' }}>
+            <div className="hidden-scrollbar" style={{ padding: '0 1.25rem', borderBottom: '1px solid #222', background: '#0a0a0a', display: 'flex', gap: '1.25rem', overflowX: 'auto', whiteSpace: 'nowrap', alignItems: 'flex-end' }}>
                 {availableTabs.map(tab => (
                     <button
                         key={tab}
@@ -280,7 +280,7 @@ export default function DLEquityPage() {
                             border: 'none',
                             borderBottom: activeTab === tab ? '2px solid #00a884' : '2px solid transparent',
                             color: activeTab === tab ? '#00a884' : '#888',
-                            padding: '12px 2px',
+                            padding: '12px 0',
                             fontSize: '13px',
                             fontWeight: activeTab === tab ? 600 : 400,
                             cursor: 'pointer',
