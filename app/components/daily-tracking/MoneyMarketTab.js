@@ -786,16 +786,16 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                                     <Line type="monotone" dataKey={`${bondTenors[0]}_mean30d`} name={`${bondTenors[0]} Mean (30D)`} stroke={COLORS.gray} strokeWidth={1} strokeDasharray="3 3" dot={false} connectNulls />
 
                                     {/* Standard Deviation Bands - 3SD */}
-                                    {bondBands.includes('3SD') && <Line type="monotone" dataKey={`${bondTenors[0]}_sd3_up`} name={`${bondTenors[0]} + 3SD`} stroke={COLORS.yellow} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
-                                    {bondBands.includes('3SD') && <Line type="monotone" dataKey={`${bondTenors[0]}_sd3_down`} name={`${bondTenors[0]} - 3SD`} stroke={COLORS.yellow} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
+                                    {bondBands.includes('3SD') && <Line type="monotone" dataKey={`${bondTenors[0]}_sd3_up`} name={`${bondTenors[0]} + 3SD`} stroke={singleColor} strokeOpacity={0.4} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
+                                    {bondBands.includes('3SD') && <Line type="monotone" dataKey={`${bondTenors[0]}_sd3_down`} name={`${bondTenors[0]} - 3SD`} stroke={singleColor} strokeOpacity={0.4} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
 
                                     {/* Standard Deviation Bands - 2SD */}
-                                    {bondBands.includes('2SD') && <Line type="monotone" dataKey={`${bondTenors[0]}_sd2_up`} name={`${bondTenors[0]} + 2SD`} stroke={COLORS.blue} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
-                                    {bondBands.includes('2SD') && <Line type="monotone" dataKey={`${bondTenors[0]}_sd2_down`} name={`${bondTenors[0]} - 2SD`} stroke={COLORS.blue} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
+                                    {bondBands.includes('2SD') && <Line type="monotone" dataKey={`${bondTenors[0]}_sd2_up`} name={`${bondTenors[0]} + 2SD`} stroke={singleColor} strokeOpacity={0.6} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
+                                    {bondBands.includes('2SD') && <Line type="monotone" dataKey={`${bondTenors[0]}_sd2_down`} name={`${bondTenors[0]} - 2SD`} stroke={singleColor} strokeOpacity={0.6} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
 
                                     {/* Standard Deviation Bands - 1SD */}
-                                    {bondBands.includes('1SD') && <Line type="monotone" dataKey={`${bondTenors[0]}_sd1_up`} name={`${bondTenors[0]} + 1SD`} stroke={COLORS.purple} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
-                                    {bondBands.includes('1SD') && <Line type="monotone" dataKey={`${bondTenors[0]}_sd1_down`} name={`${bondTenors[0]} - 1SD`} stroke={COLORS.purple} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
+                                    {bondBands.includes('1SD') && <Line type="monotone" dataKey={`${bondTenors[0]}_sd1_up`} name={`${bondTenors[0]} + 1SD`} stroke={singleColor} strokeOpacity={0.8} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
+                                    {bondBands.includes('1SD') && <Line type="monotone" dataKey={`${bondTenors[0]}_sd1_down`} name={`${bondTenors[0]} - 1SD`} stroke={singleColor} strokeOpacity={0.8} strokeWidth={1} strokeDasharray="4 4" dot={false} connectNulls />}
                                 </>
                             )}
 

@@ -255,11 +255,11 @@ export default function DLEquityPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <button
                         onClick={() => setSidebarOpen(true)}
-                        style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '1.5rem', cursor: 'pointer' }}
+                        style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '1.5rem', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                         ☰
                     </button>
-                    <h1 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#fff' }}>
+                    <h1 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#fff', lineHeight: 1 }}>
                         Daily Market Tracking
                     </h1>
                 </div>

@@ -236,8 +236,7 @@ export default function MarketTab({ data, timeFilter }) {
                             <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={dtFormatter} minTickGap={30} />
                             <YAxis stroke={COLORS.text} fontSize={10} tickFormatter={(v) => `${(v / 1000).toFixed(1)}k B`} />
                             <Tooltip
-                                contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '12px', color: '#fff' }}
-                                itemStyle={{ color: '#fff' }}
+                                contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '12px', fontWeight: 500 }}
                                 formatter={(value, name) => [`${value.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}B`, name]}
                                 labelFormatter={dtFormatter}
                                 separator=" : "

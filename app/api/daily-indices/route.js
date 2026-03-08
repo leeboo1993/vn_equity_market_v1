@@ -35,6 +35,21 @@ async function getIndexConfig() {
         { id: 'KOSPI', stooqId: null, yfId: '^KS11', name: 'KOSPI', region: 'Korea', source: 'yahoo' },
         { id: 'ASX200', stooqId: null, yfId: '^AXJO', name: 'ASX 200', region: 'Australia', source: 'yahoo' },
         { id: 'STI', stooqId: null, yfId: '^STI', name: 'STI', region: 'Singapore', source: 'yahoo' },
+
+        // Commodities
+        { id: 'GOLD', stooqId: null, yfId: 'GC=F', name: 'Gold', region: 'Commodity', source: 'yahoo' },
+        { id: 'WTI', stooqId: null, yfId: 'CL=F', name: 'WTI Crude', region: 'Commodity', source: 'yahoo' },
+        { id: 'COPPER', stooqId: null, yfId: 'HG=F', name: 'Copper', region: 'Commodity', source: 'yahoo' },
+        { id: 'NATGAS', stooqId: null, yfId: 'NG=F', name: 'Natural Gas', region: 'Commodity', source: 'yahoo' },
+        { id: 'SILVER', stooqId: null, yfId: 'SI=F', name: 'Silver', region: 'Commodity', source: 'yahoo' },
+        { id: 'WHEAT', stooqId: null, yfId: 'ZW=F', name: 'Wheat', region: 'Commodity', source: 'yahoo' },
+
+        // Crypto
+        { id: 'BTC', stooqId: null, yfId: 'BTC-USD', name: 'Bitcoin', region: 'Crypto', source: 'yahoo' },
+        { id: 'ETH', stooqId: null, yfId: 'ETH-USD', name: 'Ethereum', region: 'Crypto', source: 'yahoo' },
+        { id: 'BNB', stooqId: null, yfId: 'BNB-USD', name: 'BNB', region: 'Crypto', source: 'yahoo' },
+        { id: 'SOL', stooqId: null, yfId: 'SOL-USD', name: 'Solana', region: 'Crypto', source: 'yahoo' },
+        { id: 'XRP', stooqId: null, yfId: 'XRP-USD', name: 'XRP', region: 'Crypto', source: 'yahoo' }
     ];
 }
 
@@ -289,7 +304,11 @@ async function executeSSIFetch(token) {
                     techRating: techRating,
                     support: Math.round(Math.min(...recent) * 100) / 100,
                     resistance: Math.round(Math.max(...recent) * 100) / 100,
-                    stale: false
+                    stale: false,
+                    history: sorted.slice(-365).map(d => {
+                        const [dd, mm, yy] = d.TradingDate.split('/');
+                        return { date: `${yy}-${mm}-${dd}`, value: parseFloat(d.IndexValue) };
+                    })
                 };
             }
         } catch (e) { console.error(`Error processing SSI index ${config.id}:`, e); }
@@ -409,7 +428,8 @@ function buildGlobalResult(config, pairs) {
         techRating: techRating,
         support: Math.round(Math.min(...closes.slice(-20)) * 100) / 100,
         resistance: Math.round(Math.max(...closes.slice(-20)) * 100) / 100,
-        stale: false
+        stale: false,
+        history: pairs.slice(-365).map(p => ({ date: p.date, value: p.close }))
     };
 }
 async function fetchOneGlobal(config) {

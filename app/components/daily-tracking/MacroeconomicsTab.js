@@ -11,7 +11,8 @@ import {
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
-    Legend
+    Legend,
+    ReferenceLine
 } from 'recharts';
 import MoneyMarketTab from './MoneyMarketTab';
 
@@ -253,6 +254,367 @@ export default function MacroeconomicsTab({ data, timeFilter, customRange, timeF
         </div>
     );
 
+    const [selectedCrypto, setSelectedCrypto] = useState(['BTC']);
+    const [selectedCommodity, setSelectedCommodity] = useState(['GOLD']);
+    const [chartType, setChartType] = useState('Absolute');
+    const [showMA5, setShowMA5] = useState(false);
+    const [showMA20, setShowMA20] = useState(false);
+    const [showMA50, setShowMA50] = useState(false);
+    const [showBB, setShowBB] = useState(false);
+    const [showRSI, setShowRSI] = useState(false);
+
+    const toggleSelection = (id, currentSelected, setSelection) => {
+        if (currentSelected.includes(id)) {
+            if (currentSelected.length > 1) setSelection(currentSelected.filter(item => item !== id));
+        } else {
+            setSelection([...currentSelected, id]);
+        }
+    };
+
+    const getComparisonChartData = (selectedIds) => {
+        const items = indices.filter(idx => selectedIds.includes(idx.id) && idx.history && idx.history.length > 0);
+        if (items.length === 0) return [];
+        let days = 3650;
+        if (timeFilter === '1M') days = 30;
+        else if (timeFilter === '3M') days = 90;
+        else if (timeFilter === '6M') days = 180;
+        else if (timeFilter === '1Y') days = 365;
+        else if (timeFilter === 'YTD') {
+            const now = new Date();
+            days = Math.floor((now - new Date(now.getFullYear(), 0, 1)) / (1000 * 60 * 60 * 24));
+        }
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - days);
+        const cutoffStr = cutoffDate.toISOString().split('T')[0];
+
+        const fullPreparedHistories = {};
+        items.forEach(item => {
+            const sortedHistory = [...item.history].sort((a, b) => a.date.localeCompare(b.date));
+            const enrichedHistory = [];
+            for (let i = 0; i < sortedHistory.length; i++) {
+                const day = sortedHistory[i];
+                const prev = i > 0 ? sortedHistory[i - 1] : null;
+                const change = prev ? day.value - prev.value : 0;
+                const dailyPct = prev ? (change / prev.value) * 100 : 0;
+
+                let ma5 = null;
+                if (i >= 4) {
+                    const slice = sortedHistory.slice(i - 4, i + 1);
+                    ma5 = slice.reduce((sum, h) => sum + h.value, 0) / 5;
+                }
+
+                let ma20 = null;
+                let bbUpper = null;
+                let bbLower = null;
+                if (i >= 19) {
+                    const slice = sortedHistory.slice(i - 19, i + 1);
+                    ma20 = slice.reduce((sum, h) => sum + h.value, 0) / 20;
+
+                    const variance = slice.reduce((sum, h) => sum + Math.pow(h.value - ma20, 2), 0) / 20;
+                    const sd = Math.sqrt(variance);
+                    bbUpper = ma20 + 2 * sd;
+                    bbLower = ma20 - 2 * sd;
+                }
+
+                let ma50 = null;
+                if (i >= 49) {
+                    const slice = sortedHistory.slice(i - 49, i + 1);
+                    ma50 = slice.reduce((sum, h) => sum + h.value, 0) / 50;
+                }
+
+                enrichedHistory.push({ ...day, dailyPct, change, ma5, ma20, ma50, bbUpper, bbLower });
+            }
+
+            let avgGain = 0;
+            let avgLoss = 0;
+            for (let i = 1; i < enrichedHistory.length; i++) {
+                const change = enrichedHistory[i].change;
+                const gain = change > 0 ? change : 0;
+                const loss = change < 0 ? Math.abs(change) : 0;
+
+                if (i <= 14) {
+                    avgGain += gain;
+                    avgLoss += loss;
+                    if (i === 14) {
+                        avgGain /= 14;
+                        avgLoss /= 14;
+                        const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+                        enrichedHistory[i].rsi = avgLoss === 0 ? 100 : 100 - (100 / (1 + rs));
+                    }
+                } else {
+                    avgGain = ((avgGain * 13) + gain) / 14;
+                    avgLoss = ((avgLoss * 13) + loss) / 14;
+                    const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+                    enrichedHistory[i].rsi = avgLoss === 0 ? 100 : 100 - (100 / (1 + rs));
+                }
+            }
+
+            fullPreparedHistories[item.id] = enrichedHistory;
+        });
+
+        const dateSet = new Set();
+        const filteredHistories = {};
+
+        items.forEach(item => {
+            const filtered = fullPreparedHistories[item.id].filter(h => h.date >= cutoffStr);
+            filteredHistories[item.id] = filtered;
+            filtered.forEach(h => dateSet.add(h.date));
+        });
+
+        const sortedDates = Array.from(dateSet).sort();
+        const isComparison = selectedIds.length > 1;
+
+        const basePrices = {};
+        items.forEach(item => {
+            if (filteredHistories[item.id].length > 0) basePrices[item.id] = filteredHistories[item.id][0].value;
+        });
+
+        return sortedDates.map(date => {
+            const row = { date };
+            items.forEach(item => {
+                const dayData = filteredHistories[item.id].find(h => h.date === date);
+                if (dayData && basePrices[item.id]) {
+                    if (showRSI && dayData.rsi) row[`${item.id}_RSI`] = dayData.rsi;
+
+                    if (chartType === 'Daily Pct') {
+                        row[item.id] = dayData.dailyPct;
+                    } else if (chartType === 'Relative' || isComparison) {
+                        row[item.id] = ((dayData.value - basePrices[item.id]) / basePrices[item.id]) * 100;
+                        if (showMA5 && dayData.ma5) row[`${item.id}_MA5`] = ((dayData.ma5 - basePrices[item.id]) / basePrices[item.id]) * 100;
+                        if (showMA20 && dayData.ma20) row[`${item.id}_MA20`] = ((dayData.ma20 - basePrices[item.id]) / basePrices[item.id]) * 100;
+                        if (showMA50 && dayData.ma50) row[`${item.id}_MA50`] = ((dayData.ma50 - basePrices[item.id]) / basePrices[item.id]) * 100;
+                        if (showBB && dayData.bbUpper) {
+                            row[`${item.id}_BBUpper`] = ((dayData.bbUpper - basePrices[item.id]) / basePrices[item.id]) * 100;
+                            row[`${item.id}_BBLower`] = ((dayData.bbLower - basePrices[item.id]) / basePrices[item.id]) * 100;
+                        }
+                    } else {
+                        row[item.id] = dayData.value;
+                        if (showMA5 && dayData.ma5) row[`${item.id}_MA5`] = dayData.ma5;
+                        if (showMA20 && dayData.ma20) row[`${item.id}_MA20`] = dayData.ma20;
+                        if (showMA50 && dayData.ma50) row[`${item.id}_MA50`] = dayData.ma50;
+                        if (showBB && dayData.bbUpper) {
+                            row[`${item.id}_BBUpper`] = dayData.bbUpper;
+                            row[`${item.id}_BBLower`] = dayData.bbLower;
+                        }
+                    }
+                }
+            });
+            return row;
+        });
+    };
+
+    const cryptoChartData = useMemo(() => getComparisonChartData(selectedCrypto), [indices, selectedCrypto, timeFilter, chartType, showMA5, showMA20, showMA50, showBB, showRSI]);
+    const commodityChartData = useMemo(() => getComparisonChartData(selectedCommodity), [indices, selectedCommodity, timeFilter, chartType, showMA5, showMA20, showMA50, showBB, showRSI]);
+
+    const ASSET_COLORS = {
+        'BTC': '#F7931A', 'ETH': '#627EEA', 'BNB': '#F3BA2F', 'SOL': '#00FFA3', 'XRP': '#23292F',
+        'GOLD': '#FFD700', 'WTI': '#8B4513', 'COPPER': '#B87333', 'NATGAS': '#4169E1', 'SILVER': '#C0C0C0', 'WHEAT': '#F5DEB3'
+    };
+
+    const renderComparisonSection = (regionFilter, selectedIds, setSelectedIds, chartData) => {
+        const availableItems = indices.filter(idx => idx.region === regionFilter);
+        const isComparison = selectedIds.length > 1;
+
+        if (availableItems.length === 0) {
+            return <div style={{ color: COLORS.gray, fontSize: '13px', padding: '1rem', textAlign: 'center' }}>Loading {regionFilter} data...</div>;
+        }
+
+        return (
+            <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'start', flexWrap: 'wrap' }}>
+                <div style={{ flex: '1 1 500px', minWidth: '0', maxWidth: '100%' }}>
+                    <div className="card" style={{ padding: '0', overflow: 'hidden', border: `1px solid ${COLORS.border}`, borderRadius: '12px', background: COLORS.cardBg }}>
+                        <div style={{ padding: '1rem 1.25rem', borderBottom: `1px solid ${COLORS.border}`, background: 'rgba(30, 41, 59, 0.4)' }}>
+                            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#f8fafc' }}>{regionFilter} Performance</h3>
+                        </div>
+                        <GlobalIndicatorsTable indices={availableItems} hideValuation={regionFilter === 'Crypto' || regionFilter === 'Commodity'} />
+                    </div>
+                </div>
+
+                <div style={{ flex: '1 1 500px', minWidth: '0', maxWidth: '100%', height: showRSI ? '750px' : '600px' }}>
+                    <div className="card" style={{ padding: '1.5rem', height: '100%', display: 'flex', flexDirection: 'column', background: COLORS.cardBg, border: `1px solid ${COLORS.border}`, borderRadius: '12px', overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '10px' }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                {availableItems.map(item => {
+                                    const isSelected = selectedIds.includes(item.id);
+                                    const color = ASSET_COLORS[item.id] || COLORS.teal;
+                                    return (
+                                        <button
+                                            key={item.id}
+                                            onClick={() => toggleSelection(item.id, selectedIds, setSelectedIds)}
+                                            style={{
+                                                border: `1px solid ${isSelected ? color : COLORS.border}`,
+                                                background: isSelected ? `${color}20` : 'transparent',
+                                                color: isSelected ? color : '#94a3b8',
+                                                padding: '6px 14px',
+                                                borderRadius: '20px',
+                                                fontSize: '11px',
+                                                fontWeight: 600,
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            {item.name}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', background: 'rgba(30, 41, 59, 0.5)', borderRadius: '20px', padding: '2px' }}>
+                                    {['Absolute', 'Relative', 'Daily Pct'].map(type => (
+                                        <button
+                                            key={type}
+                                            onClick={() => setChartType(type)}
+                                            style={{
+                                                background: chartType === type ? COLORS.teal : 'transparent',
+                                                color: chartType === type ? '#fff' : '#94a3b8',
+                                                border: 'none',
+                                                padding: '4px 12px',
+                                                borderRadius: '18px',
+                                                fontSize: '11px',
+                                                fontWeight: 600,
+                                                cursor: 'pointer',
+                                                opacity: isComparison && type === 'Absolute' ? 0.3 : 1,
+                                                transition: 'all 0.2s'
+                                            }}
+                                            disabled={isComparison && type === 'Absolute'}
+                                        >
+                                            {type}
+                                        </button>
+                                    ))}
+                                </div>
+                                {chartType !== 'Daily Pct' && (
+                                    <>
+                                        <button
+                                            onClick={() => setShowMA5(!showMA5)}
+                                            style={{ border: `1px solid ${showMA5 ? '#f59e0b' : COLORS.border}`, background: showMA5 ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: showMA5 ? '#f59e0b' : '#64748b', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                                        >
+                                            MA5
+                                        </button>
+                                        <button
+                                            onClick={() => setShowMA20(!showMA20)}
+                                            style={{ border: `1px solid ${showMA20 ? '#10b981' : COLORS.border}`, background: showMA20 ? 'rgba(16, 185, 129, 0.2)' : 'transparent', color: showMA20 ? '#10b981' : '#64748b', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                                        >
+                                            MA20
+                                        </button>
+                                        <button
+                                            onClick={() => setShowMA50(!showMA50)}
+                                            style={{ border: `1px solid ${showMA50 ? '#8b5cf6' : COLORS.border}`, background: showMA50 ? 'rgba(139, 92, 246, 0.2)' : 'transparent', color: showMA50 ? '#8b5cf6' : '#64748b', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                                        >
+                                            MA50
+                                        </button>
+                                        <button
+                                            onClick={() => setShowBB(!showBB)}
+                                            style={{ border: `1px solid ${showBB ? '#0ea5e9' : COLORS.border}`, background: showBB ? 'rgba(14, 165, 233, 0.2)' : 'transparent', color: showBB ? '#0ea5e9' : '#64748b', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                                        >
+                                            BB
+                                        </button>
+                                        <button
+                                            onClick={() => setShowRSI(!showRSI)}
+                                            style={{ border: `1px solid ${showRSI ? '#db2777' : COLORS.border}`, background: showRSI ? 'rgba(219, 39, 119, 0.2)' : 'transparent', color: showRSI ? '#db2777' : '#64748b', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                                        >
+                                            RSI
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
+                        <div style={{ flex: 1, minHeight: 0, width: '100%' }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={chartData} margin={{ top: 10, right: 10, left: (isComparison || chartType === 'Relative' || chartType === 'Daily Pct') ? -20 : 10, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                                    <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickFormatter={dtFormatter} minTickGap={30} />
+                                    <YAxis
+                                        stroke="#64748b"
+                                        fontSize={10}
+                                        tickFormatter={(v) => (chartType === 'Relative' || chartType === 'Daily Pct' || isComparison) ? `${v.toFixed(1)}%` : (v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v.toLocaleString())}
+                                        domain={['auto', 'auto']}
+                                    />
+                                    <Tooltip
+                                        contentStyle={customTooltipStyle}
+                                        itemStyle={{ color: '#fff', fontSize: '13px', fontWeight: 500 }}
+                                        labelStyle={{ color: '#94a3b8', fontSize: '12px', marginBottom: '6px' }}
+                                        formatter={(value, name) => {
+                                            const isPct = chartType === 'Relative' || chartType === 'Daily Pct' || isComparison;
+                                            const formattedVal = isPct ? `${value.toFixed(2)}%` : value.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+
+                                            let itemName = name;
+                                            if (name.endsWith('_MA5')) {
+                                                const baseId = name.replace('_MA5', '');
+                                                const baseName = availableItems.find(a => a.id === baseId)?.name || baseId;
+                                                itemName = `${baseName} (MA5)`;
+                                            } else if (name.endsWith('_MA20')) {
+                                                const baseId = name.replace('_MA20', '');
+                                                const baseName = availableItems.find(a => a.id === baseId)?.name || baseId;
+                                                itemName = `${baseName} (MA20)`;
+                                            } else if (name.endsWith('_MA50')) {
+                                                const baseId = name.replace('_MA50', '');
+                                                const baseName = availableItems.find(a => a.id === baseId)?.name || baseId;
+                                                itemName = `${baseName} (MA50)`;
+                                            } else if (name.endsWith('_BBUpper') || name.endsWith('_BBLower')) {
+                                                const baseId = name.replace('_BBUpper', '').replace('_BBLower', '');
+                                                const baseName = availableItems.find(a => a.id === baseId)?.name || baseId;
+                                                itemName = `${baseName} (BB)`;
+                                            } else {
+                                                itemName = availableItems.find(a => a.id === name)?.name || name;
+                                            }
+                                            return [formattedVal, itemName];
+                                        }}
+                                        labelFormatter={dtFormatter}
+                                        separator=" : "
+                                    />
+                                    {selectedIds.map(id => (
+                                        <React.Fragment key={id}>
+                                            <Line type="monotone" dataKey={id} stroke={ASSET_COLORS[id] || COLORS.teal} strokeWidth={2} dot={false} isAnimationActive={false} />
+                                            {showMA5 && chartType !== 'Daily Pct' && <Line type="monotone" dataKey={`${id}_MA5`} stroke="#f59e0b" strokeDasharray="3 3" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />}
+                                            {showMA20 && chartType !== 'Daily Pct' && <Line type="monotone" dataKey={`${id}_MA20`} stroke="#10b981" strokeDasharray="5 5" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={false} />}
+                                            {showMA50 && chartType !== 'Daily Pct' && <Line type="monotone" dataKey={`${id}_MA50`} stroke="#8b5cf6" strokeDasharray="5 5" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={false} />}
+                                            {showBB && chartType !== 'Daily Pct' && (
+                                                <>
+                                                    <Line type="monotone" dataKey={`${id}_BBUpper`} stroke="rgba(14, 165, 233, 0.6)" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />
+                                                    <Line type="monotone" dataKey={`${id}_BBLower`} stroke="rgba(14, 165, 233, 0.6)" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />
+                                                </>
+                                            )}
+                                        </React.Fragment>
+                                    ))}
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+
+                        {showRSI && (
+                            <div style={{ height: '150px', width: '100%', marginTop: '1rem' }}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={chartData} margin={{ top: 5, right: 10, left: (isComparison || chartType === 'Relative' || chartType === 'Daily Pct') ? -20 : 10, bottom: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                                        <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickFormatter={dtFormatter} minTickGap={30} hide />
+                                        <YAxis stroke="#64748b" fontSize={10} domain={[0, 100]} ticks={[30, 50, 70]} />
+                                        <Tooltip
+                                            contentStyle={customTooltipStyle}
+                                            itemStyle={{ color: '#fff', fontSize: '13px', fontWeight: 500 }}
+                                            labelStyle={{ color: '#94a3b8', fontSize: '12px', marginBottom: '6px' }}
+                                            labelFormatter={dtFormatter}
+                                            separator=" : "
+                                            formatter={(value, name) => {
+                                                const baseId = name.replace('_RSI', '');
+                                                const baseName = availableItems.find(a => a.id === baseId)?.name || baseId;
+                                                return [value.toFixed(1), `${baseName} (RSI)`];
+                                            }}
+                                        />
+                                        <ReferenceLine y={70} stroke="rgba(239, 68, 68, 0.5)" strokeDasharray="3 3" />
+                                        <ReferenceLine y={30} stroke="rgba(16, 185, 129, 0.5)" strokeDasharray="3 3" />
+                                        {selectedIds.map(id => (
+                                            <Line key={`${id}_RSI`} type="monotone" dataKey={`${id}_RSI`} stroke={ASSET_COLORS[id] || COLORS.teal} strokeWidth={1.5} dot={false} isAnimationActive={false} />
+                                        ))}
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {renderSubTabs()}
@@ -274,7 +636,7 @@ export default function MacroeconomicsTab({ data, timeFilter, customRange, timeF
                                     <span style={{ fontSize: '10px', fontWeight: 800, color: COLORS.green, letterSpacing: '0.05em' }}>{loadingIndices ? 'SYNCING...' : 'LIVE'}</span>
                                 </div>
                             </div>
-                            <GlobalIndicatorsTable indices={indices} />
+                            <GlobalIndicatorsTable indices={indices.filter(i => i.region !== 'Crypto' && i.region !== 'Commodity')} />
                         </div>
                     </div>
 
@@ -319,53 +681,15 @@ export default function MacroeconomicsTab({ data, timeFilter, customRange, timeF
                 </div>
             )}
 
-            {subTab === 'Commodity' && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
-                    {[
-                        { label: 'Gold', symbol: 'TVC:GOLD' },
-                        { label: 'Crude Oil WTI', symbol: 'TVC:USOIL' },
-                        { label: 'Copper', symbol: 'COMEX:HG1!' },
-                        { label: 'Natural Gas', symbol: 'NYMEX:NG1!' },
-                        { label: 'Silver', symbol: 'TVC:SILVER' },
-                        { label: 'Wheat', symbol: 'CBOT:ZW1!' }
-                    ].map(card => (
-                        <div key={card.label} className="card" style={{ padding: '0', height: '400px', border: `1px solid ${COLORS.border}`, borderRadius: '12px', overflow: 'hidden' }}>
-                            <div style={{ padding: '0.875rem 1rem', borderBottom: `1px solid ${COLORS.border}`, background: 'rgba(30, 41, 59, 0.4)' }}>
-                                <h3 style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#f8fafc' }}>{card.label}</h3>
-                            </div>
-                            <TradingViewMiniChartWidget symbol={card.symbol} timeFilter={timeFilter} />
-                        </div>
-                    ))}
-                </div>
-            )}
+            {subTab === 'Commodity' && renderComparisonSection('Commodity', selectedCommodity, setSelectedCommodity, commodityChartData)}
 
-            {subTab === 'Crypto' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
-                        {[
-                            { label: 'Bitcoin (BTC)', symbol: 'BINANCE:BTCUSDT' },
-                            { label: 'Ethereum (ETH)', symbol: 'BINANCE:ETHUSDT' },
-                            { label: 'BNB', symbol: 'BINANCE:BNBUSDT' },
-                            { label: 'Solana (SOL)', symbol: 'BINANCE:SOLUSDT' },
-                            { label: 'XRP', symbol: 'BINANCE:XRPUSDT' },
-                            { label: 'USDT Dominance', symbol: 'CRYPTOCAP:USDT.D' }
-                        ].map(card => (
-                            <div key={card.label} className="card" style={{ padding: '0', height: '400px', border: `1px solid ${COLORS.border}`, borderRadius: '12px', overflow: 'hidden' }}>
-                                <div style={{ padding: '0.875rem 1rem', borderBottom: `1px solid ${COLORS.border}`, background: 'rgba(30, 41, 59, 0.4)' }}>
-                                    <h3 style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#f8fafc' }}>{card.label}</h3>
-                                </div>
-                                <TradingViewMiniChartWidget symbol={card.symbol} timeFilter={timeFilter} />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+            {subTab === 'Crypto' && renderComparisonSection('Crypto', selectedCrypto, setSelectedCrypto, cryptoChartData)}
         </div>
     );
 }
 
 // PREMIUM INDICATORS TABLE
-function GlobalIndicatorsTable({ indices }) {
+function GlobalIndicatorsTable({ indices, hideValuation = false }) {
     const formatVal = (val) => {
         if (val == null || isNaN(val)) return '–';
         if (Math.abs(val) < 100) return val.toFixed(1);
@@ -381,7 +705,7 @@ function GlobalIndicatorsTable({ indices }) {
         return (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
                 <span style={{ fontWeight: 700, fontSize: '12px', color }}>
-                    {isPositive && '+'}{val.toFixed(2)}{isPercent && '%'}
+                    {isPositive && '+'}{val.toFixed(1)}{isPercent && '%'}
                 </span>
                 <TrendIcon trend={trend} />
             </div>
@@ -405,20 +729,20 @@ function GlobalIndicatorsTable({ indices }) {
                 <table style={{ width: '100%', minWidth: 'max-content', borderCollapse: 'separate', borderSpacing: 0, fontSize: '11px', color: '#94a3b8' }}>
                     <thead style={{ position: 'sticky', top: 0, zIndex: 12 }}>
                         <tr style={{ background: '#1e293b', textAlign: 'left' }}>
-                            <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: 0, zIndex: 11, background: '#1e293b' }}>Index</th>
-                            <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '120px', zIndex: 11, background: '#1e293b' }}>Region</th>
-                            <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'right', borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '210px', zIndex: 11, background: '#1e293b' }}>Date</th>
-                            <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'right', borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '300px', zIndex: 11, background: '#1e293b' }}>Price</th>
+                            <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: 0, zIndex: 11, background: '#1e293b', width: '130px', minWidth: '130px' }}>Index</th>
+                            <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '130px', zIndex: 11, background: '#1e293b', width: '90px', minWidth: '90px' }}>Region</th>
+                            <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'right', borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '220px', zIndex: 11, background: '#1e293b', width: '100px', minWidth: '100px' }}>Date</th>
+                            <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'right', borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '320px', zIndex: 11, background: '#1e293b', width: '100px', minWidth: '100px' }}>Price</th>
                             <th colSpan="4" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}` }}>Turnover</th>
                             <th colSpan="6" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}` }}>Performance</th>
-                            <th colSpan="2" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}` }}>Valuation</th>
+                            {!hideValuation && <th colSpan="2" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}` }}>Valuation</th>}
                             <th colSpan="7" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}` }}>Technical Benchmarks</th>
                         </tr>
                         <tr style={{ background: '#1e293b', textAlign: 'center', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                             <th style={{ borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: 0, zIndex: 11, background: '#1e293b' }}></th>
-                            <th style={{ borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '120px', zIndex: 11, background: '#1e293b' }}></th>
-                            <th style={{ borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '210px', zIndex: 11, background: '#1e293b' }}></th>
-                            <th style={{ borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '300px', zIndex: 11, background: '#1e293b' }}></th>
+                            <th style={{ borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '130px', zIndex: 11, background: '#1e293b' }}></th>
+                            <th style={{ borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '220px', zIndex: 11, background: '#1e293b' }}></th>
+                            <th style={{ borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '320px', zIndex: 11, background: '#1e293b' }}></th>
                             <th style={{ padding: '6px', borderLeft: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}` }}>Value</th>
                             <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>5D Avg</th>
                             <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>10D Avg</th>
@@ -429,8 +753,12 @@ function GlobalIndicatorsTable({ indices }) {
                             <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>6M</th>
                             <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>12M</th>
                             <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>YTD</th>
-                            <th style={{ padding: '6px', borderLeft: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}` }}>P/E</th>
-                            <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>P/B</th>
+                            {!hideValuation && (
+                                <>
+                                    <th style={{ padding: '6px', borderLeft: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}` }}>P/E</th>
+                                    <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>P/B</th>
+                                </>
+                            )}
                             <th style={{ padding: '6px', borderLeft: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}` }}>Resistance</th>
                             <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>Support</th>
                             <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>RSI</th>
@@ -444,9 +772,9 @@ function GlobalIndicatorsTable({ indices }) {
                         {indices.map((row, i) => (
                             <tr key={i} className="table-row" style={{ borderBottom: `1px solid ${COLORS.border}`, transition: 'background 0.2s', '--row-bg': '#0f172a' }}>
                                 <td style={{ padding: '8px 16px', fontWeight: 700, color: '#f1f5f9', fontSize: '13px', position: 'sticky', left: 0, zIndex: 5, background: 'var(--row-bg, #0f172a)' }}>{row.name}</td>
-                                <td style={{ padding: '8px 16px', color: '#64748b', fontWeight: 500, position: 'sticky', left: '120px', zIndex: 5, background: 'var(--row-bg, #0f172a)' }}>{row.region}</td>
-                                <td style={{ padding: '8px 16px', textAlign: 'right', color: '#94a3b8', fontSize: '11px', position: 'sticky', left: '210px', zIndex: 5, background: 'var(--row-bg, #0f172a)' }}>{row.date === 'N/A' ? '–' : row.date}</td>
-                                <td style={{ padding: '8px 16px', textAlign: 'right', fontWeight: 700, color: '#f8fafc', fontSize: '12px', position: 'sticky', left: '300px', zIndex: 5, background: 'var(--row-bg, #0f172a)' }}>
+                                <td style={{ padding: '8px 16px', color: '#64748b', fontWeight: 500, position: 'sticky', left: '130px', zIndex: 5, background: 'var(--row-bg, #0f172a)' }}>{row.region}</td>
+                                <td style={{ padding: '8px 16px', textAlign: 'right', color: '#94a3b8', fontSize: '11px', position: 'sticky', left: '220px', zIndex: 5, background: 'var(--row-bg, #0f172a)' }}>{row.date === 'N/A' ? '–' : row.date}</td>
+                                <td style={{ padding: '8px 16px', textAlign: 'right', fontWeight: 700, color: '#f8fafc', fontSize: '12px', position: 'sticky', left: '320px', zIndex: 5, background: 'var(--row-bg, #0f172a)' }}>
                                     {row.date === 'N/A' ? '–' : formatVal(row.close)}
                                 </td>
                                 <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}` }}>
@@ -507,8 +835,12 @@ function GlobalIndicatorsTable({ indices }) {
                                 <td style={{ padding: '8px 10px', textAlign: 'right' }}>{row.d12m != null && row.date !== 'N/A' ? getValueWithIcon(row.d12m, true) : '–'}</td>
                                 <td style={{ padding: '8px 10px', textAlign: 'right' }}>{row.ytd != null && row.date !== 'N/A' ? getValueWithIcon(row.ytd, true) : '–'}</td>
 
-                                <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}`, color: '#cbd5e1', fontWeight: 600 }}>{row.pe != null && row.date !== 'N/A' ? `${formatVal(row.pe)}x` : '–'}</td>
-                                <td style={{ padding: '8px 16px', textAlign: 'right', color: '#cbd5e1', fontWeight: 600 }}>{row.pb != null && row.date !== 'N/A' ? `${formatVal(row.pb)}x` : '–'}</td>
+                                {!hideValuation && (
+                                    <>
+                                        <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}`, color: '#cbd5e1', fontWeight: 600 }}>{row.pe != null && row.date !== 'N/A' ? `${formatVal(row.pe)}x` : '–'}</td>
+                                        <td style={{ padding: '8px 16px', textAlign: 'right', color: '#cbd5e1', fontWeight: 600 }}>{row.pb != null && row.date !== 'N/A' ? `${formatVal(row.pb)}x` : '–'}</td>
+                                    </>
+                                )}
 
                                 <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}`, color: '#f1f5f9' }}>{row.resistance != null && row.date !== 'N/A' ? formatVal(row.resistance) : '–'}</td>
                                 <td style={{ padding: '8px 16px', textAlign: 'right', color: '#f1f5f9' }}>{row.support != null && row.date !== 'N/A' ? formatVal(row.support) : '–'}</td>
