@@ -729,20 +729,20 @@ function GlobalIndicatorsTable({ indices, hideValuation = false }) {
                 <table style={{ width: '100%', minWidth: 'max-content', borderCollapse: 'separate', borderSpacing: 0, fontSize: '11px', color: '#94a3b8' }}>
                     <thead style={{ position: 'sticky', top: 0, zIndex: 12 }}>
                         <tr style={{ background: '#1e293b', textAlign: 'left' }}>
-                            <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: 0, zIndex: 11, background: '#1e293b', width: '130px', minWidth: '130px' }}>Index</th>
-                            <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '130px', zIndex: 11, background: '#1e293b', width: '90px', minWidth: '90px' }}>Region</th>
-                            <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'right', borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '220px', zIndex: 11, background: '#1e293b', width: '100px', minWidth: '100px' }}>Date</th>
-                            <th style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'right', borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '320px', zIndex: 11, background: '#1e293b', width: '100px', minWidth: '100px' }}>Price</th>
+                            <th className="sticky-col-1" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', borderBottom: `1px solid ${COLORS.border}`, width: '130px', minWidth: '130px' }}>Index</th>
+                            <th className="sticky-col-2" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', borderBottom: `1px solid ${COLORS.border}`, width: '90px', minWidth: '90px' }}>Region</th>
+                            <th className="sticky-col-3" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'right', borderBottom: `1px solid ${COLORS.border}`, width: '100px', minWidth: '100px' }}>Date</th>
+                            <th className="sticky-col-4" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'right', borderBottom: `1px solid ${COLORS.border}`, width: '100px', minWidth: '100px' }}>Price</th>
                             <th colSpan="4" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}` }}>Turnover</th>
                             <th colSpan="6" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}` }}>Performance</th>
                             {!hideValuation && <th colSpan="2" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}` }}>Valuation</th>}
                             <th colSpan="7" style={{ padding: '10px 16px', fontWeight: 600, color: '#cbd5e1', textAlign: 'center', borderLeft: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}` }}>Technical Benchmarks</th>
                         </tr>
                         <tr style={{ background: '#1e293b', textAlign: 'center', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                            <th style={{ borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: 0, zIndex: 11, background: '#1e293b' }}></th>
-                            <th style={{ borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '130px', zIndex: 11, background: '#1e293b' }}></th>
-                            <th style={{ borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '220px', zIndex: 11, background: '#1e293b' }}></th>
-                            <th style={{ borderBottom: `1px solid ${COLORS.border}`, position: 'sticky', left: '320px', zIndex: 11, background: '#1e293b' }}></th>
+                            <th className="sticky-col-1" style={{ borderBottom: `1px solid ${COLORS.border}` }}></th>
+                            <th className="sticky-col-2" style={{ borderBottom: `1px solid ${COLORS.border}` }}></th>
+                            <th className="sticky-col-3" style={{ borderBottom: `1px solid ${COLORS.border}` }}></th>
+                            <th className="sticky-col-4" style={{ borderBottom: `1px solid ${COLORS.border}` }}></th>
                             <th style={{ padding: '6px', borderLeft: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}` }}>Value</th>
                             <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>5D Avg</th>
                             <th style={{ padding: '6px', borderBottom: `1px solid ${COLORS.border}` }}>10D Avg</th>
@@ -771,10 +771,10 @@ function GlobalIndicatorsTable({ indices, hideValuation = false }) {
                     <tbody>
                         {indices.map((row, i) => (
                             <tr key={i} className="table-row" style={{ borderBottom: `1px solid ${COLORS.border}`, transition: 'background 0.2s', '--row-bg': '#0f172a' }}>
-                                <td style={{ padding: '8px 16px', fontWeight: 700, color: '#f1f5f9', fontSize: '13px', position: 'sticky', left: 0, zIndex: 5, background: 'var(--row-bg, #0f172a)' }}>{row.name}</td>
-                                <td style={{ padding: '8px 16px', color: '#64748b', fontWeight: 500, position: 'sticky', left: '130px', zIndex: 5, background: 'var(--row-bg, #0f172a)' }}>{row.region}</td>
-                                <td style={{ padding: '8px 16px', textAlign: 'right', color: '#94a3b8', fontSize: '11px', position: 'sticky', left: '220px', zIndex: 5, background: 'var(--row-bg, #0f172a)' }}>{row.date === 'N/A' ? '–' : row.date}</td>
-                                <td style={{ padding: '8px 16px', textAlign: 'right', fontWeight: 700, color: '#f8fafc', fontSize: '12px', position: 'sticky', left: '320px', zIndex: 5, background: 'var(--row-bg, #0f172a)' }}>
+                                <td className="sticky-col-1" style={{ padding: '8px 16px', fontWeight: 700, color: '#f1f5f9', fontSize: '13px' }}>{row.name}</td>
+                                <td className="sticky-col-2" style={{ padding: '8px 16px', color: '#64748b', fontWeight: 500 }}>{row.region}</td>
+                                <td className="sticky-col-3" style={{ padding: '8px 16px', textAlign: 'right', color: '#94a3b8', fontSize: '11px' }}>{row.date === 'N/A' ? '–' : row.date}</td>
+                                <td className="sticky-col-4" style={{ padding: '8px 16px', textAlign: 'right', fontWeight: 700, color: '#f8fafc', fontSize: '12px' }}>
                                     {row.date === 'N/A' ? '–' : formatVal(row.close)}
                                 </td>
                                 <td style={{ padding: '8px 16px', textAlign: 'right', borderLeft: `1px solid ${COLORS.border}` }}>
@@ -895,6 +895,17 @@ function GlobalIndicatorsTable({ indices, hideValuation = false }) {
                     --row-bg: rgba(30, 41, 59, 1);
                 }
                 td, th { white-space: nowrap; }
+                
+                .sticky-col-1 { position: sticky; left: 0; z-index: 5; background: var(--row-bg, #0f172a); }
+                thead .sticky-col-1 { z-index: 11; background: #1e293b; }
+
+                @media (min-width: 768px) {
+                    .sticky-col-2 { position: sticky; left: 130px; z-index: 5; background: var(--row-bg, #0f172a); }
+                    .sticky-col-3 { position: sticky; left: 220px; z-index: 5; background: var(--row-bg, #0f172a); }
+                    .sticky-col-4 { position: sticky; left: 320px; z-index: 5; background: var(--row-bg, #0f172a); }
+                    
+                    thead .sticky-col-2, thead .sticky-col-3, thead .sticky-col-4 { z-index: 11; background: #1e293b; color: #cbd5e1; }
+                }
             `}</style>
         </div>
     );
