@@ -1,0 +1,192 @@
+[
+  {
+    "industry": "Chemicals",
+    "vnName": "Hóa chất",
+    "code": "1300",
+    "pe": 17.42009402919369,
+    "pb": 2.085126499508821,
+    "dividendYield": 0.018738620376002005,
+    "count": 61,
+    "latestDate": "2026-03-12"
+  },
+  {
+    "industry": "Basic Resources",
+    "vnName": "Tài nguyên",
+    "code": "1700",
+    "pe": 17.494559522834017,
+    "pb": 1.6395535672333896,
+    "dividendYield": 0.005501688992362162,
+    "count": 122,
+    "latestDate": "2026-03-12"
+  },
+  {
+    "industry": "Construction & Materials",
+    "vnName": "Xây dựng & Vật liệu",
+    "code": "2300",
+    "pe": 12.96027798270883,
+    "pb": 1.5408102673442106,
+    "dividendYield": 0.018557556889666867,
+    "count": 423,
+    "latestDate": "2026-03-12"
+  },
+  {
+    "industry": "Industrial Goods & Services",
+    "vnName": "Hàng hóa và dịch vụ công nghiệp",
+    "code": "2700",
+    "pe": 15.431625535216464,
+    "pb": 2.207823642067426,
+    "dividendYield": 0.018384595231955465,
+    "count": 345,
+    "latestDate": "2026-03-12"
+  },
+  {
+    "industry": "Automobiles & Parts",
+    "vnName": "Ôtô & linh kiện phụ tùng ",
+    "code": "3300",
+    "pe": 5.011989751294893,
+    "pb": 1.4141286371127038,
+    "dividendYield": 0.1100185105065667,
+    "count": 11,
+    "latestDate": "2026-03-12"
+  },
+  {
+    "industry": "Food & Beverage",
+    "vnName": "Thực phẩm & Đồ uống",
+    "code": "3500",
+    "pe": 18.082103987836923,
+    "pb": 2.9956105010314906,
+    "dividendYield": 0.03706205848339151,
+    "count": 191,
+    "latestDate": "2026-03-12"
+  },
+  {
+    "industry": "Personal & Household Goods",
+    "vnName": "Đồ dùng cá nhân và đồ gia dụng",
+    "code": "3700",
+    "pe": 9.806583562612678,
+    "pb": 1.153446611065063,
+    "dividendYield": 0.03859000426122841,
+    "count": 108,
+    "latestDate": "2026-03-12"
+  },
+  {
+    "industry": "Health Care",
+    "vnName": "Y tế",
+    "code": "4500",
+    "pe": 17.31336932400696,
+    "pb": 1.9315077196257093,
+    "dividendYield": 0.03600821069588097,
+    "count": 64,
+    "latestDate": "2026-03-12"
+  },
+  {
+    "industry": "Retail",
+    "vnName": "Dịch vụ bán lẻ",
+    "code": "5300",
+    "pe": 17.587327474719746,
+    "pb": 3.103576578460365,
+    "dividendYield": 0.012692715818850266,
+    "count": 60,
+    "latestDate": "2026-03-12"
+  },
+  {
+    "industry": "Media",
+    "vnName": "Phương tiện truyền thông",
+    "code": "5500",
+    "pe": 1.4045847429943223,
+    "pb": 1.800533947757184,
+    "dividendYield": 0.5782329290863979,
+    "count": 33,
+    "latestDate": "2026-03-12"
+  },
+  {
+    "industry": "Travel & Leisure",
+    "vnName": "Du lịch & Giải trí",
+    "code": "5700",
+    "pe": 18.341312393206966,
+    "pb": 4.391670196414517,
+    "dividendYield": 0.0015133477725307518,
+    "count": 45,
+    "latestDate": "2026-03-12"
+  },
+  {
+    "industry": "Telecommunications",
+    "vnName": "Viễn thông",
+    "code": "6500",
+    "pe": 24.53681229935817,
+    "pb": 5.97277296446018,
+    "dividendYield": 0.015281654907476148,
+    "count": 11,
+    "latestDate": "2026-03-12"
+  },
+  {
+    "industry": "Utilities",
+    "vnName": "Dịch vụ tiện ích",
+    "code": "7500",
+    "pe": 14.658673896510798,
+    "pb": 2.0554148862473305,
+    "dividendYield": 0.026918971634873678,
+    "count": 153,
+    "latestDate": "2026-03-12"
+  },
+  {
+    "industry": "Banks",
+    "vnName": "Ngân hàng",
+    "code": "8300",
+    "pe": 9.547480641183068,
+    "pb": 1.5189617789030145,
+    "dividendYield": 0.01631267623669501,
+    "count": 44,
+    "latestDate": "2026-03-12"
+  },
+  {
+    "industry": "Insurance",
+    "vnName": "Bảo hiểm",
+    "code": "8500",
+    "pe": 15.17778904052325,
+    "pb": 1.7924057720825268,
+    "dividendYield": 0.023607993749448688,
+    "count": 13,
+    "latestDate": "2026-03-12"
+  },
+  {
+    "industry": "Real Estate",
+    "vnName": "Bất động sản",
+    "code": "8600",
+    "pe": 22.899757023332683,
+    "pb": 2.5628650080560167,
+    "dividendYield": 0.00296105550711814,
+    "count": 139,
+    "latestDate": "2026-03-12"
+  },
+  {
+    "industry": "Financial Services",
+    "vnName": "Dịch vụ tài chính",
+    "code": "8700",
+    "pe": 17.341955616146617,
+    "pb": 1.8914700544782987,
+    "dividendYield": 0.009863336161774193,
+    "count": 189,
+    "latestDate": "2026-03-12"
+  },
+  {
+    "industry": "Technology",
+    "vnName": "Công nghệ",
+    "code": "9500",
+    "pe": 15.356006772039311,
+    "pb": 3.1025933980554488,
+    "dividendYield": 0.02042369621218949,
+    "count": 40,
+    "latestDate": "2026-03-12"
+  },
+  {
+    "industry": "Oil & Gas",
+    "vnName": "Dầu khí",
+    "code": "0500",
+    "pe": 28.929355499930768,
+    "pb": 2.4080704579345475,
+    "dividendYield": 0.006781251054389687,
+    "count": 27,
+    "latestDate": "2026-03-12"
+  }
+]

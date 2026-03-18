@@ -1,0 +1,34 @@
+[dotenv@17.3.1] injecting env (12) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+--- Peeking vnd_data/industry_analysis/vnd_industry_analysis_260312.json ---
+Characters read: 49479
+Start of content: {
+  "classification": [
+    {
+      "industryCode": "0500",
+      "industryLevel": "2",
+      "higherLevelCode": "0001",
+      "englishName": "Oil & Gas",
+      "vietnameseName": "Dầu khí",
+      "totalCount": 27.0,
+      "codeList": "BSR,MTS,PVD,PVY,POV,PCN,PVC,PLX,OIL,PND,PVS,POS,POB,PAT,PVB,PVO,PPY,PTV,PTX,PEQ,PSN,TDG,DMS,PLE,PCG,TLP,PSH",
+      "taxCodeList": "t0305795054,t0102631910,t3700146458,t0600393680,t5700100707,t3500806844,t0100108102,t5300656602,t3500850392 ,t0100150873,t0100150577,t4400114094,t0103100084,t3000413193,t0600759399,t3500818790,t4300378569,t0100107370,t6300177249,t0302495126,t1000808141,t0102349865,t2900428497,t2400345718,t2801448559,t0305447723,t0101466968"
+    },
+    {
+      "industryCode": "1300",
+      "industryLevel": "2",
+      "higherLevelCode": "1000",
+      "englishName": "Chemicals",
+      "vietnameseName": "Hóa chất",
+      "totalCount": 61.0,
+      "codeList": "HAI,TRC,PLC,HSI,HVT,VAF,CNC,CSV,DPD,CPC,PSW,ADS,SIV,HPH,SBR,AVG,APP,SFG,RTB,DGL,PGN,DCI,
+Found possible top level keys: [
+  '"classification":', '"industryCode":',
+  '"industryLevel":',  '"higherLevelCode":',
+  '"englishName":',    '"vietnameseName":',
+  '"totalCount":',     '"codeList":',
+  '"taxCodeList":',    '"ratios":',
+  '"code":',           '"group":',
+  '"reportDate":',     '"ratioCode":',
+  '"itemName":',       '"value":'
+]

@@ -1,0 +1,11 @@
+[
+  { "industry": "Banks", "pe": 12.5, "pb": 1.8, "roe": 15.5, "count": 18, "marketCap": 1500000, "flow": 0.45, "momentum": 0.12 },
+  { "industry": "RealEstate", "pe": 22.4, "pb": 2.5, "roe": 18.2, "count": 45, "marketCap": 1200000, "flow": -0.21, "momentum": -0.05 },
+  { "industry": "Financials", "pe": 15.2, "pb": 2.1, "roe": 12.8, "count": 22, "marketCap": 800000, "flow": 0.15, "momentum": 0.08 },
+  { "industry": "Resources", "pe": 9.8, "pb": 1.2, "roe": 14.5, "count": 30, "marketCap": 950000, "flow": 0.58, "momentum": 0.15 },
+  { "industry": "Consumer", "pe": 18.5, "pb": 3.2, "roe": 20.1, "count": 40, "marketCap": 1100000, "flow": 0.05, "momentum": 0.02 },
+  { "industry": "Technology", "pe": 35.0, "pb": 5.5, "roe": 25.5, "count": 12, "marketCap": 450000, "flow": 0.12, "momentum": 0.25 },
+  { "industry": "Utilities", "pe": 14.0, "pb": 1.5, "roe": 10.2, "count": 25, "marketCap": 600000, "flow": -0.05, "momentum": -0.01 },
+  { "industry": "Industrial", "pe": 16.5, "pb": 2.0, "roe": 11.5, "count": 35, "marketCap": 750000, "flow": 0.08, "momentum": 0.04 },
+  { "industry": "Energy", "pe": 11.2, "pb": 1.4, "roe": 13.8, "count": 15, "marketCap": 550000, "flow": 0.32, "momentum": 0.10 }
+]
