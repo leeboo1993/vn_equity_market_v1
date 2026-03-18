@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import {
-    LineChart, Line, XAxis, YAxis, CartesianGrid,
+    AreaChart, Area, XAxis, YAxis, CartesianGrid,
     Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import { useSession } from 'next-auth/react';
@@ -11,7 +11,8 @@ import { useSession } from 'next-auth/react';
 const C = {
     teal: '#00a884', blue: '#3b82f6', yellow: '#f59e0b',
     red: '#e55353', green: '#10b981', purple: '#a855f7',
-    card: '#111111', border: '#222222', text: '#888888', white: '#ffffff'
+    card: '#0d1117', border: '#1f2937', text: '#9ca3af', white: '#ffffff',
+    bg: '#0a0a0a'
 };
 
 // ─── Financial helpers ────────────────────────────────────────────────────────
@@ -54,12 +55,38 @@ const fmtVND = (v, unit) => {
     return num.toLocaleString(undefined, { maximumFractionDigits: 1 });
 };
 
-// ─── Trend mini-chart ─────────────────────────────────────────────────────────
-function TrendChart({ periods, data, stmtType, fromPeriod, toPeriod }) {
+// ─── Premium Metric Card ────────────────────────────────────────────────────
+function MetricCard({ label, value, subValue, trend, icon, color = C.teal }) {
+    return (
+        <div className="flex-1 min-w-[200px] p-6 rounded-2xl border border-gray-900 bg-[#0d1016]/40 backdrop-blur-sm flex flex-col gap-4 group hover:border-gray-800 transition-all duration-300">
+            <div className="flex justify-between items-start">
+                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{label}</span>
+                <div className={`p-2 rounded-lg bg-${color}/10 text-${color}`}>
+                    {icon}
+                </div>
+            </div>
+            <div>
+                <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-black text-gray-100 tracking-tighter">{value}</span>
+                    {trend !== undefined && (
+                        <span className={`text-[10px] font-bold ${trend >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                            {trend >= 0 ? '↑' : '↓'} {Math.abs(trend).toFixed(1)}%
+                        </span>
+                    )}
+                </div>
+                <span className="text-[10px] text-gray-600 font-bold uppercase tracking-tight">{subValue}</span>
+            </div>
+            <div className={`h-1 w-full bg-gray-900 rounded-full overflow-hidden mt-auto`}>
+                <div className={`h-full bg-${color}`} style={{ width: '60%', backgroundColor: color }}></div>
+            </div>
+        </div>
+    );
+}
+
+// ─── Premium Area Chart ─────────────────────────────────────────────────────
+function PremiumTrendChart({ periods, data, stmtType, fromPeriod, toPeriod }) {
     const sortedPeriods = [...periods].reverse();
 
-    // Determine default bounds if no explicit filter
-    // periods are already sorted descending when passed in, so reverse() makes them chronological.
     let startIndex = 0;
     let endIndex = sortedPeriods.length - 1;
 
@@ -67,7 +94,6 @@ function TrendChart({ periods, data, stmtType, fromPeriod, toPeriod }) {
         const fromIdx = sortedPeriods.indexOf(fromPeriod);
         if (fromIdx !== -1) startIndex = fromIdx;
     } else {
-        // Default to last 8 periods if no filter
         startIndex = Math.max(0, sortedPeriods.length - 8);
     }
 
@@ -76,46 +102,70 @@ function TrendChart({ periods, data, stmtType, fromPeriod, toPeriod }) {
         if (toIdx !== -1) endIndex = toIdx;
     }
 
-    // Ensure valid slice bounds
-    if (startIndex > endIndex) {
-        const temp = startIndex;
-        startIndex = endIndex;
-        endIndex = temp;
-    }
-
     const displayPeriods = sortedPeriods.slice(startIndex, endIndex + 1);
     const firstItems = data[periods[0]] || [];
-    const rows = classifyItems(firstItems)[stmtType].slice(0, 4);
+    const rows = classifyItems(firstItems)[stmtType].slice(0, 3);
     if (!rows.length) return null;
 
     const chartData = displayPeriods.map(p => {
         const obj = { period: p };
         for (const row of rows) {
             const match = (data[p] || []).find(x => x.code === row.code);
-            obj[row.displayName] = match ? Math.round(match.value / 1000) : null;
+            obj[row.displayName] = match ? Math.round(match.value / 1000000000) : null;
         }
         return obj;
     });
 
-    const lineColors = [C.teal, C.blue, C.yellow, C.purple];
+    const colors = [C.teal, C.blue, C.yellow];
 
     return (
-        <div style={{ height: '200px', marginTop: '1rem' }}>
+        <div style={{ height: '350px', width: '100%' }} className="mt-4">
             <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 10, right: 20, left: 10, bottom: 5 }}>
-                    <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
-                    <XAxis dataKey="period" stroke={C.text} fontSize={10} minTickGap={20} />
-                    <YAxis stroke={C.text} fontSize={10} tickFormatter={v => `${v.toLocaleString()}B`}
-                        domain={[d => Math.floor(d * 0.9), d => Math.ceil(d * 1.1)]} width={55} />
-                    <Tooltip contentStyle={{ background: C.card, border: `1px solid ${C.border}`, fontSize: '11px' }}
-                        formatter={v => v != null ? [`${v.toLocaleString()}B VND`, ''] : ['—', '']} />
-                    <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '4px' }} />
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <defs>
+                        {rows.map((row, i) => (
+                            <linearGradient key={`grad-${i}`} id={`color-${i}`} x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor={colors[i]} stopOpacity={0.3} />
+                                <stop offset="95%" stopColor={colors[i]} stopOpacity={0} />
+                            </linearGradient>
+                        ))}
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#111" />
+                    <XAxis
+                        dataKey="period"
+                        stroke="#333"
+                        fontSize={9}
+                        tick={{ fill: '#444' }}
+                        axisLine={false}
+                        tickLine={false}
+                    />
+                    <YAxis
+                        stroke="#333"
+                        fontSize={9}
+                        tick={{ fill: '#444' }}
+                        tickFormatter={v => `${v}B`}
+                        axisLine={false}
+                        tickLine={false}
+                        width={40}
+                    />
+                    <Tooltip
+                        contentStyle={{ background: '#111', border: '1px solid #222', borderRadius: '12px', fontSize: '10px' }}
+                        itemStyle={{ padding: '0px' }}
+                    />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: '10px', paddingTop: '20px' }} />
                     {rows.map((row, i) => (
-                        <Line key={row.code} type="monotone" dataKey={row.displayName}
-                            stroke={lineColors[i % lineColors.length]} dot={false}
-                            strokeWidth={2} connectNulls />
+                        <Area
+                            key={row.code}
+                            type="monotone"
+                            dataKey={row.displayName}
+                            stroke={colors[i]}
+                            fillOpacity={1}
+                            fill={`url(#color-${i})`}
+                            strokeWidth={2}
+                            connectNulls
+                        />
                     ))}
-                </LineChart>
+                </AreaChart>
             </ResponsiveContainer>
         </div>
     );
@@ -123,12 +173,11 @@ function TrendChart({ periods, data, stmtType, fromPeriod, toPeriod }) {
 
 // ─── Financial Table ──────────────────────────────────────────────────────────
 function FinancialTable({ periods, data, stmtType, fromPeriod, toPeriod, isAdmin, isEditing, rowPrefs, onPrefChange, globalUnit }) {
-    if (!periods.length) return <div style={{ color: C.text, fontSize: '13px', padding: '2rem' }}>No data.</div>;
+    if (!periods.length) return <div className="p-12 text-center text-gray-700 font-black uppercase tracking-widest text-[10px]">Awaiting Dataset Verification...</div>;
 
     const firstItems = data[periods[0]] || [];
     let rows = classifyItems(firstItems)[stmtType];
 
-    // Filter out hidden rows if not in edit mode
     if (!isEditing) {
         rows = rows.filter(r => {
             const code = r.itemCode || r.code;
@@ -136,10 +185,9 @@ function FinancialTable({ periods, data, stmtType, fromPeriod, toPeriod, isAdmin
         });
     }
 
-    // Sort rows by displayOrder to match VNDirect standard ordering
     rows.sort((a, b) => (a.displayOrder ?? 9999) - (b.displayOrder ?? 9999));
 
-    if (!rows || !rows.length) return <div style={{ color: C.text, fontSize: '13px', padding: '2rem' }}>No {stmtType} items found. Ratios will be added soon.</div>;
+    if (!rows || !rows.length) return <div className="p-12 text-center text-gray-700 font-black uppercase tracking-widest text-[10px]">No {stmtType} Architecture Found</div>;
 
     const sortedPeriods = [...periods].reverse();
 
@@ -164,7 +212,6 @@ function FinancialTable({ periods, data, stmtType, fromPeriod, toPeriod, isAdmin
         endIndex = temp;
     }
 
-    // Ensure display is chronological (oldest to newest from left to right)
     const displayPeriods = sortedPeriods.slice(startIndex, endIndex + 1);
     const lookup = {};
     for (const p of displayPeriods) {
@@ -173,15 +220,15 @@ function FinancialTable({ periods, data, stmtType, fromPeriod, toPeriod, isAdmin
     }
 
     return (
-        <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+        <div className="overflow-x-auto relative">
+            <table className="w-full border-collapse">
                 <thead>
-                    <tr>
-                        <th style={{ textAlign: 'left', padding: '10px 12px', color: C.text, borderBottom: `1px solid ${C.border}`, fontWeight: 500, position: 'sticky', left: 0, background: C.card, minWidth: '200px' }}>
-                            Item (Billion VND)
+                    <tr className="border-b border-gray-900 sticky top-0 z-30 bg-[#0d1117]">
+                        <th className="sticky left-0 top-0 z-40 bg-[#0d1117] text-left p-4 text-[10px] font-black text-gray-600 uppercase tracking-widest min-w-[240px] border-b border-gray-900">
+                            Strategic Metrics ({globalUnit === 'raw' ? 'VND' : `${globalUnit} VND`})
                         </th>
                         {displayPeriods.map(p => (
-                            <th key={p} style={{ textAlign: 'right', padding: '10px 12px', color: C.white, borderBottom: `1px solid ${C.border}`, fontWeight: 600, whiteSpace: 'nowrap', minWidth: '85px' }}>{p}</th>
+                            <th key={p} className="sticky top-0 p-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest min-w-[100px] border-l border-gray-900/30 bg-[#0d1117] border-b border-gray-900">{p}</th>
                         ))}
                     </tr>
                 </thead>
@@ -193,33 +240,37 @@ function FinancialTable({ periods, data, stmtType, fromPeriod, toPeriod, isAdmin
                         const customName = pref.name || item.displayName;
 
                         const vals = displayPeriods.map(p => lookup[p][code]);
+
+                        // Conditional highlight for key metrics
+                        const isKeyMetric = ['net revenue', 'profit before tax', 'profit after tax', 'net profit'].some(kw => customName.toLowerCase().includes(kw));
+
                         return (
-                            <tr key={code} style={{ background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)', opacity: isEditing && isHidden ? 0.4 : 1 }}>
-                                <td style={{ padding: '8px 12px', color: C.text, borderBottom: `1px solid ${C.border}`, position: 'sticky', left: 0, background: i % 2 === 0 ? C.card : '#131313', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={customName}>
+                            <tr key={code} className={`group hover:bg-white/[0.02] transition-colors border-b border-gray-900/50 ${isKeyMetric ? 'bg-emerald-500/[0.02]' : ''}`}>
+                                <td className={`sticky left-0 z-10 p-4 text-[11px] font-bold text-gray-400 border-r border-gray-900/50 backdrop-blur-md bg-[#0d1117]/80 group-hover:text-gray-100 transition-colors`}>
                                     {isEditing ? (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={!isHidden}
-                                                    onChange={(e) => onPrefChange(code, 'hidden', !e.target.checked)}
-                                                    style={{ marginRight: '8px', cursor: 'pointer', accentColor: C.teal }}
-                                                />
-                                                <input
-                                                    type="text"
-                                                    value={pref.name !== undefined ? pref.name : item.displayName}
-                                                    onChange={(e) => onPrefChange(code, 'name', e.target.value)}
-                                                    style={{ background: '#222', border: '1px solid #444', color: '#fff', fontSize: '11px', padding: '2px 4px', width: '220px' }}
-                                                    placeholder="Custom Row Name"
-                                                />
-                                            </div>
+                                        <div className="flex items-center gap-3">
+                                            <input
+                                                type="checkbox"
+                                                checked={!isHidden}
+                                                onChange={(e) => onPrefChange(code, 'hidden', !e.target.checked)}
+                                                className="w-3 h-3 accent-emerald-500 rounded border-gray-800 bg-black"
+                                            />
+                                            <input
+                                                type="text"
+                                                value={pref.name !== undefined ? pref.name : item.displayName}
+                                                onChange={(e) => onPrefChange(code, 'name', e.target.value)}
+                                                className="bg-black border border-gray-800 text-emerald-500 px-2 py-1 flex-1 text-[10px] font-bold outline-none focus:border-emerald-500"
+                                            />
                                         </div>
                                     ) : (
-                                        <>{customName}</>
+                                        <div className="flex items-center gap-2">
+                                            {isKeyMetric && <div className="w-1 h-3 rounded-full bg-emerald-500/50"></div>}
+                                            {customName}
+                                        </div>
                                     )}
                                 </td>
                                 {vals.map((v, j) => (
-                                    <td key={j} style={{ padding: '8px 12px', textAlign: 'right', color: v != null && v < 0 ? C.red : C.teal, borderBottom: `1px solid ${C.border}`, fontVariantNumeric: 'tabular-nums' }}>
+                                    <td key={j} className={`p-4 text-right text-[11px] font-black tabular-nums transition-all ${v < 0 ? 'text-rose-500' : 'text-gray-300 group-hover:text-emerald-400'}`}>
                                         {fmtVND(v, globalUnit)}
                                     </td>
                                 ))}
@@ -233,7 +284,7 @@ function FinancialTable({ periods, data, stmtType, fromPeriod, toPeriod, isAdmin
 }
 
 // ─── Company Financials panel ─────────────────────────────────────────────────
-const STMT_LABELS = { IS: 'Income Statement', BS: 'Balance Sheet', CF: 'Cash Flow', Ratio: 'Key Ratios' };
+const STMT_LABELS = { IS: 'Income Statement', BS: 'Balance Sheet', CF: 'Cash Flow', Ratio: 'Performance Ratios' };
 
 export default function CompanyFinancials() {
     const { data: session } = useSession();
@@ -258,25 +309,11 @@ export default function CompanyFinancials() {
 
     useEffect(() => {
         let mounted = true;
-        fetch('/api/stock-info')
-            .then(res => res.json())
-            .then(data => { if (mounted) setStockInfo(data); })
-            .catch(console.error);
-
-        fetch('/api/financial-prefs')
-            .then(res => res.json())
-            .then(data => { if (mounted && data.rows) setRowPrefs(data.rows); })
-            .catch(console.error);
-
-        fetch('/api/financials/available')
-            .then(res => res.json())
-            .then(data => { if (mounted && Array.isArray(data)) setAvailableTickers(data); })
-            .catch(console.error);
-
-        // Auto-load initial ticker on mount
+        fetch('/api/stock-info').then(res => res.json()).then(data => { if (mounted) setStockInfo(data); });
+        fetch('/api/financial-prefs').then(res => res.json()).then(data => { if (mounted && data.rows) setRowPrefs(data.rows); });
+        fetch('/api/financials/available').then(res => res.json()).then(data => { if (mounted && Array.isArray(data)) setAvailableTickers(data); });
         setTickerInput('VCB');
         doSearch('VCB');
-
         return () => { mounted = false; };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -309,178 +346,202 @@ export default function CompanyFinancials() {
         });
     }, [financials, view]);
 
-    // Automatically set default from/to periods when periods array changes
     useEffect(() => {
         if (periods.length > 0) {
-            // Periods are sorted descending (newest first).
-            // We want 'From' to be 8 periods ago (or oldest if < 8), and 'To' to be the newest.
             setFromPeriod(periods[Math.min(7, periods.length - 1)]);
             setToPeriod(periods[0]);
-        } else {
-            setFromPeriod('');
-            setToPeriod('');
         }
     }, [periods]);
 
     const data = useMemo(() => financials ? (view === 'Annual' ? financials.annual : financials.quarterly) : {}, [financials, view]);
 
     const handlePrefChange = (code, key, val) => {
-        setRowPrefs(prev => {
-            const newPrefs = { ...prev };
-            if (!newPrefs[code]) newPrefs[code] = {};
-            newPrefs[code] = { ...newPrefs[code], [key]: val };
-            return newPrefs;
-        });
+        setRowPrefs(prev => ({ ...prev, [code]: { ...prev[code], [key]: val } }));
     };
 
     const handleSavePrefs = async () => {
         setSavingPrefs(true);
         try {
-            const payload = { rows: rowPrefs };
             const res = await fetch('/api/financial-prefs', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({ rows: rowPrefs })
             });
-            if (res.ok) {
-                setIsEditing(false);
-            } else {
-                alert("Failed to save preferences");
-            }
+            if (res.ok) setIsEditing(false);
+            else alert("Failed to save preferences");
         } catch (e) {
-            console.error(e);
             alert("Error saving preferences");
         } finally {
             setSavingPrefs(false);
         }
     };
 
-    const btnStyle = (v, active) => ({
-        background: active ? C.teal : 'transparent',
-        color: active ? '#fff' : C.text,
-        border: `1px solid ${active ? C.teal : '#333'}`,
-        padding: '5px 14px', borderRadius: '20px', fontSize: '11px',
-        fontWeight: active ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s'
-    });
-    const tabStyle = (t) => ({
-        padding: '8px 18px',
-        borderBottom: stmtTab === t ? `2px solid ${C.teal}` : '2px solid transparent',
-        color: stmtTab === t ? C.teal : C.text,
-        fontWeight: stmtTab === t ? 600 : 400,
-        fontSize: '12px', cursor: 'pointer', background: 'transparent', border: 'none'
-    });
+    // Calculate dynamic insights from top results
+    const insights = useMemo(() => {
+        if (!financials || periods.length < 2) return null;
+        const curP = periods[0];
+        const prevP = periods[1];
+        const curData = data[curP] || [];
+        const prevData = data[prevP] || [];
+
+        const findVal = (list, kw) => {
+            const item = list.find(x =>
+                (x.nameEn || '').toLowerCase().includes(kw) ||
+                (x.name || '').toLowerCase().includes(kw) ||
+                (x.itemName || '').toLowerCase().includes(kw) ||
+                (x.itemNameEn || '').toLowerCase().includes(kw)
+            );
+            return item ? item.value : 0;
+        };
+
+        // VCB specific: 'NET REVENUE' or 'Net revenue'
+        const curRev = findVal(curData, 'total operating income') || findVal(curData, 'net revenue');
+        const prevRev = findVal(prevData, 'total operating income') || findVal(prevData, 'net revenue');
+        const curProfit = findVal(curData, 'profit after tax') || findVal(curData, 'net profit');
+        const prevProfit = findVal(prevData, 'profit after tax') || findVal(prevData, 'net profit');
+        const curAssets = findVal(curData, 'total asset');
+        const curEquity = findVal(curData, 'equity') || findVal(curData, 'owners\' equity') || findVal(curData, 'owner\'s equity');
+
+        return {
+            rev: curRev,
+            revGrowth: prevRev ? ((curRev - prevRev) / prevRev) * 100 : 0,
+            profit: curProfit,
+            profitGrowth: prevProfit ? ((curProfit - prevProfit) / prevProfit) * 100 : 0,
+            roe: curEquity && curProfit ? (curProfit / curEquity) * 100 * 4 : 0, // Annualize quarterly ROE roughly if needed, or just keep as is
+            assetBase: curAssets
+        };
+    }, [financials, periods, data]);
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <div className="flex flex-col gap-8">
             {/* Control Bar */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'center', marginBottom: '8px' }}>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                    <span style={{ fontSize: '13px', color: C.text, fontWeight: 500 }}>Select Company:</span>
+            <div className="flex flex-wrap items-center justify-between gap-6 bg-[#0d1117] p-4 rounded-2xl border border-gray-900 shadow-2xl">
+                <div className="flex items-center gap-4">
+                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Asset Intelligence:</span>
                     <select
                         value={tickerInput}
-                        onChange={e => {
-                            const val = e.target.value;
-                            setTickerInput(val);
-                            doSearch(val);
-                        }}
-                        style={{ background: '#1a1a1a', border: `1px solid ${C.border}`, color: C.white, borderRadius: '6px', padding: '6px 10px', fontSize: '12px', outline: 'none', cursor: 'pointer', width: 'auto', minWidth: '80px' }}
+                        onChange={e => { setTickerInput(e.target.value); doSearch(e.target.value); }}
+                        className="bg-black border border-gray-800 text-[11px] font-black text-emerald-500 rounded-lg px-4 py-2 outline-none focus:border-emerald-500 transition-all cursor-pointer uppercase"
                     >
                         {Object.entries(stockInfo)
                             .filter(([tk]) => availableTickers.length === 0 || availableTickers.includes(tk))
                             .map(([tk, info]) => (
-                                <option key={tk} value={tk}>{tk}</option>
+                                <option key={tk} value={tk}>{tk} - {info.organ_short}</option>
                             ))}
                     </select>
                 </div>
 
-                {isAdmin && (
-                    <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
-                        {isEditing ? (
-                            <>
-                                <button style={{ ...btnStyle('Cancel', true), background: C.red, borderColor: C.red }} onClick={() => setIsEditing(false)}>Cancel</button>
-                                <button style={{ ...btnStyle('Save', true), background: C.green, borderColor: C.green }} onClick={handleSavePrefs} disabled={savingPrefs}>
-                                    {savingPrefs ? 'Saving...' : '💾 Save Preferences'}
-                                </button>
-                            </>
-                        ) : (
-                            <button style={btnStyle('Edit', false)} onClick={() => setIsEditing(true)}>
-                                👁️ Edit Visible Rows
+                <div className="flex items-center gap-6">
+                    {financials && (
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setView('Quarterly')}
+                                className={`px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-md transition-all ${view === 'Quarterly' ? 'bg-emerald-500 text-black' : 'text-gray-500'}`}
+                            >
+                                Quarterly
                             </button>
-                        )}
-                    </div>
-                )}
-
-                {financials && !loading && (
-                    <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                            <span style={{ fontSize: '13px', color: C.text, fontWeight: 500 }}>Period:</span>
-                            <select
-                                value={fromPeriod}
-                                onChange={(e) => setFromPeriod(e.target.value)}
-                                style={{ background: '#1a1a1a', border: `1px solid ${C.border}`, color: C.white, borderRadius: '6px', padding: '6px 10px', fontSize: '12px', outline: 'none', cursor: 'pointer' }}
+                            <button
+                                onClick={() => setView('Annual')}
+                                className={`px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-md transition-all ${view === 'Annual' ? 'bg-emerald-500 text-black' : 'text-gray-500'}`}
                             >
-                                {[...periods].reverse().map(p => <option key={p} value={p}>{p}</option>)}
-                            </select>
-                            <span style={{ fontSize: '12px', color: C.text, margin: '0 4px' }}>to</span>
-                            <select
-                                value={toPeriod}
-                                onChange={(e) => setToPeriod(e.target.value)}
-                                style={{ background: '#1a1a1a', border: `1px solid ${C.border}`, color: C.white, borderRadius: '6px', padding: '6px 10px', fontSize: '12px', outline: 'none', cursor: 'pointer' }}
-                            >
-                                {[...periods].reverse().map(p => <option key={p} value={p}>{p}</option>)}
-                            </select>
-
-                            <span style={{ fontSize: '13px', color: C.text, fontWeight: 500, marginLeft: '12px' }}>Unit:</span>
-                            <select
-                                value={globalUnit}
-                                onChange={(e) => setGlobalUnit(e.target.value)}
-                                style={{ background: '#1a1a1a', border: `1px solid ${C.border}`, color: C.white, borderRadius: '6px', padding: '6px 10px', fontSize: '12px', outline: 'none', cursor: 'pointer' }}
-                            >
-                                <option value="raw">Raw (VND)</option>
-                                <option value="M">Million</option>
-                                <option value="B">Billion</option>
-                                <option value="T">Trillion</option>
-                            </select>
+                                Annual
+                            </button>
                         </div>
-                        <div style={{ display: 'flex', gap: '6px', paddingLeft: '20px', borderLeft: `1px solid ${C.border}` }}>
-                            <button style={btnStyle('Quarterly', view === 'Quarterly')} onClick={() => setView('Quarterly')}>Quarterly</button>
-                            <button style={btnStyle('Annual', view === 'Annual')} onClick={() => setView('Annual')}>Annual</button>
-                        </div>
-                    </div>
-                )}
+                    )}
+
+                    <div className="h-6 w-px bg-gray-800"></div>
+
+                    {isAdmin && (
+                        <button
+                            onClick={() => isEditing ? handleSavePrefs() : setIsEditing(true)}
+                            disabled={savingPrefs}
+                            className={`px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-md border ${isEditing ? 'bg-emerald-500/10 border-emerald-500 text-emerald-500' : 'border-gray-800 text-gray-500 hover:text-gray-300'}`}
+                        >
+                            {isEditing ? (savingPrefs ? 'Updating...' : 'Commit Changes') : 'Curate Layout'}
+                        </button>
+                    )}
+                </div>
             </div>
 
-            {error && <div style={{ background: '#1a0a0a', border: `1px solid ${C.red}`, borderRadius: '8px', padding: '0.875rem 1rem', color: C.red, fontSize: '12px' }}>⚠ {error}</div>}
-            {loading && <div style={{ color: C.text, fontSize: '13px', padding: '2rem', textAlign: 'center' }}>Loading financials for {ticker}...</div>}
+            {error && <div className="p-4 bg-rose-500/10 border border-rose-500/50 rounded-xl text-rose-500 text-[11px] font-bold">⚠ {error}</div>}
 
             {financials && !loading && (
                 <>
-                    {/* Ticker header */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '8px' }}>
-                        <div>
-                            <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 700, color: C.green }}>
-                                {stockInfo[financials.ticker] ? stockInfo[financials.ticker].organ_short : financials.ticker} (Ticker: {financials.ticker})
-                            </h2>
-                            <p style={{ margin: '4px 0 0', fontSize: '12px', color: C.text }}>
-                                Updated: {financials.lastUpdated ? new Date(financials.lastUpdated).toLocaleDateString('en-GB') : '—'} · Values in {globalUnit === 'raw' ? 'VND' : `${globalUnit} VND`}
-                            </p>
+                    {/* Insights Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
+                        <MetricCard
+                            label="Current Revenue"
+                            value={`${(insights?.rev / 1e9).toFixed(1)}B`}
+                            subValue="Billion VND"
+                            trend={insights?.revGrowth}
+                            color={C.teal}
+                            icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 2v20M2 12h20" /></svg>}
+                        />
+                        <MetricCard
+                            label="Net Earnings"
+                            value={`${(insights?.profit / 1e9).toFixed(1)}B`}
+                            subValue="Post-Tax Profit"
+                            trend={insights?.profitGrowth}
+                            color={C.blue}
+                            icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></svg>}
+                        />
+                        <MetricCard
+                            label="Return on Equity"
+                            value={`${insights?.roe.toFixed(2)}%`}
+                            subValue="Capital Efficiency"
+                            color={C.yellow}
+                            icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="12" cy="12" r="10" /><path d="m16 12-4-4-4 4" /></svg>}
+                        />
+                        <MetricCard
+                            label="Asset Integrity"
+                            value={`${(insights?.assetBase / 1e12).toFixed(1)}T`}
+                            subValue="Total Assets"
+                            color={C.purple}
+                            icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /></svg>}
+                        />
+                    </div>
+
+                    {/* Chart Section */}
+                    <div className="grid grid-cols-1 gap-6">
+                        <div className="bg-[#0d1117] border border-gray-900 rounded-3xl p-8 relative overflow-hidden group">
+                            <div className="flex flex-col gap-1 mb-6 relative z-10">
+                                <h3 className="text-[11px] font-black text-gray-500 uppercase tracking-widest">{STMT_LABELS[stmtTab]} Evolution</h3>
+                                <p className="text-[9px] text-gray-700 font-bold uppercase tracking-widest italic">Temporal trend analysis for {financials.ticker}</p>
+                            </div>
+                            <PremiumTrendChart periods={periods} data={data} stmtType={stmtTab} fromPeriod={fromPeriod} toPeriod={toPeriod} />
+
+                            {/* Decorative Grid Overlay */}
+                            <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:20px_20px]"></div>
                         </div>
                     </div>
 
-                    {/* Trend chart */}
-                    <div className="card" style={{ padding: '1.25rem', background: C.card, border: `1px solid ${C.border}` }}>
-                        <h3 style={{ margin: 0, fontSize: '13px', color: C.white }}>Key Trends — {STMT_LABELS[stmtTab]}</h3>
-                        <p style={{ margin: '3px 0 0', fontSize: '11px', color: C.text }}>Top line items over time ({globalUnit === 'raw' ? 'VND' : `${globalUnit} VND`})</p>
-                        <TrendChart periods={periods} data={data} stmtType={stmtTab} fromPeriod={fromPeriod} toPeriod={toPeriod} globalUnit={globalUnit} />
-                    </div>
-
-                    {/* Statement tabs */}
-                    <div className="card" style={{ padding: 0, background: C.card, border: `1px solid ${C.border}`, overflow: 'hidden' }}>
-                        <div style={{ display: 'flex', borderBottom: `1px solid ${C.border}`, padding: '0 1rem', alignItems: 'center' }}>
-                            {Object.entries(STMT_LABELS).map(([key, label]) => (
-                                <button key={key} style={tabStyle(key)} onClick={() => setStmtTab(key)}>{label}</button>
-                            ))}
-                            <span style={{ marginLeft: 'auto', fontSize: '11px', color: C.text }}>{periods.length} total periods</span>
+                    {/* Smart Table Section */}
+                    <div className="bg-[#0d1117] border border-gray-900 rounded-3xl overflow-hidden shadow-2xl">
+                        <div className="p-6 border-b border-gray-900 flex items-center justify-between bg-white/[0.01]">
+                            <div className="flex items-center gap-6">
+                                {Object.entries(STMT_LABELS).map(([key, label]) => (
+                                    <button
+                                        key={key}
+                                        onClick={() => setStmtTab(key)}
+                                        className={`text-[10px] font-black uppercase tracking-widest transition-all ${stmtTab === key ? 'text-emerald-500' : 'text-gray-600 hover:text-gray-400'}`}
+                                    >
+                                        {label}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <span className="text-[10px] text-gray-700 font-bold uppercase tracking-widest">{periods.length} Data Points</span>
+                                <select
+                                    value={globalUnit}
+                                    onChange={(e) => setGlobalUnit(e.target.value)}
+                                    className="bg-black border border-gray-800 text-[9px] font-black text-gray-500 px-2 py-1 rounded outline-none"
+                                >
+                                    <option value="raw">VND</option>
+                                    <option value="M">Million</option>
+                                    <option value="B">Billion</option>
+                                    <option value="T">Trillion</option>
+                                </select>
+                            </div>
                         </div>
                         <FinancialTable
                             periods={periods}
@@ -498,11 +559,10 @@ export default function CompanyFinancials() {
                 </>
             )}
 
-            {!financials && !loading && !error && (
-                <div style={{ textAlign: 'center', padding: '3rem 0', color: C.text }}>
-                    <div style={{ fontSize: '40px', marginBottom: '0.75rem' }}>📊</div>
-                    <div style={{ fontSize: '14px', color: C.white }}>Search for a company above</div>
-                    <div style={{ fontSize: '12px', marginTop: '4px' }}>Analyze financial statements in detail</div>
+            {!financials && loading && (
+                <div className="flex flex-col items-center justify-center p-24 gap-4">
+                    <div className="w-12 h-12 border-t-2 border-emerald-500 rounded-full animate-spin"></div>
+                    <span className="text-[10px] text-gray-700 font-black uppercase tracking-widest animate-pulse">Synchronizing Market Data...</span>
                 </div>
             )}
         </div>

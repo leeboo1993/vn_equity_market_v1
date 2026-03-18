@@ -130,11 +130,12 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
             cutoffStr = customRange.from || '1900-01-01';
             if (customRange.to) toStr = customRange.to;
         } else {
-            let days = 365; // default to 1 year to avoid confusing old FX data
+            let days = 3650; // Use 10 years as default consistency across macro tabs
             if (timeFilter === '1M') days = 30;
             else if (timeFilter === '3M') days = 90;
             else if (timeFilter === '6M') days = 180;
             else if (timeFilter === '1Y') days = 365;
+            else if (timeFilter === 'ALL') days = 10000;
             else if (timeFilter === 'YTD') {
                 const now = new Date();
                 days = Math.floor((now - new Date(now.getFullYear(), 0, 1)) / (1000 * 60 * 60 * 24));
@@ -358,23 +359,27 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                         <div style={{ fontSize: '10px', color: COLORS.text, opacity: 0.8 }}>Latest: {formatDate(latestDates.fx) || '-'}</div>
                     </div>
                     <div style={{ height: '280px' }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={usdComparisonData}>
-                                <defs>
-                                    <linearGradient id="colorVCB" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor={COLORS.teal} stopOpacity={0.1} />
-                                        <stop offset="95%" stopColor={COLORS.teal} stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
-                                <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={axisDate} minTickGap={20} />
-                                <YAxis domain={[d => Math.floor(d * 0.98), d => Math.ceil(d * 1.02)]} stroke={COLORS.text} fontSize={10} tickFormatter={v => v.toLocaleString()} width={55} />
-                                <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px', color: '#fff' }} formatter={v => v.toLocaleString(undefined, { minimumFractionDigits: 0 })} labelFormatter={formatDate} />
-                                <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
-                                <Area type="monotone" dataKey="vcb" name="VCB Sell" stroke={COLORS.teal} fill="url(#colorVCB)" strokeWidth={2} dot={false} />
-                                <Line type="monotone" dataKey="black" name="Black Market" stroke={COLORS.yellow} strokeWidth={2} dot={false} />
-                            </AreaChart>
-                        </ResponsiveContainer>
+                        {usdComparisonData && usdComparisonData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={usdComparisonData}>
+                                    <defs>
+                                        <linearGradient id="colorVCB" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor={COLORS.teal} stopOpacity={0.1} />
+                                            <stop offset="95%" stopColor={COLORS.teal} stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
+                                    <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={axisDate} minTickGap={20} />
+                                    <YAxis domain={[d => Math.floor(d * 0.98), d => Math.ceil(d * 1.02)]} stroke={COLORS.text} fontSize={10} tickFormatter={v => v.toLocaleString()} width={55} />
+                                    <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px', color: '#fff' }} formatter={v => v.toLocaleString(undefined, { minimumFractionDigits: 0 })} labelFormatter={formatDate} />
+                                    <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
+                                    <Area type="monotone" dataKey="vcb" name="VCB Sell" stroke={COLORS.teal} fill="url(#colorVCB)" strokeWidth={2} dot={false} />
+                                    <Line type="monotone" dataKey="black" name="Black Market" stroke={COLORS.yellow} strokeWidth={2} dot={false} />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: COLORS.text, fontSize: '12px' }}>No FX data in range</div>
+                        )}
                     </div>
                 </div>
 
@@ -620,23 +625,27 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                         </div>
                     </div>
                     <div style={{ height: '280px' }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={treasurySeries}>
-                                <defs>
-                                    <linearGradient id="colorTreasury" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor={COLORS.teal} stopOpacity={0.15} />
-                                        <stop offset="95%" stopColor={COLORS.teal} stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
-                                <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={axisDate} minTickGap={20} />
-                                <YAxis stroke={COLORS.text} fontSize={10} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} domain={[d => Math.floor(d * 1.2), d => Math.ceil(d * 1.2)]} width={45} />
-                                <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px' }} formatter={v => v.toLocaleString()} labelFormatter={formatDate} />
-                                <Area hide={hiddenTreasury.includes('State Treasury')} type="monotone" dataKey="State Treasury" stroke={COLORS.teal} fill="url(#colorTreasury)" strokeWidth={2} dot={false} connectNulls />
-                                <Area hide={hiddenTreasury.includes('OMO')} type="monotone" dataKey="OMO" stroke={COLORS.yellow} fill="transparent" strokeWidth={2} dot={false} connectNulls />
-                                <Area hide={hiddenTreasury.includes('CITAD')} type="monotone" dataKey="CITAD" stroke={COLORS.blue} fill="transparent" strokeWidth={2} dot={false} connectNulls />
-                            </AreaChart>
-                        </ResponsiveContainer>
+                        {treasurySeries && treasurySeries.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={treasurySeries}>
+                                    <defs>
+                                        <linearGradient id="colorTreasury" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor={COLORS.teal} stopOpacity={0.15} />
+                                            <stop offset="95%" stopColor={COLORS.teal} stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
+                                    <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={axisDate} minTickGap={20} />
+                                    <YAxis stroke={COLORS.text} fontSize={10} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} domain={[d => Math.floor(d * 1.2), d => Math.ceil(d * 1.2)]} width={45} />
+                                    <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px' }} formatter={v => v.toLocaleString()} labelFormatter={formatDate} />
+                                    <Area hide={hiddenTreasury.includes('State Treasury')} type="monotone" dataKey="State Treasury" stroke={COLORS.teal} fill="url(#colorTreasury)" strokeWidth={2} dot={false} connectNulls />
+                                    <Area hide={hiddenTreasury.includes('OMO')} type="monotone" dataKey="OMO" stroke={COLORS.yellow} fill="transparent" strokeWidth={2} dot={false} connectNulls />
+                                    <Area hide={hiddenTreasury.includes('CITAD')} type="monotone" dataKey="CITAD" stroke={COLORS.blue} fill="transparent" strokeWidth={2} dot={false} connectNulls />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: COLORS.text, fontSize: '12px' }}>No Liquidity data in economics.json</div>
+                        )}
                     </div>
                 </div>
 
@@ -675,27 +684,31 @@ export default function MoneyMarketTab({ timeFilter, customRange }) {
                         </div>
                     </div>
                     <div style={{ height: '280px' }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={interbankSeries}>
-                                <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
-                                <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={axisDate} minTickGap={20} />
-                                <YAxis
-                                    domain={[
-                                        dataMin => Math.max(0, dataMin - 1),
-                                        dataMax => dataMax + 1
-                                    ]}
-                                    stroke={COLORS.text}
-                                    fontSize={10}
-                                    tickFormatter={v => `${Number(v).toFixed(1)}%`}
-                                    width={40}
-                                />
-                                <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px' }} formatter={v => `${v}%`} labelFormatter={formatDate} />
-                                <Line hide={hiddenInterbank.includes('O/N')} type="monotone" dataKey="O/N" stroke={COLORS.red} strokeWidth={2.5} dot={false} connectNulls />
-                                <Line hide={hiddenInterbank.includes('1W')} type="monotone" dataKey="1W" stroke={COLORS.teal} strokeWidth={2.5} dot={false} connectNulls />
-                                <Line hide={hiddenInterbank.includes('1M')} type="monotone" dataKey="1M" stroke={COLORS.blue} strokeWidth={2.5} dot={false} connectNulls />
-                                <Line hide={hiddenInterbank.includes('1Y')} type="monotone" dataKey="1Y" stroke={COLORS.purple} strokeWidth={2.5} dot={false} connectNulls />
-                            </LineChart>
-                        </ResponsiveContainer>
+                        {interbankSeries && interbankSeries.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={interbankSeries}>
+                                    <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
+                                    <XAxis dataKey="date" stroke={COLORS.text} fontSize={10} tickFormatter={axisDate} minTickGap={20} />
+                                    <YAxis
+                                        domain={[
+                                            dataMin => Math.max(0, dataMin - 1),
+                                            dataMax => dataMax + 1
+                                        ]}
+                                        stroke={COLORS.text}
+                                        fontSize={10}
+                                        tickFormatter={v => `${Number(v).toFixed(1)}%`}
+                                        width={40}
+                                    />
+                                    <Tooltip contentStyle={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, fontSize: '11px' }} formatter={v => `${v}%`} labelFormatter={formatDate} />
+                                    <Line hide={hiddenInterbank.includes('O/N')} type="monotone" dataKey="O/N" stroke={COLORS.red} strokeWidth={2.5} dot={false} connectNulls />
+                                    <Line hide={hiddenInterbank.includes('1W')} type="monotone" dataKey="1W" stroke={COLORS.teal} strokeWidth={2.5} dot={false} connectNulls />
+                                    <Line hide={hiddenInterbank.includes('1M')} type="monotone" dataKey="1M" stroke={COLORS.blue} strokeWidth={2.5} dot={false} connectNulls />
+                                    <Line hide={hiddenInterbank.includes('1Y')} type="monotone" dataKey="1Y" stroke={COLORS.purple} strokeWidth={2.5} dot={false} connectNulls />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: COLORS.text, fontSize: '12px' }}>No Interbank data in economics.json</div>
+                        )}
                     </div>
                 </div>
             </div>

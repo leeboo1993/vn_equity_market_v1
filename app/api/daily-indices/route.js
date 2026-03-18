@@ -53,7 +53,13 @@ async function getIndexConfig() {
     ];
 }
 
-const calcPctChg = (from, to) => from && to ? parseFloat(((to - from) / from * 100).toFixed(2)) : null;
+const calcPctChg = (from, to) => {
+    if (from == null || to == null) return null;
+    // For small volumes (e.g. < 0.01B which is < 10M), 
+    // percentage changes are often misleading or data noise.
+    if (Math.abs(from) < 0.01) return 0;
+    return parseFloat(((to - from) / from * 100).toFixed(2));
+};
 
 function calculateTechRating(trend, macd, rsi, d1, turnoverVs5d) {
     let score = 0;

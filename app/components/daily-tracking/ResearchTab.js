@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import UnifiedTickerChartModal from './UnifiedTickerChartModal';
 
 // Badge styling helper
 const Badge = ({ children, bg, color }) => (
@@ -24,6 +25,7 @@ export default function ResearchTab({ data }) {
     const [dateFilter, setDateFilter] = useState(''); // YYYY-MM-DD
     const [selectedNews, setSelectedNews] = useState(null); // Modal state
     const [selectedMacroBroker, setSelectedMacroBroker] = useState('All');
+    const [chartTicker, setChartTicker] = useState(null); // Chart modal state
 
     const { ticker_news = [], macro_research = [] } = data || {}; // Extract Macro Research
 
@@ -195,7 +197,15 @@ export default function ResearchTab({ data }) {
                                 >
                                     {/* Top Badges */}
                                     <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', alignItems: 'center' }}>
-                                        <Badge bg="#1a4d40" color="#4ade80">{news.ticker}</Badge>
+                                        <div 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setChartTicker(news.ticker);
+                                            }}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            <Badge bg="#1a4d40" color="#4ade80">{news.ticker}</Badge>
+                                        </div>
                                         <Badge bg={sentimentStyle.bg} color={sentimentStyle.color}>
                                             {news.sentiment ? news.sentiment.charAt(0).toUpperCase() + news.sentiment.slice(1).toLowerCase() : 'Neutral'}
                                         </Badge>
@@ -396,7 +406,12 @@ export default function ResearchTab({ data }) {
 
                         {/* Modal Header Badges */}
                         <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', alignItems: 'center' }}>
-                            <Badge bg="#1a4d40" color="#4ade80">{selectedNews.ticker}</Badge>
+                            <div 
+                                onClick={() => setChartTicker(selectedNews.ticker)}
+                                style={{ cursor: 'pointer' }}
+                            >
+                                <Badge bg="#1a4d40" color="#4ade80">{selectedNews.ticker}</Badge>
+                            </div>
                             <Badge bg={selectedNews.sentimentStyle.bg} color={selectedNews.sentimentStyle.color}>
                                 {selectedNews.sentiment ? selectedNews.sentiment.charAt(0).toUpperCase() + selectedNews.sentiment.slice(1).toLowerCase() : 'Neutral'}
                             </Badge>
@@ -449,6 +464,14 @@ export default function ResearchTab({ data }) {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* General Ticker Chart Modal */}
+            {chartTicker && (
+                <UnifiedTickerChartModal 
+                    ticker={chartTicker} 
+                    onClose={() => setChartTicker(null)} 
+                />
             )}
         </div>
     );

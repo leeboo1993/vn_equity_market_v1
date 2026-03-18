@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import Header from './Header';
+import UnifiedTickerChartModal from './daily-tracking/UnifiedTickerChartModal';
 
 // Helper functions
 const formatDateDisplay = (dateStr) => {
@@ -279,6 +280,7 @@ export default function DailyTrackingPage({ hideHeader = false }) {
     const [recBrokerFilter, setRecBrokerFilter] = useState('all');
     const [recTickerFilter, setRecTickerFilter] = useState('');
     const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
+    const [chartTicker, setChartTicker] = useState(null); // Chart modal state
 
 
 
@@ -1292,7 +1294,7 @@ export default function DailyTrackingPage({ hideHeader = false }) {
                                             return (
                                                 <tr key={idx}>
                                                     <td>{formatDateDisplay(rec.date)}</td>
-                                                    <td><strong style={{ color: '#fff' }}>{rec.ticker}</strong></td>
+                                                    <td><strong style={{ color: '#fff', cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: 'dotted' }} onClick={() => setChartTicker(rec.ticker)}>{rec.ticker}</strong></td>
                                                     <td>{formatBrokerName(rec.broker)}</td>
                                                     <td>
                                                         <span className={`call-badge ${badgeClass}`}>
@@ -1347,6 +1349,14 @@ export default function DailyTrackingPage({ hideHeader = false }) {
                     {/* Stock Recommendations */}
                 </div>
             </main>
+
+            {/* General Ticker Chart Modal */}
+            {chartTicker && (
+                <UnifiedTickerChartModal 
+                    ticker={chartTicker} 
+                    onClose={() => setChartTicker(null)} 
+                />
+            )}
         </div>
     );
 }

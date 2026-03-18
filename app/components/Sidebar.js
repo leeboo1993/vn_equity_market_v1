@@ -10,6 +10,9 @@ const navItems = [
     { href: '/market-valuation', label: 'Market Valuation', feature: 'Market Dashboard' },
     { href: '/fundamentals', label: 'Fundamentals', feature: 'Market Dashboard' },
     { href: '/broker-consensus', label: 'Broker Consensus', feature: 'Research' },
+    { type: 'divider', label: 'Quantitative Models', feature: 'Model' },
+    { href: '/model', label: 'Quantitative Models', feature: 'Model' },
+    { type: 'divider', label: 'Others', feature: 'Market Dashboard' },
     { href: '/daily-tracking', label: 'Daily Market Tracking', feature: 'Market Dashboard' },
 ];
 

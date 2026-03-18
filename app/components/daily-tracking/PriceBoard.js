@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import UnifiedTickerChartModal from './UnifiedTickerChartModal';
 
 // Specialized Hook to compare previous and current values to trigger CSS flashes
 // Fixed to avoid accessing ref during render
@@ -82,6 +83,7 @@ export default function PriceBoard() {
 
     // Session & User Role
     const [session, setSession] = useState(null);
+    const [chartTicker, setChartTicker] = useState(null); // Chart modal state
 
     // Load Session
     useEffect(() => {
@@ -861,7 +863,12 @@ export default function PriceBoard() {
                                 return (
                                     <tr key={ticker} className="pb-row" style={{ position: 'relative' }}>
                                         <td className="pb-td pb-td-left" style={{ color: symbolColor, fontWeight: 'bold' }}>
-                                            {ticker}
+                                            <span 
+                                                style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: 'dotted' }}
+                                                onClick={() => setChartTicker(ticker)}
+                                            >
+                                                {ticker}
+                                            </span>
                                             {/* Delete Button for Watchlist */}
                                             {activeTab === 'Watchlist' && (
                                                 <button
@@ -1211,6 +1218,14 @@ export default function PriceBoard() {
                     </div>
                 )}
             </div>
+
+            {/* General Ticker Chart Modal */}
+            {chartTicker && (
+                <UnifiedTickerChartModal 
+                    ticker={chartTicker} 
+                    onClose={() => setChartTicker(null)} 
+                />
+            )}
         </div>
     );
 }

@@ -108,20 +108,33 @@ export async function GET(request) {
             }
 
             if (pData && pData.data && pData.data.length > 0) {
+                console.log(`[vnindex-history] Parsing ${pData.data.length} records for range: ${startDateStr} - ${toDateStr}`);
                 for (const rec of pData.data) {
                     const tradingDate = rec.TradingDate || rec.tradingDate;
-                    const indexValue = rec.IndexValue !== undefined ? rec.IndexValue : (rec.indexValue !== undefined ? rec.indexValue : (rec.ClosePrice !== undefined ? rec.ClosePrice : rec.closePrice));
+                    // Coverage for multiple possible field names from various SSI API versions
+                    const indexValue = rec.IndexValue !== undefined ? rec.IndexValue : 
+                                      (rec.indexValue !== undefined ? rec.indexValue : 
+                                      (rec.ClosePrice !== undefined ? rec.ClosePrice : 
+                                      (rec.closePrice !== undefined ? rec.closePrice : 
+                                      (rec.Close !== undefined ? rec.Close : rec.close))));
 
                     if (tradingDate && indexValue !== undefined) {
                         const [d, m, yStr] = tradingDate.split('/');
-                        const yy = yStr.substring(2, 4);
-                        const formattedDateYYMMDD = `${yy}${m}${d}`;
-                        const formattedDateYYYYMMDD = `${yStr}${m}${d}`;
-                        historyMap[formattedDateYYMMDD] = parseFloat(indexValue);
-                        historyMap[formattedDateYYYYMMDD] = parseFloat(indexValue);
-                        historyMap[`${yStr}-${m}-${d}`] = parseFloat(indexValue);
+                        const ddStr = d.padStart(2, '0');
+                        const mmStr = m.padStart(2, '0');
+                        const yyStrShort = yStr.substring(2);
+                        const formattedDateYYMMDD = `${yyStrShort}${mmStr}${ddStr}`;
+                        const formattedDateYYYYMMDD = `${yStr}${mmStr}${ddStr}`;
+                        const val = parseFloat(indexValue);
+                        if (!isNaN(val)) {
+                            historyMap[formattedDateYYMMDD] = val;
+                            historyMap[formattedDateYYYYMMDD] = val;
+                            historyMap[`${yStr}-${mmStr}-${ddStr}`] = val;
+                        }
                     }
                 }
+            } else {
+                console.warn(`[vnindex-history] No data returned from SSI for range: ${startDateStr} - ${toDateStr}`);
             }
             // Move start to next chunk
             currentStart = new Date(currentEnd.getTime());
@@ -131,12 +144,16 @@ export async function GET(request) {
         // Map requested dates to fetched historical prices
         for (const date of dates) {
             const priceAtCall = historyMap[date] || null;
+            if (priceAtCall === null) {
+                console.warn(`[vnindex-history] Missing price for date: ${date}`);
+            }
             const key = `VNINDEX_${date}`;
             prices[key] = {
                 priceAtCall
             };
         }
 
+        console.log(`[vnindex-history] Returning prices for ${Object.keys(prices).length} dates.`);
         return NextResponse.json({ prices });
     } catch (error) {
         console.error('Error fetching VNINDEX history:', error);

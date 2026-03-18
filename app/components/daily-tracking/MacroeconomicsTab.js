@@ -14,6 +14,8 @@ import {
     Legend,
     ReferenceLine
 } from 'recharts';
+import { TradingViewAdvancedChartWidget, TradingViewMiniChartWidget, TradingViewCalendarWidget } from './TradingViewWidgets';
+import UnifiedTickerChartModal from './UnifiedTickerChartModal';
 import MoneyMarketTab from './MoneyMarketTab';
 
 const COLORS = {
@@ -63,13 +65,20 @@ const TrendIcon = ({ trend }) => {
 // Initial Mock Data (Fallback if API fails) — grouped by region
 const INITIAL_INDICES = [
     // Vietnam
-    { id: 'VNINDEX', name: 'VN-Index', region: 'Vietnam', close: 1176.84, turnover: 474, turnoverVnd: 12050, turnover5dAvg: 450, turnover5dAvgVnd: 11500, turnoverVs5d: 5.3, turnover10dAvg: 440, turnover10dAvgVnd: 11200, turnoverVs10d: 7.7, turnover1mAvg: 420, turnover1mAvgVnd: 10800, turnoverVs1m: 12.8, d1: -2.25, d1m: 1.2, d3m: 3.5, d6m: 5.0, d12m: 10.0, ytd: 10.0, pe: 14.9, pb: 1.7, resistance: 1200, support: 1150, rsi: 52, ma20: 1160, macd: 5.2, date: 'N/A' },
-    { id: 'HNXINDEX', name: 'HNX-Index', region: 'Vietnam', close: 253.64, turnover: 44, turnoverVnd: 1120, turnover5dAvg: 42, turnover5dAvgVnd: 1080, turnoverVs5d: 4.8, turnover10dAvg: 40, turnover10dAvgVnd: 1020, turnoverVs10d: 10.0, turnover1mAvg: 38, turnover1mAvgVnd: 980, turnoverVs1m: 15.7, d1: -0.5, d1m: 0.8, d3m: 2.1, d6m: 3.5, d12m: 8.0, ytd: 3.0, pe: 16.1, pb: 1.3, resistance: 260, support: 245, rsi: 50, ma20: 250, macd: 1.2, date: 'N/A' },
-    { id: 'VN30', name: 'VN30', region: 'Vietnam', close: 1904.19, turnover: 250, turnoverVnd: 6350, turnover5dAvg: 240, turnover5dAvgVnd: 6100, turnoverVs5d: 4.2, turnover10dAvg: 235, turnover10dAvgVnd: 5980, turnoverVs10d: 6.4, turnover1mAvg: 220, turnover1mAvgVnd: 5600, turnoverVs1m: 13.6, d1: -2.0, d1m: 1.0, d3m: 3.2, d6m: 4.8, d12m: 9.0, ytd: 8.0, pe: 14.9, pb: 1.7, resistance: 1950, support: 1850, rsi: 52, ma20: 1880, macd: 4.5, date: 'N/A' },
+    { id: 'VNINDEX', name: 'VN-Index', region: 'Vietnam', tvSymbol: 'HOSE:VNINDEX', close: 1176.84, turnover: 474, turnoverVnd: 12050, turnover5dAvg: 450, turnover5dAvgVnd: 11500, turnoverVs5d: 5.3, turnover10dAvg: 440, turnover10dAvgVnd: 11200, turnoverVs10d: 7.7, turnover1mAvg: 420, turnover1mAvgVnd: 10800, turnoverVs1m: 12.8, d1: -2.25, d1m: 1.2, d3m: 3.5, d6m: 5.0, d12m: 10.0, ytd: 10.0, pe: 14.9, pb: 1.7, resistance: 1200, support: 1150, rsi: 52, ma20: 1160, macd: 5.2, date: 'N/A' },
+    { id: 'HNXINDEX', name: 'HNX-Index', region: 'Vietnam', tvSymbol: 'HNX:HNXINDEX', close: 253.64, turnover: 44, turnoverVnd: 1120, turnover5dAvg: 42, turnover5dAvgVnd: 1080, turnoverVs5d: 4.8, turnover10dAvg: 40, turnover10dAvgVnd: 1020, turnoverVs10d: 10.0, turnover1mAvg: 38, turnover1mAvgVnd: 980, turnoverVs1m: 15.7, d1: -0.5, d1m: 0.8, d3m: 2.1, d6m: 3.5, d12m: 8.0, ytd: 3.0, pe: 16.1, pb: 1.3, resistance: 260, support: 245, rsi: 50, ma20: 250, macd: 1.2, date: 'N/A' },
+    { id: 'VN30', name: 'VN30', region: 'Vietnam', tvSymbol: 'HOSE:VN30', close: 1904.19, turnover: 250, turnoverVnd: 6350, turnover5dAvg: 240, turnover5dAvgVnd: 6100, turnoverVs5d: 4.2, turnover10dAvg: 235, turnover10dAvgVnd: 5980, turnoverVs10d: 6.4, turnover1mAvg: 220, turnover1mAvgVnd: 5600, turnoverVs1m: 13.6, d1: -2.0, d1m: 1.0, d3m: 3.2, d6m: 4.8, d12m: 9.0, ytd: 8.0, pe: 14.9, pb: 1.7, resistance: 1950, support: 1850, rsi: 52, ma20: 1880, macd: 4.5, date: 'N/A' },
     // USA
-    { id: 'SPX', name: 'S&P 500', region: 'USA', close: 5700, turnover: 65000, turnover5dAvg: 64000, turnoverVs5d: 1.5, turnover10dAvg: 63000, turnoverVs10d: 3.2, turnover1mAvg: 62000, turnoverVs1m: 4.8, d1: -0.9, d1m: 2.1, d3m: 5.2, d6m: 10.5, d12m: 15.0, ytd: 8.0, pe: 26.0, pb: 5.0, resistance: 6000, support: 5600, rsi: 55, ma20: 5650, macd: 12.5, date: 'N/A' },
-    { id: 'NASDAQ', name: 'Nasdaq', region: 'USA', close: 18000, turnover: 50000, turnover5dAvg: 49000, turnoverVs5d: 2.0, turnover10dAvg: 48000, turnoverVs10d: 4.1, turnover1mAvg: 47000, turnoverVs1m: 6.3, d1: -1.2, d1m: 1.5, d3m: 4.8, d6m: 9.5, d12m: 14.0, ytd: 6.0, pe: 32.0, pb: 7.0, resistance: 19000, support: 17500, rsi: 52, ma20: 17800, macd: 25.0, date: 'N/A' },
-    { id: 'DJI', name: 'Dow Jones', region: 'USA', close: 43000, turnover: 14000, turnover5dAvg: 13800, turnoverVs5d: 1.4, turnover10dAvg: 13500, turnoverVs10d: 3.7, turnover1mAvg: 13000, turnoverVs1m: 7.7, d1: -0.5, ytd: 5.0, pe: 22.0, pb: 5.0, resistance: 45000, support: 42000, rsi: 54, ma20: 42500, macd: 85.0, date: 'N/A' },
+    { id: 'SPX', name: 'S&P 500', region: 'USA', tvSymbol: 'CURRENCYCOM:US500', close: 5700, turnover: 65000, turnover5dAvg: 64000, turnoverVs5d: 1.5, turnover10dAvg: 63000, turnoverVs10d: 3.2, turnover1mAvg: 62000, turnoverVs1m: 4.8, d1: -0.9, d1m: 2.1, d3m: 5.2, d6m: 10.5, d12m: 15.0, ytd: 8.0, pe: 26.0, pb: 5.0, resistance: 6000, support: 5600, rsi: 55, ma20: 5650, macd: 12.5, date: 'N/A' },
+    { id: 'NASDAQ', name: 'Nasdaq', region: 'USA', tvSymbol: 'NASDAQ:IXIC', close: 18000, turnover: 50000, turnover5dAvg: 49000, turnoverVs5d: 2.0, turnover10dAvg: 48000, turnoverVs10d: 4.1, turnover1mAvg: 47000, turnoverVs1m: 6.3, d1: -1.2, d1m: 1.5, d3m: 4.8, d6m: 9.5, d12m: 14.0, ytd: 6.0, pe: 32.0, pb: 7.0, resistance: 19000, support: 17500, rsi: 52, ma20: 17800, macd: 25.0, date: 'N/A' },
+    { id: 'DJI', name: 'Dow Jones', region: 'USA', tvSymbol: 'DJ:DJI', close: 43000, turnover: 14000, turnover5dAvg: 13800, turnoverVs5d: 1.4, turnover10dAvg: 13500, turnoverVs10d: 3.7, turnover1mAvg: 13000, turnoverVs1m: 7.7, d1: -0.5, ytd: 5.0, pe: 22.0, pb: 5.0, resistance: 45000, support: 42000, rsi: 54, ma20: 42500, macd: 85.0, date: 'N/A' },
+    // Commodities
+    { id: 'GOLD', name: 'Gold', region: 'Commodity', tvSymbol: 'TVC:GOLD', close: 2600, turnover: 0, d1: 0.5, date: 'N/A' },
+    { id: 'SILVER', name: 'Silver', region: 'Commodity', tvSymbol: 'TVC:SILVER', close: 30, turnover: 0, d1: 0.8, date: 'N/A' },
+    { id: 'WTI', name: 'WTI Crude', region: 'Commodity', tvSymbol: 'TVC:USOIL', close: 70, turnover: 0, d1: -0.5, date: 'N/A' },
+    // Crypto
+    { id: 'BTC', name: 'Bitcoin', region: 'Crypto', tvSymbol: 'BINANCE:BTCUSDT', close: 65000, turnover: 0, d1: 2.5, date: 'N/A' },
+    { id: 'ETH', name: 'Ethereum', region: 'Crypto', tvSymbol: 'BINANCE:ETHUSDT', close: 3500, turnover: 0, d1: 1.8, date: 'N/A' },
     // Europe
     { id: 'FTSE', name: 'FTSE 100', region: 'UK', close: 8288, turnover: 2800, turnover5dAvg: 2750, turnoverVs5d: 1.8, turnover10dAvg: 2700, turnoverVs10d: 3.7, turnover1mAvg: 2600, turnoverVs1m: 7.7, d1: 0.1, ytd: 5.0, pe: 14.0, pb: 1.9, resistance: 8500, support: 8100, rsi: 53, ma20: 8200, macd: 12.0, date: 'N/A' },
     { id: 'DAX', name: 'DAX', region: 'Germany', close: 22000, turnover: 5000, turnover5dAvg: 4900, turnoverVs5d: 2.0, turnover10dAvg: 4800, turnoverVs10d: 4.2, turnover1mAvg: 4700, turnoverVs1m: 6.4, d1: 0.4, ytd: 14.0, pe: 17.0, pb: 1.8, resistance: 23000, support: 21000, rsi: 60, ma20: 21500, macd: 150.0, date: 'N/A' },
@@ -87,6 +96,8 @@ const INITIAL_INDICES = [
 
 export default function MacroeconomicsTab({ data, timeFilter, customRange, timeFilterControl }) {
     const [subTab, setSubTab] = useState('Global');
+    const [chartTicker, setChartTicker] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
     const [indices, setIndices] = useState(INITIAL_INDICES);
     const [loadingIndices, setLoadingIndices] = useState(false);
 
@@ -169,6 +180,7 @@ export default function MacroeconomicsTab({ data, timeFilter, customRange, timeF
         else if (timeFilter === '3M') days = 90;
         else if (timeFilter === '6M') days = 180;
         else if (timeFilter === '1Y') days = 365;
+        else if (timeFilter === 'ALL') days = 10000;
         else if (timeFilter === 'YTD') {
             const now = new Date();
             days = Math.floor((now - new Date(now.getFullYear(), 0, 1)) / (1000 * 60 * 60 * 24));
@@ -411,7 +423,7 @@ export default function MacroeconomicsTab({ data, timeFilter, customRange, timeF
         'GOLD': '#FFD700', 'WTI': '#8B4513', 'COPPER': '#B87333', 'NATGAS': '#4169E1', 'SILVER': '#C0C0C0', 'WHEAT': '#F5DEB3'
     };
 
-    const renderComparisonSection = (regionFilter, selectedIds, setSelectedIds, chartData) => {
+    const renderComparisonSection = (regionFilter, selectedIds, setSelectedIds, chartData, chartTicker, setChartTicker) => {
         const availableItems = indices.filter(idx => idx.region === regionFilter);
         const isComparison = selectedIds.length > 1;
 
@@ -426,7 +438,12 @@ export default function MacroeconomicsTab({ data, timeFilter, customRange, timeF
                         <div style={{ padding: '1rem 1.25rem', borderBottom: `1px solid ${COLORS.border}`, background: 'rgba(30, 41, 59, 0.4)' }}>
                             <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#f8fafc' }}>{regionFilter} Performance</h3>
                         </div>
-                        <GlobalIndicatorsTable indices={availableItems} hideValuation={regionFilter === 'Crypto' || regionFilter === 'Commodity'} />
+                        <GlobalIndicatorsTable 
+                            indices={availableItems} 
+                            hideValuation={regionFilter === 'Crypto' || regionFilter === 'Commodity'} 
+                            chartTicker={chartTicker}
+                            setChartTicker={setChartTicker}
+                        />
                     </div>
                 </div>
 
@@ -519,66 +536,70 @@ export default function MacroeconomicsTab({ data, timeFilter, customRange, timeF
                             </div>
                         </div>
 
-                        <div style={{ flex: 1, minHeight: 0, width: '100%' }}>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={chartData} margin={{ top: 10, right: 10, left: (isComparison || chartType === 'Relative' || chartType === 'Daily Pct') ? -20 : 10, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                                    <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickFormatter={dtFormatter} minTickGap={30} />
-                                    <YAxis
-                                        stroke="#64748b"
-                                        fontSize={10}
-                                        tickFormatter={(v) => (chartType === 'Relative' || chartType === 'Daily Pct' || isComparison) ? `${v.toFixed(1)}%` : (v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v.toLocaleString())}
-                                        domain={['auto', 'auto']}
-                                    />
-                                    <Tooltip
-                                        contentStyle={customTooltipStyle}
-                                        itemStyle={{ color: '#fff', fontSize: '13px', fontWeight: 500 }}
-                                        labelStyle={{ color: '#94a3b8', fontSize: '12px', marginBottom: '6px' }}
-                                        formatter={(value, name) => {
-                                            const isPct = chartType === 'Relative' || chartType === 'Daily Pct' || isComparison;
-                                            const formattedVal = isPct ? `${value.toFixed(2)}%` : value.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+                        <div style={{ flex: 1, minHeight: 0, width: '100%', position: 'relative' }}>
+                            {selectedIds.length === 1 && availableItems.find(a => a.id === selectedIds[0])?.tvSymbol ? (
+                                <TradingViewAdvancedChartWidget symbol={availableItems.find(a => a.id === selectedIds[0]).tvSymbol} />
+                            ) : (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={chartData} margin={{ top: 10, right: 10, left: (isComparison || chartType === 'Relative' || chartType === 'Daily Pct') ? -20 : 10, bottom: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                                        <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickFormatter={dtFormatter} minTickGap={30} />
+                                        <YAxis
+                                            stroke="#64748b"
+                                            fontSize={10}
+                                            tickFormatter={(v) => (chartType === 'Relative' || chartType === 'Daily Pct' || isComparison) ? `${v.toFixed(1)}%` : (v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v.toLocaleString())}
+                                            domain={['auto', 'auto']}
+                                        />
+                                        <Tooltip
+                                            contentStyle={customTooltipStyle}
+                                            itemStyle={{ color: '#fff', fontSize: '13px', fontWeight: 500 }}
+                                            labelStyle={{ color: '#94a3b8', fontSize: '12px', marginBottom: '6px' }}
+                                            formatter={(value, name) => {
+                                                const isPct = chartType === 'Relative' || chartType === 'Daily Pct' || isComparison;
+                                                const formattedVal = isPct ? `${value.toFixed(2)}%` : value.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 2 });
 
-                                            let itemName = name;
-                                            if (name.endsWith('_MA5')) {
-                                                const baseId = name.replace('_MA5', '');
-                                                const baseName = availableItems.find(a => a.id === baseId)?.name || baseId;
-                                                itemName = `${baseName} (MA5)`;
-                                            } else if (name.endsWith('_MA20')) {
-                                                const baseId = name.replace('_MA20', '');
-                                                const baseName = availableItems.find(a => a.id === baseId)?.name || baseId;
-                                                itemName = `${baseName} (MA20)`;
-                                            } else if (name.endsWith('_MA50')) {
-                                                const baseId = name.replace('_MA50', '');
-                                                const baseName = availableItems.find(a => a.id === baseId)?.name || baseId;
-                                                itemName = `${baseName} (MA50)`;
-                                            } else if (name.endsWith('_BBUpper') || name.endsWith('_BBLower')) {
-                                                const baseId = name.replace('_BBUpper', '').replace('_BBLower', '');
-                                                const baseName = availableItems.find(a => a.id === baseId)?.name || baseId;
-                                                itemName = `${baseName} (BB)`;
-                                            } else {
-                                                itemName = availableItems.find(a => a.id === name)?.name || name;
-                                            }
-                                            return [formattedVal, itemName];
-                                        }}
-                                        labelFormatter={dtFormatter}
-                                        separator=" : "
-                                    />
-                                    {selectedIds.map(id => (
-                                        <React.Fragment key={id}>
-                                            <Line type="monotone" dataKey={id} stroke={ASSET_COLORS[id] || COLORS.teal} strokeWidth={2} dot={false} isAnimationActive={false} />
-                                            {showMA5 && chartType !== 'Daily Pct' && <Line type="monotone" dataKey={`${id}_MA5`} stroke="#f59e0b" strokeDasharray="3 3" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />}
-                                            {showMA20 && chartType !== 'Daily Pct' && <Line type="monotone" dataKey={`${id}_MA20`} stroke="#10b981" strokeDasharray="5 5" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={false} />}
-                                            {showMA50 && chartType !== 'Daily Pct' && <Line type="monotone" dataKey={`${id}_MA50`} stroke="#8b5cf6" strokeDasharray="5 5" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={false} />}
-                                            {showBB && chartType !== 'Daily Pct' && (
-                                                <>
-                                                    <Line type="monotone" dataKey={`${id}_BBUpper`} stroke="rgba(14, 165, 233, 0.6)" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />
-                                                    <Line type="monotone" dataKey={`${id}_BBLower`} stroke="rgba(14, 165, 233, 0.6)" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />
-                                                </>
-                                            )}
-                                        </React.Fragment>
-                                    ))}
-                                </LineChart>
-                            </ResponsiveContainer>
+                                                let itemName = name;
+                                                if (name.endsWith('_MA5')) {
+                                                    const baseId = name.replace('_MA5', '');
+                                                    const baseName = availableItems.find(a => a.id === baseId)?.name || baseId;
+                                                    itemName = `${baseName} (MA5)`;
+                                                } else if (name.endsWith('_MA20')) {
+                                                    const baseId = name.replace('_MA20', '');
+                                                    const baseName = availableItems.find(a => a.id === baseId)?.name || baseId;
+                                                    itemName = `${baseName} (MA20)`;
+                                                } else if (name.endsWith('_MA50')) {
+                                                    const baseId = name.replace('_MA50', '');
+                                                    const baseName = availableItems.find(a => a.id === baseId)?.name || baseId;
+                                                    itemName = `${baseName} (MA50)`;
+                                                } else if (name.endsWith('_BBUpper') || name.endsWith('_BBLower')) {
+                                                    const baseId = name.replace('_BBUpper', '').replace('_BBLower', '');
+                                                    const baseName = availableItems.find(a => a.id === baseId)?.name || baseId;
+                                                    itemName = `${baseName} (BB)`;
+                                                } else {
+                                                    itemName = availableItems.find(a => a.id === name)?.name || name;
+                                                }
+                                                return [formattedVal, itemName];
+                                            }}
+                                            labelFormatter={dtFormatter}
+                                            separator=" : "
+                                        />
+                                        {selectedIds.map(id => (
+                                            <React.Fragment key={id}>
+                                                <Line type="monotone" dataKey={id} stroke={ASSET_COLORS[id] || COLORS.teal} strokeWidth={2} dot={false} isAnimationActive={false} />
+                                                {showMA5 && chartType !== 'Daily Pct' && <Line type="monotone" dataKey={`${id}_MA5`} stroke="#f59e0b" strokeDasharray="3 3" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />}
+                                                {showMA20 && chartType !== 'Daily Pct' && <Line type="monotone" dataKey={`${id}_MA20`} stroke="#10b981" strokeDasharray="5 5" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={false} />}
+                                                {showMA50 && chartType !== 'Daily Pct' && <Line type="monotone" dataKey={`${id}_MA50`} stroke="#8b5cf6" strokeDasharray="5 5" strokeWidth={1.5} dot={false} isAnimationActive={false} activeDot={false} />}
+                                                {showBB && chartType !== 'Daily Pct' && (
+                                                    <>
+                                                        <Line type="monotone" dataKey={`${id}_BBUpper`} stroke="rgba(14, 165, 233, 0.6)" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />
+                                                        <Line type="monotone" dataKey={`${id}_BBLower`} stroke="rgba(14, 165, 233, 0.6)" strokeWidth={1} dot={false} isAnimationActive={false} activeDot={false} />
+                                                    </>
+                                                )}
+                                            </React.Fragment>
+                                        ))}
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            )}
                         </div>
 
                         {showRSI && (
@@ -617,7 +638,55 @@ export default function MacroeconomicsTab({ data, timeFilter, customRange, timeF
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {renderSubTabs()}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                {renderSubTabs()}
+                
+                {/* Global Search Bar */}
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <form 
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            if (searchQuery.trim()) {
+                                setChartTicker(searchQuery.trim().toUpperCase());
+                                setSearchQuery('');
+                            }
+                        }}
+                        style={{ display: 'flex', gap: '8px' }}
+                    >
+                        <input 
+                            type="text"
+                            placeholder="SEARCH SYMBOL (e.g. FPT, BTC...)"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            style={{
+                                background: COLORS.cardBg,
+                                border: `1px solid ${COLORS.border}`,
+                                borderRadius: '8px',
+                                padding: '8px 12px',
+                                color: '#f8fafc',
+                                fontSize: '12px',
+                                minWidth: '220px',
+                                outline: 'none'
+                            }}
+                        />
+                        <button 
+                            type="submit"
+                            style={{
+                                background: COLORS.teal,
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '8px 16px',
+                                fontSize: '12px',
+                                fontWeight: 700,
+                                cursor: 'pointer'
+                            }}
+                        >
+                            VIEW CHART
+                        </button>
+                    </form>
+                </div>
+            </div>
 
             {(subTab === 'Macro' || subTab === 'Money market' || subTab === 'Commodity' || subTab === 'Crypto') && timeFilterControl}
 
@@ -636,7 +705,11 @@ export default function MacroeconomicsTab({ data, timeFilter, customRange, timeF
                                     <span style={{ fontSize: '10px', fontWeight: 800, color: COLORS.green, letterSpacing: '0.05em' }}>{loadingIndices ? 'SYNCING...' : 'LIVE'}</span>
                                 </div>
                             </div>
-                            <GlobalIndicatorsTable indices={indices.filter(i => i.region !== 'Crypto' && i.region !== 'Commodity')} />
+                            <GlobalIndicatorsTable 
+                                indices={indices.filter(i => i.region !== 'Crypto' && i.region !== 'Commodity')} 
+                                chartTicker={chartTicker}
+                                setChartTicker={setChartTicker}
+                            />
                         </div>
                     </div>
 
@@ -661,8 +734,8 @@ export default function MacroeconomicsTab({ data, timeFilter, customRange, timeF
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
                     {[
                         { label: 'US 10Y Treasury Yield', symbol: 'TVC:US10Y' },
-                        { label: 'DXY - US Dollar Index', symbol: 'CAPITALCOM:DXY' },
-                        { label: 'Vietnam 10Y Bond Yield', symbol: 'TVC:VN10Y' },
+                        { label: 'DXY - US Dollar Index', symbol: 'INDEX:DXY' },
+                        { label: 'Vietnam 10Y Bond Yield', symbol: 'OTC:VN10Y' },
                         { label: 'USD/VND', symbol: 'FX_IDC:USDVND' }
                     ].map(card => (
                         <div key={card.label} className="card" style={{ padding: '0', height: '350px', border: `1px solid ${COLORS.border}`, borderRadius: '12px' }}>
@@ -681,15 +754,15 @@ export default function MacroeconomicsTab({ data, timeFilter, customRange, timeF
                 </div>
             )}
 
-            {subTab === 'Commodity' && renderComparisonSection('Commodity', selectedCommodity, setSelectedCommodity, commodityChartData)}
+            {subTab === 'Commodity' && renderComparisonSection('Commodity', selectedCommodity, setSelectedCommodity, commodityChartData, chartTicker, setChartTicker)}
 
-            {subTab === 'Crypto' && renderComparisonSection('Crypto', selectedCrypto, setSelectedCrypto, cryptoChartData)}
+            {subTab === 'Crypto' && renderComparisonSection('Crypto', selectedCrypto, setSelectedCrypto, cryptoChartData, chartTicker, setChartTicker)}
         </div>
     );
 }
 
 // PREMIUM INDICATORS TABLE
-function GlobalIndicatorsTable({ indices, hideValuation = false }) {
+function GlobalIndicatorsTable({ indices, hideValuation = false, chartTicker, setChartTicker }) {
     const formatVal = (val) => {
         if (val == null || isNaN(val)) return '–';
         if (Math.abs(val) < 100) return val.toFixed(1);
@@ -771,7 +844,14 @@ function GlobalIndicatorsTable({ indices, hideValuation = false }) {
                     <tbody>
                         {indices.map((row, i) => (
                             <tr key={i} className="table-row" style={{ borderBottom: `1px solid ${COLORS.border}`, transition: 'background 0.2s', '--row-bg': '#0f172a' }}>
-                                <td className="sticky-col-1" style={{ padding: '8px 16px', fontWeight: 700, color: '#f1f5f9', fontSize: '13px' }}>{row.name}</td>
+                                <td className="sticky-col-1" style={{ padding: '8px 16px', fontWeight: 700, color: '#f1f5f9', fontSize: '13px' }}>
+                                    <span 
+                                        style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: 'dotted' }}
+                                        onClick={() => setChartTicker(row.tvSymbol || row.id)}
+                                    >
+                                        {row.name}
+                                    </span>
+                                </td>
                                 <td className="sticky-col-2" style={{ padding: '8px 16px', color: '#64748b', fontWeight: 500 }}>{row.region}</td>
                                 <td className="sticky-col-3" style={{ padding: '8px 16px', textAlign: 'right', color: '#94a3b8', fontSize: '11px' }}>{row.date === 'N/A' ? '–' : row.date}</td>
                                 <td className="sticky-col-4" style={{ padding: '8px 16px', textAlign: 'right', fontWeight: 700, color: '#f8fafc', fontSize: '12px' }}>
@@ -907,66 +987,15 @@ function GlobalIndicatorsTable({ indices, hideValuation = false }) {
                     thead .sticky-col-2, thead .sticky-col-3, thead .sticky-col-4 { z-index: 11; background: #1e293b; color: #cbd5e1; }
                 }
             `}</style>
+            {/* General Ticker Chart Modal */}
+            {chartTicker && (
+                <UnifiedTickerChartModal 
+                    ticker={chartTicker} 
+                    onClose={() => setChartTicker(null)} 
+                />
+            )}
         </div>
     );
 }
 
-// TradingView Widgets
-function TradingViewCalendarWidget() {
-    const containerRef = useRef(null);
-    useEffect(() => {
-        const container = containerRef.current;
-        if (!container) return;
 
-        // Cleanup existing content
-        container.innerHTML = '';
-
-        const script = document.createElement('script');
-        script.src = "https://s3.tradingview.com/external-embedding/embed-widget-events.js";
-        script.type = "text/javascript";
-        script.async = true;
-        script.innerHTML = JSON.stringify({
-            "width": "100%", "height": "100%", "colorTheme": "dark", "isTransparent": true, "locale": "en",
-            "importanceFilter": "-1,0,1", "currencyFilter": "USD,VND,EUR,JPY,GBP,CNY"
-        });
-        container.appendChild(script);
-
-        return () => {
-            if (container) container.innerHTML = '';
-        };
-    }, []);
-    return <div ref={containerRef} style={{ height: '100%', width: '100%', overflow: 'hidden' }} />;
-}
-
-function TradingViewMiniChartWidget({ symbol, timeFilter }) {
-    const containerRef = useRef(null);
-    useEffect(() => {
-        const container = containerRef.current;
-        if (!container) return;
-
-        container.innerHTML = '';
-
-        let dateRange = "12M";
-        if (timeFilter === '1M') dateRange = "1M";
-        else if (timeFilter === '3M') dateRange = "3M";
-        else if (timeFilter === '6M') dateRange = "6M";
-        else if (timeFilter === 'YTD') dateRange = "YTD";
-        else if (timeFilter === '1Y') dateRange = "12M";
-        else if (timeFilter === 'ALL') dateRange = "ALL";
-
-        const script = document.createElement('script');
-        script.src = "https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js";
-        script.type = "text/javascript";
-        script.async = true;
-        script.innerHTML = JSON.stringify({
-            "symbol": symbol, "width": "100%", "height": "100%", "locale": "en", "dateRange": dateRange,
-            "colorTheme": "dark", "isTransparent": true, "autosize": true, "largeChartUrl": ""
-        });
-        container.appendChild(script);
-
-        return () => {
-            if (container) container.innerHTML = '';
-        };
-    }, [symbol, timeFilter]);
-    return <div ref={containerRef} style={{ height: '100%', width: '100%', overflow: 'hidden' }} />;
-}
