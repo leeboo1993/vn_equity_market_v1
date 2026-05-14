@@ -51,3 +51,27 @@ next-env.d.ts
 /data/
 ssi_price_api/config.py
 ssi_price_api/
+
+# Temporary and test scripts
+test_*.js
+test_*.py
+test_*.cjs
+verify_order.js
+fetch_forecast*.cjs
+find_txt_r2.cjs
+read_txt_r2.cjs
+
+# Logs and environment dumps
+*.log
+vercel_envs.txt
+
+# Data artifacts
+*.json
+!package.json
+!package-lock.json
+!jsconfig.json
+!eslint.config.mjs
+!public/*.svg
+!public/favicon.ico
+vnstock_data/data/
+scripts/peek_temp.json
